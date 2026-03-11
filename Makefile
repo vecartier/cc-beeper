@@ -8,13 +8,13 @@ install: build
 	@echo "Setting up Claude Code hooks..."
 	@python3 setup.py
 	@echo ""
-	@echo "Launching ClawGotchi..."
-	@open ClawGotchi.app
+	@echo "Launching Claumagotchi..."
+	@open Claumagotchi.app
 
 uninstall:
-	@echo "Uninstalling ClawGotchi..."
+	@echo "Uninstalling Claumagotchi..."
 	@python3 uninstall.py
 
 clean:
-	@rm -rf .build ClawGotchi.app
+	@rm -rf .build Claumagotchi.app
 	@echo "Cleaned build artifacts"

@@ -2,11 +2,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "ClawGotchi",
+    name: "Claumagotchi",
     platforms: [.macOS(.v14)],
     targets: [
         .executableTarget(
-            name: "ClawGotchi",
+            name: "Claumagotchi",
             path: "Sources"
         )
     ]

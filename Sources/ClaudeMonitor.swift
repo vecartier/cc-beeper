@@ -32,9 +32,9 @@ struct PendingPermission: Equatable {
 // MARK: - Monitor
 
 final class ClaudeMonitor: ObservableObject {
-    static let eventsFile = "/tmp/clawgotchi-events.jsonl"
-    static let pendingFile = "/tmp/clawgotchi-pending.json"
-    static let responseFile = "/tmp/clawgotchi-response.json"
+    static let eventsFile = "/tmp/claumagotchi-events.jsonl"
+    static let pendingFile = "/tmp/claumagotchi-pending.json"
+    static let responseFile = "/tmp/claumagotchi-response.json"
 
     @Published var state: ClaudeState = .finished
     @Published var pendingPermission: PendingPermission?

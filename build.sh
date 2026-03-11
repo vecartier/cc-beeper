@@ -3,27 +3,27 @@ set -e
 
 cd "$(dirname "$0")"
 
-echo "Building ClawGotchi..."
+echo "Building Claumagotchi..."
 swift build -c release 2>&1
 
-BINARY=".build/release/ClawGotchi"
-APP_DIR="ClawGotchi.app/Contents/MacOS"
+BINARY=".build/release/Claumagotchi"
+APP_DIR="Claumagotchi.app/Contents/MacOS"
 
 echo "Creating app bundle..."
 mkdir -p "$APP_DIR"
 cp "$BINARY" "$APP_DIR/"
 
-cat > ClawGotchi.app/Contents/Info.plist << 'PLIST'
+cat > Claumagotchi.app/Contents/Info.plist << 'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>ClawGotchi</string>
+    <string>Claumagotchi</string>
     <key>CFBundleIdentifier</key>
-    <string>com.clawgotchi.app</string>
+    <string>com.claumagotchi.app</string>
     <key>CFBundleName</key>
-    <string>ClawGotchi</string>
+    <string>Claumagotchi</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
@@ -36,4 +36,4 @@ cat > ClawGotchi.app/Contents/Info.plist << 'PLIST'
 </plist>
 PLIST
 
-echo "Built ClawGotchi.app"
+echo "Built Claumagotchi.app"

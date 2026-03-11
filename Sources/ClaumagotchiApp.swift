@@ -2,12 +2,12 @@ import SwiftUI
 import AppKit
 
 @main
-struct ClawGotchiApp: App {
+struct ClaumagotchiApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var monitor = ClaudeMonitor()
 
     var body: some Scene {
-        Window("ClawGotchi", id: "main") {
+        Window("Claumagotchi", id: "main") {
             ContentView()
                 .environmentObject(monitor)
                 .background(WindowConfigurator())
@@ -52,7 +52,7 @@ struct ClawGotchiApp: App {
     }
 
     static func toggleMainWindow() {
-        for window in NSApp.windows where window.title == "ClawGotchi" {
+        for window in NSApp.windows where window.title == "Claumagotchi" {
             window.isVisible ? window.orderOut(nil) : window.makeKeyAndOrderFront(nil)
             return
         }

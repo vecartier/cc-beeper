@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Removes ClawGotchi hooks from Claude Code settings."""
+"""Removes Claumagotchi hooks from Claude Code settings."""
 
 import json
 import os
@@ -7,8 +7,8 @@ import signal
 
 SETTINGS_PATH = os.path.expanduser("~/.claude/settings.json")
 HOOKS_DIR = os.path.expanduser("~/.claude/hooks")
-HOOK_SCRIPT = os.path.join(HOOKS_DIR, "clawgotchi-hook.py")
-APP_PATH_FILE = os.path.join(HOOKS_DIR, "clawgotchi-app-path")
+HOOK_SCRIPT = os.path.join(HOOKS_DIR, "claumagotchi-hook.py")
+APP_PATH_FILE = os.path.join(HOOKS_DIR, "claumagotchi-app-path")
 
 HOOK_EVENTS = [
     "PreToolUse", "PostToolUse", "PermissionRequest",
@@ -19,8 +19,8 @@ HOOK_EVENTS = [
 def main():
     # Kill running app
     try:
-        os.system("pkill -x ClawGotchi 2>/dev/null")
-        print("  Stopped ClawGotchi app")
+        os.system("pkill -x Claumagotchi 2>/dev/null")
+        print("  Stopped Claumagotchi app")
     except Exception:
         pass
 
@@ -46,7 +46,7 @@ def main():
             existing = hooks.get(event, [])
             filtered = [
                 rule for rule in existing
-                if not any("clawgotchi-hook.py" in h.get("command", "") for h in rule.get("hooks", []))
+                if not any("claumagotchi-hook.py" in h.get("command", "") for h in rule.get("hooks", []))
             ]
             if len(filtered) != len(existing):
                 changed = True
@@ -63,16 +63,16 @@ def main():
 
     # Clean tmp files
     for f in [
-        "/tmp/clawgotchi-events.jsonl",
-        "/tmp/clawgotchi-pending.json",
-        "/tmp/clawgotchi-response.json",
-        "/tmp/clawgotchi-sessions.json",
+        "/tmp/claumagotchi-events.jsonl",
+        "/tmp/claumagotchi-pending.json",
+        "/tmp/claumagotchi-response.json",
+        "/tmp/claumagotchi-sessions.json",
     ]:
         if os.path.exists(f):
             os.remove(f)
 
     print()
-    print("  ClawGotchi uninstalled!")
+    print("  Claumagotchi uninstalled!")
     print("  You can safely delete this folder now.")
 
 

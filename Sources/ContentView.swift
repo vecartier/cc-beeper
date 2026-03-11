@@ -132,8 +132,8 @@ struct ContentView: View {
                 ZStack {
                     // Deny (left, slightly up)
                     ActionButton(
-                        symbol: "xmark", size: 7,
-                        colors: [Color(hex: "A060D0"), Color(hex: "7840A8")],
+                        symbol: "xmark", size: 12,
+                        iconColor: .white,
                         active: monitor.state.needsAttention
                     ) { monitor.respondToPermission(allow: false) }
                     .accessibilityLabel("Deny permission")
@@ -141,8 +141,8 @@ struct ContentView: View {
 
                     // Go to conversation (center)
                     ActionButton(
-                        symbol: "arrow.up.forward", size: 8,
-                        colors: [Color(hex: "A060D0"), Color(hex: "7840A8")],
+                        symbol: "arrow.up.forward", size: 12,
+                        iconColor: .white,
                         active: monitor.state.canGoToConvo || monitor.state.needsAttention,
                         pulse: monitor.state.canGoToConvo
                     ) { monitor.goToConversation() }
@@ -150,8 +150,8 @@ struct ContentView: View {
 
                     // Allow (right, slightly up)
                     ActionButton(
-                        symbol: "checkmark", size: 8,
-                        colors: [Color(hex: "A060D0"), Color(hex: "7840A8")],
+                        symbol: "checkmark", size: 12,
+                        iconColor: .white,
                         active: monitor.state.needsAttention,
                         pulse: monitor.state.needsAttention
                     ) { monitor.respondToPermission(allow: true) }
@@ -215,7 +215,7 @@ struct SeededRNG {
 struct ActionButton: View {
     let symbol: String
     var size: CGFloat = 9
-    let colors: [Color]
+    var iconColor: Color = .white
     let active: Bool
     var pulse: Bool = false
     let action: () -> Void
@@ -228,40 +228,37 @@ struct ActionButton: View {
                 // Recessed well the button sits in
                 Circle()
                     .fill(Color.black.opacity(0.25))
-                    .frame(width: 27, height: 27)
+                    .frame(width: 31, height: 31)
                     .blur(radius: 1)
 
-                // Button face — convex gradient
+                // Button face — dark purple translucent
                 Circle()
                     .fill(
                         RadialGradient(
-                            colors: active ? [
-                                colors[0].opacity(0.9),
-                                colors[1],
-                            ] : [
-                                Color(hex: "D8D4CE"),
-                                Color(hex: "BAB6B0"),
+                            colors: [
+                                Color(hex: "6030A0").opacity(active ? 0.5 : 0.3),
+                                Color(hex: "401870").opacity(active ? 0.6 : 0.35),
                             ],
                             center: UnitPoint(x: 0.4, y: 0.35),
                             startRadius: 0,
-                            endRadius: 14
+                            endRadius: 16
                         )
                     )
-                    .frame(width: 24, height: 24)
+                    .frame(width: 28, height: 28)
 
                 // Top specular highlight
                 Circle()
                     .fill(
                         LinearGradient(
                             colors: [
-                                .white.opacity(active ? 0.4 : 0.2),
+                                .white.opacity(0.4),
                                 .white.opacity(0.05),
                                 .clear,
                             ],
                             startPoint: .top, endPoint: .center
                         )
                     )
-                    .frame(width: 24, height: 24)
+                    .frame(width: 28, height: 28)
 
                 // Bottom catch light
                 Circle()
@@ -269,35 +266,35 @@ struct ActionButton: View {
                         LinearGradient(
                             colors: [
                                 .clear,
-                                .white.opacity(0.06),
+                                .white.opacity(0.08),
                             ],
                             startPoint: .center, endPoint: .bottom
                         )
                     )
-                    .frame(width: 24, height: 24)
+                    .frame(width: 28, height: 28)
 
                 // Rim
                 Circle()
                     .strokeBorder(
                         LinearGradient(
                             colors: [
-                                .white.opacity(0.25),
+                                .white.opacity(0.4),
                                 .clear,
-                                .black.opacity(0.2),
+                                .black.opacity(0.15),
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
                         lineWidth: 0.8
                     )
-                    .frame(width: 24, height: 24)
+                    .frame(width: 28, height: 28)
 
                 Image(systemName: symbol)
                     .font(.system(size: size, weight: .black))
-                    .foregroundColor(active ? .white : Color(hex: "A8A4A0"))
+                    .foregroundColor(active ? iconColor : Color(hex: "A8A4A0"))
                     .shadow(color: .black.opacity(active ? 0.3 : 0), radius: 0.5, y: 0.5)
             }
-            .frame(width: 28, height: 28)
+            .frame(width: 32, height: 32)
             .scaleEffect(pulse && animating ? 1.08 : 1.0)
         }
         .buttonStyle(.plain)

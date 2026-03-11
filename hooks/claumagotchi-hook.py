@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ClawGotchi hook — forwards Claude Code events, handles permissions, auto-launches app."""
+"""Claumagotchi hook — forwards Claude Code events, handles permissions, auto-launches app."""
 
 import json
 import os
@@ -8,11 +8,11 @@ import sys
 import time
 import uuid
 
-EVENT_FILE = "/tmp/clawgotchi-events.jsonl"
-PENDING_FILE = "/tmp/clawgotchi-pending.json"
-RESPONSE_FILE = "/tmp/clawgotchi-response.json"
-SESSIONS_FILE = "/tmp/clawgotchi-sessions.json"
-APP_PATH_FILE = os.path.expanduser("~/.claude/hooks/clawgotchi-app-path")
+EVENT_FILE = "/tmp/claumagotchi-events.jsonl"
+PENDING_FILE = "/tmp/claumagotchi-pending.json"
+RESPONSE_FILE = "/tmp/claumagotchi-response.json"
+SESSIONS_FILE = "/tmp/claumagotchi-sessions.json"
+APP_PATH_FILE = os.path.expanduser("~/.claude/hooks/claumagotchi-app-path")
 
 
 def get_app_path():
@@ -24,10 +24,10 @@ def get_app_path():
                 return path
     # Fallback: search common locations
     for candidate in [
-        os.path.expanduser("~/Desktop/ClawGotchi/ClawGotchi.app"),
-        os.path.expanduser("~/ClawGotchi/ClawGotchi.app"),
-        os.path.expanduser("~/Projects/ClawGotchi/ClawGotchi.app"),
-        os.path.expanduser("~/Developer/ClawGotchi/ClawGotchi.app"),
+        os.path.expanduser("~/Desktop/Claumagotchi/Claumagotchi.app"),
+        os.path.expanduser("~/Claumagotchi/Claumagotchi.app"),
+        os.path.expanduser("~/Projects/Claumagotchi/Claumagotchi.app"),
+        os.path.expanduser("~/Developer/Claumagotchi/Claumagotchi.app"),
     ]:
         if os.path.exists(candidate):
             return candidate
@@ -90,8 +90,8 @@ def track_session(session_id, action):
 
 
 def ensure_app_running():
-    """Launch ClawGotchi if not already running."""
-    result = subprocess.run(["pgrep", "-x", "ClawGotchi"], capture_output=True)
+    """Launch Claumagotchi if not already running."""
+    result = subprocess.run(["pgrep", "-x", "Claumagotchi"], capture_output=True)
     if result.returncode != 0:
         app_path = get_app_path()
         if app_path:
@@ -141,7 +141,7 @@ def handle_permission(data):
                             "hookEventName": "PermissionRequest",
                             "decision": {
                                 "behavior": decision,
-                                "message": f"{'Approved' if decision == 'allow' else 'Denied'} via ClawGotchi",
+                                "message": f"{'Approved' if decision == 'allow' else 'Denied'} via Claumagotchi",
                             },
                         }
                     }
