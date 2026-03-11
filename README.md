@@ -12,7 +12,7 @@ A Tamagotchi-style desktop companion for [Claude Code](https://docs.anthropic.co
 ## Install
 
 ```bash
-git clone https://github.com/user/Claumagotchi.git ~/Claumagotchi
+git clone https://github.com/vecartier/Claumagotchi.git ~/Claumagotchi
 cd ~/Claumagotchi
 make install
 ```
