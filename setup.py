@@ -7,6 +7,7 @@ import shutil
 
 SETTINGS_PATH = os.path.expanduser("~/.claude/settings.json")
 HOOKS_DIR = os.path.expanduser("~/.claude/hooks")
+IPC_DIR = os.path.expanduser("~/.claude/claumagotchi")
 HOOK_SCRIPT = os.path.join(HOOKS_DIR, "claumagotchi-hook.py")
 APP_PATH_FILE = os.path.join(HOOKS_DIR, "claumagotchi-app-path")
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -27,6 +28,11 @@ HOOK_CONFIGS = {
 def main():
     # Ensure ~/.claude exists
     os.makedirs(os.path.expanduser("~/.claude"), exist_ok=True)
+
+    # Create IPC directory with owner-only permissions
+    os.makedirs(IPC_DIR, mode=0o700, exist_ok=True)
+    os.chmod(IPC_DIR, 0o700)
+    print(f"  IPC directory created -> {IPC_DIR}")
 
     # Install hook script
     os.makedirs(HOOKS_DIR, exist_ok=True)
