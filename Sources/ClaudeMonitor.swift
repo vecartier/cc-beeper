@@ -32,9 +32,10 @@ struct PendingPermission: Equatable {
 // MARK: - Monitor
 
 final class ClaudeMonitor: ObservableObject {
-    static let eventsFile = "/tmp/claumagotchi-events.jsonl"
-    static let pendingFile = "/tmp/claumagotchi-pending.json"
-    static let responseFile = "/tmp/claumagotchi-response.json"
+    static let ipcDir = NSHomeDirectory() + "/.claude/claumagotchi"
+    static let eventsFile = ipcDir + "/events.jsonl"
+    static let pendingFile = ipcDir + "/pending.json"
+    static let responseFile = ipcDir + "/response.json"
 
     @Published var state: ClaudeState = .finished
     @Published var pendingPermission: PendingPermission?
@@ -56,7 +57,18 @@ final class ClaudeMonitor: ObservableObject {
     init() {
         soundEnabled = UserDefaults.standard.object(forKey: "soundEnabled") as? Bool ?? true
         autoAccept = UserDefaults.standard.object(forKey: "autoAccept") as? Bool ?? false
+        ensureIPCDir()
         setupFileWatcher()
+    }
+
+    private func ensureIPCDir() {
+        let fm = FileManager.default
+        var isDir: ObjCBool = false
+        if !fm.fileExists(atPath: Self.ipcDir, isDirectory: &isDir) || !isDir.boolValue {
+            try? fm.createDirectory(atPath: Self.ipcDir, withIntermediateDirectories: true)
+        }
+        // Ensure owner-only permissions (0700)
+        try? fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: Self.ipcDir)
     }
 
     deinit {
@@ -211,26 +223,8 @@ final class ClaudeMonitor: ObservableObject {
             return
         }
         let tool = json["tool"] as? String ?? ""
-        let input = json["input"] as? [String: Any] ?? [:]
-        pendingPermission = PendingPermission(
-            id: id, tool: tool,
-            summary: Self.extractSummary(tool: tool, input: input)
-        )
-    }
-
-    private static func extractSummary(tool: String, input: [String: Any]) -> String {
-        switch tool {
-        case "Bash":
-            let cmd = input["command"] as? String ?? ""
-            let t = String(cmd.prefix(50))
-            return t.count < cmd.count ? t + "..." : t
-        case "Write", "Read", "Edit", "Glob":
-            let path = input["file_path"] as? String ?? input["pattern"] as? String ?? ""
-            return URL(fileURLWithPath: path).lastPathComponent
-        case "Grep":  return input["pattern"] as? String ?? "search"
-        case "Agent": return input["description"] as? String ?? "sub-agent"
-        default:      return tool.lowercased()
-        }
+        let summary = json["summary"] as? String ?? tool.lowercased()
+        pendingPermission = PendingPermission(id: id, tool: tool, summary: summary)
     }
 
     // MARK: Timers & Sound
