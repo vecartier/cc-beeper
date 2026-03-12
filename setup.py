@@ -45,7 +45,11 @@ def main():
     print(f"  Hook script installed -> {HOOK_SCRIPT}")
 
     # Write app path so hook knows where to find the .app bundle
-    app_path = os.path.join(SCRIPT_DIR, "Claumagotchi.app")
+    # Prefer /Applications if installed there, otherwise use local build
+    if os.path.exists("/Applications/Claumagotchi.app"):
+        app_path = "/Applications/Claumagotchi.app"
+    else:
+        app_path = os.path.join(SCRIPT_DIR, "Claumagotchi.app")
     with open(APP_PATH_FILE, "w") as f:
         f.write(app_path)
     print(f"  App path saved -> {APP_PATH_FILE}")
