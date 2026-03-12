@@ -5,11 +5,13 @@ import AppKit
 struct ClaumagotchiApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var monitor = ClaudeMonitor()
+    @StateObject private var themeManager = ThemeManager()
 
     var body: some Scene {
         Window("Claumagotchi", id: "main") {
             ContentView()
                 .environmentObject(monitor)
+                .environmentObject(themeManager)
                 .background(WindowConfigurator())
         }
         .windowStyle(.hiddenTitleBar)
@@ -41,6 +43,17 @@ struct ClaumagotchiApp: App {
                 monitor.soundEnabled.toggle()
             }
             .keyboardShortcut("s")
+            Divider()
+            Menu("Theme") {
+                Picker("Color", selection: $themeManager.currentThemeId) {
+                    ForEach(ThemeManager.themes) { theme in
+                        Text(theme.name).tag(theme.id)
+                    }
+                }
+                Divider()
+                Toggle("Dark Mode", isOn: $themeManager.darkMode)
+            }
+            Divider()
             Button("Show / Hide") { Self.toggleMainWindow() }
                 .keyboardShortcut("h", modifiers: [.command, .shift])
             Button("Quit Claumagotchi") { NSApp.terminate(nil) }

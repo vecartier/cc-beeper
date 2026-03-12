@@ -1,4 +1,4 @@
-.PHONY: build install uninstall clean
+.PHONY: build install uninstall clean dmg
 
 build:
 	@./build.sh
@@ -16,5 +16,8 @@ uninstall:
 	@python3 uninstall.py
 
 clean:
-	@rm -rf .build Claumagotchi.app
+	@rm -rf .build Claumagotchi.app Claumagotchi.dmg
 	@echo "Cleaned build artifacts"
+
+dmg: build
+	@./create-dmg.sh

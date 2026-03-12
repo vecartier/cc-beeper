@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var monitor: ClaudeMonitor
+    @EnvironmentObject var themeManager: ThemeManager
 
     private let shellW: CGFloat = 186
     private let shellH: CGFloat = 224
@@ -19,12 +20,7 @@ struct ContentView: View {
             Ellipse()
                 .fill(
                     LinearGradient(
-                        colors: [
-                            Color(hex: "F09050"),
-                            Color(hex: "E07838"),
-                            Color(hex: "D06828"),
-                            Color(hex: "C05820"),
-                        ],
+                        colors: themeManager.shellColors,
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -59,8 +55,8 @@ struct ContentView: View {
                 .strokeBorder(
                     LinearGradient(
                         colors: [
-                            .white.opacity(0.35),
-                            .white.opacity(0.1),
+                            .white.opacity(themeManager.darkMode ? 0.15 : 0.35),
+                            .white.opacity(themeManager.darkMode ? 0.04 : 0.1),
                             .clear,
                             .black.opacity(0.12),
                             .black.opacity(0.2),
@@ -84,7 +80,6 @@ struct ContentView: View {
                 ZStack {
                     // LCD screen
                     ScreenView()
-                        .environmentObject(monitor)
                         .frame(width: 116, height: 88)
                         .clipShape(RoundedRectangle(cornerRadius: 5))
 
@@ -124,7 +119,7 @@ struct ContentView: View {
                         .frame(width: 116, height: 88)
                         .clipShape(RoundedRectangle(cornerRadius: 5))
                         .allowsHitTesting(false)
-                }
+                    }
 
                 Spacer().frame(height: 6)
 
@@ -213,6 +208,8 @@ struct SeededRNG {
 // MARK: - Action Button
 
 struct ActionButton: View {
+    @EnvironmentObject var themeManager: ThemeManager
+
     let symbol: String
     var size: CGFloat = 9
     var iconColor: Color = .white
@@ -231,13 +228,13 @@ struct ActionButton: View {
                     .frame(width: 31, height: 31)
                     .blur(radius: 1)
 
-                // Button face — dark purple translucent
+                // Button face — themed accent color
                 Circle()
                     .fill(
                         RadialGradient(
                             colors: [
-                                Color(hex: "6030A0").opacity(active ? 0.5 : 0.3),
-                                Color(hex: "401870").opacity(active ? 0.6 : 0.35),
+                                themeManager.accentBase.opacity(active ? 0.5 : 0.3),
+                                themeManager.accentDark.opacity(active ? 0.6 : 0.35),
                             ],
                             center: UnitPoint(x: 0.4, y: 0.35),
                             startRadius: 0,
@@ -314,11 +311,10 @@ struct ActionButton: View {
 // MARK: - Pixel Title
 
 struct PixelTitle: View {
+    @EnvironmentObject var themeManager: ThemeManager
+
     private let px: CGFloat = 1.4
     private let gap: CGFloat = 1.0
-    private let color = Color(hex: "A060D0")
-    private let highlight = Color(hex: "C890F0")
-    private let shadow = Color(hex: "3A1060")
 
     // Rounded, playful letterforms — inspired by Tamagotchi logo
     private static let font: [Character: [String]] = [
@@ -336,6 +332,10 @@ struct PixelTitle: View {
 
     var body: some View {
         Canvas { context, size in
+            let color = themeManager.titleColor
+            let highlight = themeManager.titleHighlight
+            let shadow = themeManager.titleShadow
+
             let text: [Character] = Array("CLAUMAGOTCHI")
 
             var totalW: CGFloat = 0

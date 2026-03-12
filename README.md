@@ -15,6 +15,24 @@ A Tamagotchi-style desktop companion for [Claude Code](https://docs.anthropic.co
 
 ## Install
 
+### Quick install (DMG)
+
+Download the latest `Claumagotchi.dmg` from [Releases](https://github.com/vecartier/Claumagotchi/releases), open it, and drag **Claumagotchi.app** to **Applications**. Then register the hooks:
+
+```bash
+cd ~/Claumagotchi   # or wherever you cloned the repo
+python3 setup.py
+open /Applications/Claumagotchi.app
+```
+
+To build the DMG yourself:
+
+```bash
+make dmg
+```
+
+### Build from source
+
 ```bash
 git clone https://github.com/vecartier/Claumagotchi.git ~/Claumagotchi
 cd ~/Claumagotchi
@@ -73,8 +91,9 @@ Click the egg icon in your menu bar for:
 
 - **Allow / Deny** — handle permissions without touching the widget
 - **Go to Conversation** — jump to your terminal
-- **Enable/Disable Auto-Accept** — automatically approve all permission requests
+- **Enable/Disable Auto-Accept** — automatically approve all permission requests (shows "YOLO" on the LCD when active)
 - **Enable/Disable Sounds** — toggle notification sounds
+- **Theme** — pick a color pairing (Sunset, Sakura, Ocean, Forest, Lavender, Honey, Mint, Berry) and toggle dark mode
 - **Show / Hide** — toggle the floating widget
 - **Quit**
 
@@ -82,8 +101,10 @@ Click the egg icon in your menu bar for:
 
 Settings persist across restarts via UserDefaults:
 
-- **Auto-Accept** — approve all tool permissions automatically (off by default)
+- **Auto-Accept** — approve all tool permissions automatically (off by default). When active, a blinking "YOLO" indicator appears on the LCD screen.
 - **Sounds** — play a chime when Claude finishes or needs permission (on by default)
+- **Theme** — 8 color pairings for the shell and buttons (default: Sunset)
+- **Dark Mode** — darkened shell and inverted LCD for low-light use
 
 ## Uninstall
 
@@ -99,8 +120,9 @@ This removes the hooks from Claude Code settings, stops the app, and cleans up t
 ```
 Claumagotchi/
   Package.swift          # Swift package manifest (macOS 14+, Swift 5.10)
-  Makefile               # build / install / uninstall
+  Makefile               # build / install / uninstall / dmg
   build.sh               # Builds the .app bundle
+  create-dmg.sh          # Packages the app into a DMG for distribution
   setup.py               # Registers hooks with Claude Code
   uninstall.py           # Removes hooks and cleans up
   Sources/
@@ -108,6 +130,7 @@ Claumagotchi/
     ClaudeMonitor.swift   # State machine, file watcher, event processing
     ContentView.swift     # Egg shell UI, buttons, pixel title
     ScreenView.swift      # LCD screen, pixel character sprites
+    ThemeManager.swift    # Color themes and dark mode
   hooks/
     claumagotchi-hook.py  # Claude Code hook script (installed to ~/.claude/hooks/)
 ```
