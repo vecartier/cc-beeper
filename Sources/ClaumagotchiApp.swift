@@ -121,6 +121,14 @@ enum EggIcon {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+
+        // Enforce single instance — quit if another is already running
+        let bundleID = Bundle.main.bundleIdentifier ?? "com.claumagotchi.app"
+        let running = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+        if running.count > 1 {
+            NSApp.terminate(nil)
+            return
+        }
     }
 }
 
