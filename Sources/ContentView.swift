@@ -123,37 +123,40 @@ struct ContentView: View {
 
                 Spacer().frame(height: 6)
 
-                // Buttons — nearly flat row, deny+allow slightly elevated
-                ZStack {
-                    // Deny (left, slightly up)
-                    ActionButton(
-                        symbol: "xmark", size: 12,
-                        iconColor: .white,
-                        active: monitor.state.needsAttention
-                    ) { monitor.respondToPermission(allow: false) }
-                    .accessibilityLabel("Deny permission")
-                    .offset(x: -32, y: -7)
+                // Buttons
+                HStack(alignment: .center, spacing: 10) {
+                    if monitor.autoAccept {
+                        // YOLO mode: bolt (disable) + go-to-convo
+                        ActionButton(
+                            symbol: "bolt.slash.fill", size: 12,
+                            iconColor: .white,
+                            active: true
+                        ) { monitor.autoAccept = false }
+                        .accessibilityLabel("Disable YOLO mode")
 
-                    // Go to conversation (center)
-                    ActionButton(
-                        symbol: "arrow.up.forward", size: 12,
-                        iconColor: .white,
-                        active: monitor.state.canGoToConvo || monitor.state.needsAttention,
-                        pulse: monitor.state.canGoToConvo
-                    ) { monitor.goToConversation() }
-                    .accessibilityLabel("Go to conversation")
+                        centerButton
+                    } else {
+                        // Normal mode: deny / center / allow
+                        ActionButton(
+                            symbol: "xmark", size: 12,
+                            iconColor: .white,
+                            active: monitor.state.needsAttention
+                        ) { monitor.respondToPermission(allow: false) }
+                        .accessibilityLabel("Deny permission")
 
-                    // Allow (right, slightly up)
-                    ActionButton(
-                        symbol: "checkmark", size: 12,
-                        iconColor: .white,
-                        active: monitor.state.needsAttention,
-                        pulse: monitor.state.needsAttention
-                    ) { monitor.respondToPermission(allow: true) }
-                    .accessibilityLabel("Allow permission")
-                    .offset(x: 32, y: -7)
+                        centerButton
+
+                        ActionButton(
+                            symbol: "checkmark", size: 12,
+                            iconColor: .white,
+                            active: monitor.state.needsAttention,
+                            pulse: monitor.state.needsAttention
+                        ) { monitor.respondToPermission(allow: true) }
+                        .accessibilityLabel("Allow permission")
+                    }
                 }
                 .animation(.easeInOut(duration: 0.3), value: monitor.state)
+                .animation(.easeInOut(duration: 0.3), value: monitor.autoAccept)
                 .frame(height: 34)
             }
         }
@@ -162,6 +165,16 @@ struct ContentView: View {
         .contextMenu {
             Button("Quit Claumagotchi") { NSApplication.shared.terminate(nil) }
         }
+    }
+
+    private var centerButton: some View {
+        ActionButton(
+            symbol: "arrow.up.forward", size: 12,
+            iconColor: .white,
+            active: monitor.state.canGoToConvo || monitor.state.needsAttention,
+            pulse: monitor.state.canGoToConvo
+        ) { monitor.goToConversation() }
+        .accessibilityLabel("Go to conversation")
     }
 }
 

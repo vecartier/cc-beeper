@@ -50,6 +50,9 @@ final class ClaudeMonitor: ObservableObject {
     /// This is the source of truth — never cleared by timeouts or external events.
     private var awaitingUserAction = false
 
+    /// Per-session state tracking — key is session ID, value is last known state.
+    private var sessionStates: [String: ClaudeState] = [:]
+
     private var fileHandle: FileHandle?
     private var source: DispatchSourceFileSystemObject?
     private var idleTimer: Timer?
@@ -151,16 +154,18 @@ final class ClaudeMonitor: ObservableObject {
               let event = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let type = event["event"] as? String else { return }
 
+        let sid = event["sid"] as? String ?? ""
+
         // Permission ALWAYS wins
         if type == "permission" {
             idleTimer?.invalidate()
             loadPendingPermission()
             if autoAccept {
-                // Auto-accept after a short delay to let pending file load
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
                     self?.respondToPermission(allow: true)
                 }
             } else {
+                if !sid.isEmpty { sessionStates[sid] = .needsYou }
                 awaitingUserAction = true
                 state = .needsYou
                 playAlert()
@@ -175,6 +180,7 @@ final class ClaudeMonitor: ObservableObject {
                     self?.respondToPermission(allow: true)
                 }
             } else {
+                if !sid.isEmpty { sessionStates[sid] = .needsYou }
                 awaitingUserAction = true
                 state = .needsYou
                 playAlert()
@@ -182,7 +188,6 @@ final class ClaudeMonitor: ObservableObject {
             return
         }
         if type == "permission_timeout" {
-            // Hook timed out but keep showing in UI — user must act on it.
             return
         }
 
@@ -193,19 +198,45 @@ final class ClaudeMonitor: ObservableObject {
 
         switch type {
         case "pre_tool", "post_tool", "post_tool_error":
-            state = .thinking
+            if !sid.isEmpty { sessionStates[sid] = .thinking }
+            updateAggregateState()
         case "stop":
-            state = .finished
-            playDoneChime()
-            startIdleTimer(interval: 60)
-        case "session_start":
-            state = .thinking
-        case "session_end":
-            if state == .thinking {
-                state = .finished
+            if !sid.isEmpty { sessionStates[sid] = .finished }
+            updateAggregateState()
+            if state == .finished {
+                playDoneChime()
+                startIdleTimer(interval: 60)
             }
+        case "session_start":
+            if !sid.isEmpty { sessionStates[sid] = .thinking }
+            updateAggregateState()
+        case "session_end":
+            if !sid.isEmpty { sessionStates.removeValue(forKey: sid) }
+            updateAggregateState()
         default:
             break
+        }
+    }
+
+    /// Derive the overall state from all active sessions.
+    /// Priority: needsYou > thinking > finished.
+    private func updateAggregateState() {
+        // Prune sessions no longer tracked by the hook
+        if let sessionsData = FileManager.default.contents(atPath: Self.ipcDir + "/sessions.json"),
+           let sessions = try? JSONSerialization.jsonObject(with: sessionsData) as? [String: Any] {
+            let activeIds = Set(sessions.keys)
+            for key in sessionStates.keys where !activeIds.contains(key) {
+                sessionStates.removeValue(forKey: key)
+            }
+        }
+
+        let values = sessionStates.values
+        if values.contains(.needsYou) {
+            state = .needsYou
+        } else if values.contains(.thinking) {
+            state = .thinking
+        } else {
+            state = .finished
         }
     }
 

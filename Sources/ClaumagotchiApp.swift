@@ -19,7 +19,7 @@ struct ClaumagotchiApp: App {
         .defaultPosition(.topTrailing)
 
         MenuBarExtra {
-            Text("Status: \(monitor.state.label)")
+            Text("Status: \(monitor.autoAccept ? "YOLO MODE" : monitor.state.label)")
             if let pending = monitor.pendingPermission {
                 Divider()
                 Text("\(pending.tool): \(pending.summary)")
@@ -35,7 +35,7 @@ struct ClaumagotchiApp: App {
                     .keyboardShortcut("g")
             }
             Divider()
-            Button(monitor.autoAccept ? "Disable Auto-Accept" : "Enable Auto-Accept") {
+            Button(monitor.autoAccept ? "Disable YOLO Mode" : "Enable YOLO Mode") {
                 monitor.autoAccept.toggle()
             }
             .keyboardShortcut("a", modifiers: [.command, .shift])
@@ -67,6 +67,16 @@ struct ClaumagotchiApp: App {
     static func toggleMainWindow() {
         for window in NSApp.windows where window.title == "Claumagotchi" {
             window.isVisible ? window.orderOut(nil) : window.makeKeyAndOrderFront(nil)
+            return
+        }
+    }
+
+    /// Show the main window without toggling (used by applicationShouldHandleReopen).
+    static func showMainWindow() {
+        for window in NSApp.windows where window.title == "Claumagotchi" {
+            if !window.isVisible {
+                window.makeKeyAndOrderFront(nil)
+            }
             return
         }
     }
@@ -119,16 +129,60 @@ enum EggIcon {
 // MARK: - App Delegate
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
+    private static let pidFile = NSHomeDirectory() + "/.claude/claumagotchi/claumagotchi.pid"
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
-        // Enforce single instance — quit if another is already running
-        let bundleID = Bundle.main.bundleIdentifier ?? "com.claumagotchi.app"
-        let running = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
-        if running.count > 1 {
+        // Enforce single instance via PID file — works even when the app is
+        // installed in multiple locations (e.g. /Applications/ AND ~/Desktop/).
+        if let existing = Self.readPID(), Self.isProcessAlive(existing) {
+            // Another Claumagotchi is already running — quit silently.
             NSApp.terminate(nil)
             return
         }
+        Self.writePID()
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        // Clean up PID file so the next launch doesn't see a stale PID.
+        Self.removePID()
+    }
+
+    /// Prevent `open Claumagotchi.app` from creating a second window when already running.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            ClaumagotchiApp.showMainWindow()
+        }
+        return false
+    }
+
+    // MARK: PID File Helpers
+
+    private static func readPID() -> pid_t? {
+        guard let data = FileManager.default.contents(atPath: pidFile),
+              let str = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+              let pid = Int32(str) else { return nil }
+        return pid
+    }
+
+    private static func writePID() {
+        let dir = (pidFile as NSString).deletingLastPathComponent
+        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+        let pid = ProcessInfo.processInfo.processIdentifier
+        try? "\(pid)\n".write(toFile: pidFile, atomically: true, encoding: .utf8)
+    }
+
+    private static func removePID() {
+        // Only remove if it's our PID (avoid race with a replacement instance).
+        if let stored = readPID(), stored == ProcessInfo.processInfo.processIdentifier {
+            try? FileManager.default.removeItem(atPath: pidFile)
+        }
+    }
+
+    private static func isProcessAlive(_ pid: pid_t) -> Bool {
+        // kill(pid, 0) checks existence without sending a signal.
+        kill(pid, 0) == 0
     }
 }
 

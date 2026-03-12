@@ -7,19 +7,23 @@ struct ScreenView: View {
 
     private let timer = Timer.publish(every: 0.45, on: .main, in: .common).autoconnect()
 
+    private var isYoloActive: Bool {
+        monitor.autoAccept
+    }
+
     var body: some View {
         ZStack {
             Rectangle().fill(themeManager.lcdBg)
 
             VStack(spacing: 0) {
-                // Top icon row — status indicators + YOLO badge
+                // Top icon row — status indicators
                 HStack(spacing: 0) {
                     LCDIcon(symbol: "exclamationmark.triangle.fill",
                             active: monitor.state == .needsYou,
                             color: themeManager.lcdOn)
                     Spacer()
                     LCDIcon(symbol: "bolt.fill",
-                            active: monitor.state == .thinking,
+                            active: isYoloActive ? false : monitor.state == .thinking,
                             color: themeManager.lcdOn)
                     Spacer()
                     LCDIcon(symbol: "checkmark.circle.fill",
@@ -27,9 +31,9 @@ struct ScreenView: View {
                             color: themeManager.lcdOn)
                     if monitor.autoAccept {
                         Spacer()
-                        Text("YOLO")
-                            .font(.system(size: 5, weight: .black, design: .monospaced))
-                            .foregroundColor(themeManager.lcdOn.opacity(animFrame % 4 < 3 ? 0.75 : 0.15))
+                        LCDIcon(symbol: "flame.fill",
+                                active: true,
+                                color: themeManager.lcdOn)
                     }
                 }
                 .padding(.horizontal, 8)
@@ -38,18 +42,19 @@ struct ScreenView: View {
 
                 // Character
                 PixelCharacterView(state: monitor.state, frame: animFrame,
-                                   onColor: themeManager.lcdOn)
+                                   onColor: themeManager.lcdOn,
+                                   isYolo: isYoloActive)
                     .frame(maxHeight: .infinity)
 
                 // Status label
-                Text(monitor.state.label)
+                Text(displayLabel)
                     .font(.system(size: 9, weight: .black, design: .monospaced))
                     .foregroundColor(themeManager.lcdOn)
                     .opacity(monitor.state.needsAttention
                              ? (animFrame % 2 == 0 ? 1 : 0.15) : 1)
 
                 // Detail line
-                Text(detailText)
+                Text(displayDetail)
                     .font(.system(size: 6.5, weight: .medium, design: .monospaced))
                     .foregroundColor(themeManager.lcdOn.opacity(0.55))
                     .lineLimit(2)
@@ -89,7 +94,13 @@ struct ScreenView: View {
         .onReceive(timer) { _ in animFrame += 1 }
     }
 
-    private var detailText: String {
+    private var displayLabel: String {
+        if isYoloActive { return "YOLO MODE" }
+        return monitor.state.label
+    }
+
+    private var displayDetail: String {
+        if isYoloActive { return "auto-accept on" }
         if let p = monitor.pendingPermission {
             return "\(p.tool): \(p.summary)"
         }
@@ -117,11 +128,12 @@ struct PixelCharacterView: View {
     let state: ClaudeState
     let frame: Int
     var onColor: Color = Color(hex: "3A3A2E")
+    var isYolo: Bool = false
 
     private let pixelSize: CGFloat = 2.5
 
     private var currentSprite: [String] {
-        let sprites = spritesForState(state)
+        let sprites = isYolo ? [Sprites.yolo1, Sprites.yolo2] : spritesForState(state)
         return sprites[frame % sprites.count]
     }
 
@@ -273,5 +285,34 @@ enum Sprites {
         "....######....",
         "...#......#...",
         "..##......##..",
+    ]
+    // YOLO mode — sunglasses character
+    static let yolo1: [String] = [
+        "......##......",
+        "....######....",
+        "..##########..",
+        ".#..........#.",
+        ".#.####.###.#.",
+        ".#..........#.",
+        ".#.########.#.",
+        ".#..........#.",
+        "..##########..",
+        "....######....",
+        "...#......#...",
+        "..##......##..",
+    ]
+    static let yolo2: [String] = [
+        "......##......",
+        "....######....",
+        "..##########..",
+        ".#..........#.",
+        ".#.###.####.#.",
+        ".#..........#.",
+        ".#.########.#.",
+        ".#..........#.",
+        "..##########..",
+        "....######....",
+        "..............",
+        "..##..##..##..",
     ]
 }
