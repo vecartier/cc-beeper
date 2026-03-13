@@ -61,7 +61,25 @@ final class ClaudeMonitor: ObservableObject {
         soundEnabled = UserDefaults.standard.object(forKey: "soundEnabled") as? Bool ?? true
         autoAccept = UserDefaults.standard.object(forKey: "autoAccept") as? Bool ?? false
         ensureIPCDir()
+        rehydrateSessions()
         setupFileWatcher()
+    }
+
+    /// Pre-populate sessionStates from sessions.json so the app picks up
+    /// sessions that were already active before this launch.
+    private func rehydrateSessions() {
+        guard let data = FileManager.default.contents(atPath: Self.ipcDir + "/sessions.json"),
+              let sessions = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+        let now = Int(Date().timeIntervalSince1970)
+        for (sid, value) in sessions {
+            // Only rehydrate sessions less than 2 hours old (matches hook's 7200s pruning)
+            if let ts = value as? Int, now - ts < 7200 {
+                sessionStates[sid] = .thinking
+            }
+        }
+        if !sessionStates.isEmpty {
+            state = .thinking
+        }
     }
 
     private func ensureIPCDir() {

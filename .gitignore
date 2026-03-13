@@ -1,4 +1,6 @@
 .build/
 Claumagotchi.app/
+Claumagotchi.dmg
+AppIcon.icns
 .DS_Store
 .swiftpm/
