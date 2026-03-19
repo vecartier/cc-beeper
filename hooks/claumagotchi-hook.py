@@ -233,7 +233,9 @@ def handle_permission(data, session_id=""):
                     except OSError:
                         pass
 
-                    decision = resp.get("decision", "allow")
+                    decision = resp.get("decision", "deny")
+                    if decision not in ("allow", "deny"):
+                        decision = "deny"
                     output = {
                         "hookSpecificOutput": {
                             "hookEventName": "PermissionRequest",
