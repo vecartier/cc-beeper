@@ -14,7 +14,7 @@ v1.1 hardens the existing foundation before adding new visible capabilities. Pha
 
 **Milestone Goal:** Fix known issues, harden security, improve stability and performance, then ship three user-visible improvements and Notification Center integration.
 
-- [ ] **Phase 1: Hardening** - Fix bugs and close security gaps in the IPC and event pipeline
+- [x] **Phase 1: Hardening** - Fix bugs and close security gaps in the IPC and event pipeline
 - [ ] **Phase 2: Reliability + Performance** - Stabilize the file watcher, timers, and rendering without changing behavior
 - [ ] **Phase 3: UX Enhancements** - Add session count, idle animation, richer permission context, and global hotkeys
 - [ ] **Phase 4: Notifications** - Integrate macOS Notification Center with permission, finish, and error alerts
@@ -33,8 +33,8 @@ v1.1 hardens the existing foundation before adding new visible capabilities. Pha
   5. A response.json written before the permission request was issued is ignored (stale timestamp check)
 **Plans:** 2 plans
 Plans:
-- [ ] 01-01-PLAN.md — Swift-side fixes: YOLO icon, window identifier lookup, event schema validation
-- [ ] 01-02-PLAN.md — Python-side fixes: default-deny with whitelist, response freshness check
+- [x] 01-01-PLAN.md — Swift-side fixes: YOLO icon, window identifier lookup, event schema validation
+- [x] 01-02-PLAN.md — Python-side fixes: default-deny with whitelist, response freshness check
 
 ### Phase 2: Reliability + Performance
 **Goal**: The app runs stably for hours without degrading — watcher survives file rotation, timers pause when hidden, rendering is efficient
@@ -75,7 +75,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Hardening | 0/2 | Planning complete | - |
+| 1. Hardening | 2/2 | Complete | 2026-03-19 |
 | 2. Reliability + Performance | 0/TBD | Not started | - |
 | 3. UX Enhancements | 0/TBD | Not started | - |
 | 4. Notifications | 0/TBD | Not started | - |
