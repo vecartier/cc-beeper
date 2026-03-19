@@ -24,13 +24,16 @@ Users can see what Claude is doing and respond to permission requests without le
 - Auto-launch on Claude Code session start
 - Auto-update via LaunchAgent
 - DMG distribution
+- ✓ YOLO mode distinct purple icon in menu bar — Phase 1
+- ✓ Stable window lookup via identifier (not title) — Phase 1
+- ✓ Default-deny on malformed/missing permission response — Phase 1
+- ✓ Event JSON schema validation before processing — Phase 1
+- ✓ Response freshness check (rejects stale/pre-written responses) — Phase 1
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] Fix known bugs (YOLO icon, window lookup, default-allow on malformed response)
-- [ ] Harden security (default-deny, event validation, response file integrity)
 - [ ] Improve reliability (file watcher recovery, timer management)
 - [ ] Improve performance (cache noise texture, pause timers when hidden, reduce disk I/O, unify hex parsers)
 - [ ] Show active session count on screen
@@ -71,7 +74,7 @@ Users can see what Claude is doing and respond to permission requests without le
 | No external dependencies | Minimal attack surface, easy distribution | ✓ Good |
 | Global hotkey Option+A/D for permissions | Fastest response path without mouse | — Pending |
 | Notifications for visibility, not actions | App is always floating — action buttons redundant | — Pending |
-| Default-deny on malformed response | Security: fail closed, not open | — Pending |
+| Default-deny on malformed response | Security: fail closed, not open | ✓ Good |
 
 ---
-*Last updated: 2026-03-19 after v1.1 milestone initialization*
+*Last updated: 2026-03-19 after Phase 1 completion*
