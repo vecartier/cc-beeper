@@ -206,12 +206,13 @@ def handle_permission(data, session_id=""):
     tool = data.get("tool_name", "")
     tool_input = data.get("tool_input", {})
     req_id = secrets.token_hex(16)
+    pending_ts = int(time.time())
 
     pending = {
         "id": req_id,
         "tool": tool,
         "summary": summarize_input(tool, tool_input),
-        "ts": int(time.time()),
+        "ts": pending_ts,
     }
     safe_write(PENDING_FILE, json.dumps(pending))
 
@@ -224,6 +225,15 @@ def handle_permission(data, session_id=""):
                 with open(RESPONSE_FILE) as f:
                     resp = json.load(f)
                 if resp.get("id") == req_id:
+                    # Freshness: reject responses written before pending was issued
+                    resp_mtime = os.path.getmtime(RESPONSE_FILE)
+                    if resp_mtime < pending_ts - 2:
+                        try:
+                            os.remove(RESPONSE_FILE)
+                        except OSError:
+                            pass
+                        time.sleep(0.3)
+                        continue
                     try:
                         os.remove(RESPONSE_FILE)
                     except OSError:
