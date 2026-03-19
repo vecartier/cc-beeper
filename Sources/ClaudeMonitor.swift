@@ -50,6 +50,12 @@ final class ClaudeMonitor: ObservableObject {
     /// This is the source of truth — never cleared by timeouts or external events.
     private var awaitingUserAction = false
 
+    var yoloIconState: EggIconState {
+        if autoAccept { return .yolo }
+        if state.needsAttention { return .attention }
+        return .normal
+    }
+
     /// Per-session state tracking — key is session ID, value is last known state.
     private var sessionStates: [String: ClaudeState] = [:]
 
