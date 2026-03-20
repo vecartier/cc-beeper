@@ -183,27 +183,37 @@ struct ContentView: View {
 // MARK: - Noise Texture
 
 struct NoiseView: View {
-    var body: some View {
-        Canvas { context, size in
-            var rng = SeededRNG(seed: 42)
-            let step: CGFloat = 1.5
-            var y: CGFloat = 0
-            while y < size.height {
-                var x: CGFloat = 0
-                while x < size.width {
-                    let val = rng.next()
-                    if val < 0.45 {
-                        let rect = CGRect(x: x, y: y, width: step, height: step)
-                        context.fill(Path(rect), with: .color(.white.opacity(val * 0.7)))
-                    } else if val > 0.55 {
-                        let rect = CGRect(x: x, y: y, width: step, height: step)
-                        context.fill(Path(rect), with: .color(.black.opacity((1.0 - val) * 0.5)))
-                    }
-                    x += step
+    // Render once, cache forever — noise is deterministic (seeded RNG)
+    private static let cachedImage: NSImage = {
+        let width = 186
+        let height = 224
+        let step: CGFloat = 1.5
+        let img = NSImage(size: NSSize(width: width, height: height))
+        img.lockFocus()
+        var rng = SeededRNG(seed: 42)
+        var y: CGFloat = 0
+        while y < CGFloat(height) {
+            var x: CGFloat = 0
+            while x < CGFloat(width) {
+                let val = rng.next()
+                if val < 0.45 {
+                    NSColor.white.withAlphaComponent(val * 0.7).setFill()
+                    NSRect(x: x, y: y, width: step, height: step).fill()
+                } else if val > 0.55 {
+                    NSColor.black.withAlphaComponent((1.0 - val) * 0.5).setFill()
+                    NSRect(x: x, y: y, width: step, height: step).fill()
                 }
-                y += step
+                x += step
             }
+            y += step
         }
+        img.unlockFocus()
+        return img
+    }()
+
+    var body: some View {
+        Image(nsImage: Self.cachedImage)
+            .resizable()
     }
 }
 

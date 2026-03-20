@@ -4,6 +4,7 @@ struct ScreenView: View {
     @EnvironmentObject var monitor: ClaudeMonitor
     @EnvironmentObject var themeManager: ThemeManager
     @State private var animFrame = 0
+    @State private var isWindowVisible = true
 
     private let timer = Timer.publish(every: 0.45, on: .main, in: .common).autoconnect()
 
@@ -86,7 +87,14 @@ struct ScreenView: View {
             }
             .allowsHitTesting(false)
         }
-        .onReceive(timer) { _ in animFrame += 1 }
+        .onReceive(timer) { _ in
+            if isWindowVisible { animFrame += 1 }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didChangeOcclusionStateNotification)) { notification in
+            if let window = notification.object as? NSWindow {
+                isWindowVisible = window.occlusionState.contains(.visible)
+            }
+        }
     }
 
     private var displayLabel: String {
