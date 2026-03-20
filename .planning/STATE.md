@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish + Hardening
-status: unknown
-stopped_at: Completed 03-ux-enhancements-01-PLAN.md
-last_updated: "2026-03-20T13:51:09.937Z"
+status: executing
+stopped_at: Completed 03-ux-enhancements-02-PLAN.md
+last_updated: "2026-03-20T13:55:57Z"
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -23,8 +23,8 @@ See: .planning/PROJECT.md (updated 2026-03-19)
 
 ## Current Position
 
-Phase: 03 (ux-enhancements) — EXECUTING
-Plan: 1 of 2
+Phase: 03 (ux-enhancements) — COMPLETE
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -45,6 +45,7 @@ Plan: 1 of 2
 | Phase 02-reliability-performance P02 | 3min | 2 tasks | 4 files |
 | Phase 02-reliability-performance P01 | 4 | 2 tasks | 1 files |
 | Phase 03-ux-enhancements P01 | 3min | 2 tasks | 3 files |
+| Phase 03-ux-enhancements P02 | 3min | 1 task | 2 files |
 
 ## Accumulated Context
 
@@ -68,6 +69,9 @@ Plan: 1 of 2
 - [Phase 03-ux-enhancements]: sessionCount updated at all 4 mutation sites for accuracy
 - [Phase 03-ux-enhancements]: Idle timer transitions to .idle not .finished — distinct sleeping state
 - [Phase 03-ux-enhancements]: Full path left-truncated at 40 chars preserving meaningful filename end
+- [Phase 03-ux-enhancements]: Global + local monitor pair covers any foreground app and companion window focus
+- [Phase 03-ux-enhancements]: flags == .option strict equality rejects Cmd+Option and Ctrl+Option — avoids terminal conflicts
+- [Phase 03-ux-enhancements]: setupGlobalHotkeys called from permission events for lazy re-install after Accessibility granted post-launch
 
 ### Pending Todos
 
@@ -80,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T13:51:09.935Z
-Stopped at: Completed 03-ux-enhancements-01-PLAN.md
+Last session: 2026-03-20T13:55:57Z
+Stopped at: Completed 03-ux-enhancements-02-PLAN.md
 Resume file: None

@@ -16,7 +16,7 @@ v1.1 hardens the existing foundation before adding new visible capabilities. Pha
 
 - [x] **Phase 1: Hardening** - Fix bugs and close security gaps in the IPC and event pipeline
 - [x] **Phase 2: Reliability + Performance** - Stabilize the file watcher, timers, and rendering without changing behavior (completed 2026-03-20)
-- [ ] **Phase 3: UX Enhancements** - Add session count, idle animation, richer permission context, and global hotkeys
+- [x] **Phase 3: UX Enhancements** - Add session count, idle animation, richer permission context, and global hotkeys (completed 2026-03-20)
 - [ ] **Phase 4: Notifications** - Integrate macOS Notification Center with permission, finish, and error alerts
 
 ## Phase Details
@@ -47,8 +47,8 @@ Plans:
   4. Hex color parsing behaves consistently across all themes (single implementation, no divergence)
 **Plans:** 2/2 plans complete
 Plans:
-- [ ] 02-01-PLAN.md — Monitor resilience: file watcher recovery, throttled session pruning, DispatchWorkItem idle timer
-- [ ] 02-02-PLAN.md — View layer performance: visibility-aware sprite timer, cached noise texture, unified hex parser
+- [x] 02-01-PLAN.md — Monitor resilience: file watcher recovery, throttled session pruning, DispatchWorkItem idle timer
+- [x] 02-02-PLAN.md — View layer performance: visibility-aware sprite timer, cached noise texture, unified hex parser
 
 ### Phase 3: UX Enhancements
 **Goal**: The companion window shows richer context and users can respond to permissions without touching the mouse
@@ -59,10 +59,10 @@ Plans:
   2. When no session has been active for a defined period, the character plays a sleeping or idle animation
   3. The permission prompt shows the actual file path or command being requested, not just a tool category label
   4. Pressing Option+A allows and Option+D denies a pending permission from any app, without clicking the companion window
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
-- [ ] 03-01-PLAN.md — Session count display, idle/sleeping animation, full-path permission info
-- [ ] 03-02-PLAN.md — Global hotkeys (Option+A allow, Option+D deny) with accessibility gate
+- [x] 03-01-PLAN.md — Session count display, idle/sleeping animation, full-path permission info
+- [x] 03-02-PLAN.md — Global hotkeys (Option+A allow, Option+D deny) with accessibility gate
 
 ### Phase 4: Notifications
 **Goal**: Users receive macOS Notification Center alerts for permission requests, session completion, and errors — with a toggle to disable them
@@ -83,5 +83,5 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Hardening | 2/2 | Complete   | 2026-03-19 |
 | 2. Reliability + Performance | 2/2 | Complete   | 2026-03-20 |
-| 3. UX Enhancements | 1/2 | In Progress|  |
+| 3. UX Enhancements | 2/2 | Complete   | 2026-03-20 |
 | 4. Notifications | 0/TBD | Not started | - |
