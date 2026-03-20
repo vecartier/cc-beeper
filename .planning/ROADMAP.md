@@ -45,7 +45,10 @@ Plans:
   2. The sprite animation does not consume CPU cycles when the companion window is hidden or minimized
   3. Switching themes or triggering state changes does not cause noticeable frame drops or redundant disk reads
   4. Hex color parsing behaves consistently across all themes (single implementation, no divergence)
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 02-01-PLAN.md — Monitor resilience: file watcher recovery, throttled session pruning, DispatchWorkItem idle timer
+- [ ] 02-02-PLAN.md — View layer performance: visibility-aware sprite timer, cached noise texture, unified hex parser
 
 ### Phase 3: UX Enhancements
 **Goal**: The companion window shows richer context and users can respond to permissions without touching the mouse
@@ -76,6 +79,6 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Hardening | 2/2 | Complete   | 2026-03-19 |
-| 2. Reliability + Performance | 0/TBD | Not started | - |
+| 2. Reliability + Performance | 0/2 | Not started | - |
 | 3. UX Enhancements | 0/TBD | Not started | - |
 | 4. Notifications | 0/TBD | Not started | - |
