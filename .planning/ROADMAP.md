@@ -90,8 +90,8 @@ Plans:
   4. Sound toggle, notification toggle, theme picker, and hotkey config are all accessible from the Settings window
 **Plans:** 2/2 plans complete
 Plans:
-- [ ] 05-01-PLAN.md — KeychainHelper, APIKeyValidator, Window scene registration + openSettingsWindow helper (SET-01, SET-04)
-- [ ] 05-02-PLAN.md — SettingsView with 4 tabs (General/Appearance/AI/Privacy), menu bar cleanup (SET-01, SET-02, SET-03, SET-04)
+- [x] 05-01-PLAN.md — KeychainHelper, APIKeyValidator, Window scene registration + openSettingsWindow helper (SET-01, SET-04)
+- [x] 05-02-PLAN.md — SettingsView with 4 tabs (General/Appearance/AI/Privacy), menu bar cleanup (SET-01, SET-02, SET-03, SET-04)
 
 ### Phase 6: Activity Feed
 **Goal**: Users can see a live log of what Claude did in each session — files edited, commands run, tools used
@@ -101,7 +101,10 @@ Plans:
   1. User can see a per-session list of Claude's actions (files edited, commands run, tools used) in the companion window
   2. Activity feed entries appear in real-time as new hook events arrive — no manual refresh needed
   3. Feed data is derived from existing hook events without any changes to the IPC protocol
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 06-01-PLAN.md — ActivityEntry data model, hook summary enrichment, real-time storage in ClaudeMonitor (FEED-01, FEED-02, FEED-03)
+- [ ] 06-02-PLAN.md — ActivityFeedView UI, expandable panel in ContentView, human verification (FEED-01, FEED-02)
 
 ### Phase 7: AI Summary
 **Goal**: When a session ends and an API key is configured, Claude's activity is summarized into a readable recap — gracefully degrading to raw feed when no key is set
@@ -136,7 +139,7 @@ Plans:
 | 2. Reliability + Performance | v1.1 | 2/2 | Complete | 2026-03-20 |
 | 3. UX Enhancements | v1.1 | 2/2 | Complete | 2026-03-20 |
 | 4. Notifications | v1.1 | 2/2 | Complete | 2026-03-20 |
-| 5. Settings Window | 2/2 | Complete   | 2026-03-20 | - |
-| 6. Activity Feed | v2.0 | 0/? | Not started | - |
+| 5. Settings Window | v2.0 | 2/2 | Complete | 2026-03-20 |
+| 6. Activity Feed | v2.0 | 0/2 | Planned | - |
 | 7. AI Summary | v2.0 | 0/? | Not started | - |
 | 8. Voice Input + Layout | v2.0 | 0/? | Not started | - |
