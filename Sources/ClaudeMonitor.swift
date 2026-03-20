@@ -61,7 +61,8 @@ final class ClaudeMonitor: ObservableObject {
 
     private var fileHandle: FileHandle?
     private var source: DispatchSourceFileSystemObject?
-    private var idleTimer: Timer?
+    private var idleWork: DispatchWorkItem?
+    private var lastPruneTime: Date = .distantPast
 
     init() {
         soundEnabled = UserDefaults.standard.object(forKey: "soundEnabled") as? Bool ?? true
@@ -101,7 +102,7 @@ final class ClaudeMonitor: ObservableObject {
     deinit {
         source?.cancel()
         try? fileHandle?.close()
-        idleTimer?.invalidate()
+        idleWork?.cancel()
     }
 
     // MARK: Actions
@@ -123,7 +124,7 @@ final class ClaudeMonitor: ObservableObject {
     }
 
     func goToConversation() {
-        idleTimer?.invalidate()
+        idleWork?.cancel()
         pendingPermission = nil
         awaitingUserAction = false
         state = .finished
@@ -202,7 +203,7 @@ final class ClaudeMonitor: ObservableObject {
 
         // Permission ALWAYS wins
         if type == "permission" {
-            idleTimer?.invalidate()
+            idleWork?.cancel()
             loadPendingPermission()
             if autoAccept {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
@@ -217,7 +218,7 @@ final class ClaudeMonitor: ObservableObject {
             return
         }
         if type == "notification", event["type"] as? String == "permission_prompt" {
-            idleTimer?.invalidate()
+            idleWork?.cancel()
             loadPendingPermission()
             if autoAccept {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
@@ -238,7 +239,7 @@ final class ClaudeMonitor: ObservableObject {
         // Awaiting user action -> nothing else changes display
         guard !awaitingUserAction else { return }
 
-        idleTimer?.invalidate()
+        idleWork?.cancel()
 
         switch type {
         case "pre_tool", "post_tool", "post_tool_error":
@@ -305,10 +306,13 @@ final class ClaudeMonitor: ObservableObject {
     // MARK: Timers & Sound
 
     private func startIdleTimer(interval: TimeInterval) {
-        idleTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { [weak self] _ in
+        idleWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
             guard let self, self.pendingPermission == nil else { return }
-            self.state = .finished
+            DispatchQueue.main.async { self.state = .finished }
         }
+        idleWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + interval, execute: work)
     }
 
     private func playAlert() {

@@ -104,12 +104,7 @@ final class ThemeManager: ObservableObject {
     // MARK: - Helpers
 
     private static func darken(_ hex: String, by factor: Double) -> Color {
-        let trimmed = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: trimmed).scanHexInt64(&int)
-        let r = Double(int >> 16) / 255 * (1 - factor)
-        let g = Double(int >> 8 & 0xFF) / 255 * (1 - factor)
-        let b = Double(int & 0xFF) / 255 * (1 - factor)
-        return Color(.sRGB, red: r, green: g, blue: b)
+        let c = Color.hexComponents(hex)
+        return Color(.sRGB, red: c.r * (1 - factor), green: c.g * (1 - factor), blue: c.b * (1 - factor))
     }
 }
