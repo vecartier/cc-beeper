@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Voice & Intelligence
 status: unknown
-stopped_at: "Checkpoint: 06-02 Task 3 human-verify"
-last_updated: "2026-03-20T17:24:52.577Z"
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-03-20T18:29:18.308Z"
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 6
+  completed_plans: 5
 ---
 
 # Project State
@@ -19,11 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-20)
 
 **Core value:** Users can see what Claude is doing and respond to permission requests without leaving their workflow
-**Current focus:** Phase 06 — activity-feed
+**Current focus:** Phase 07 — ai-summary
 
 ## Current Position
 
-Phase: 06 (activity-feed) — EXECUTING
+Phase: 07 (ai-summary) — EXECUTING
 Plan: 1 of 2
 
 ## Performance Metrics
@@ -51,6 +51,7 @@ Plan: 1 of 2
 | Phase 05-settings-window P01 | 5 | 2 tasks | 3 files |
 | Phase 05-settings-window P02 | 25 | 3 tasks | 2 files |
 | Phase 06-activity-feed P01 | 2 | 2 tasks | 2 files |
+| Phase 07-ai-summary P01 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,9 @@ Recent decisions affecting v2.0:
 - [Phase 06-activity-feed]: 200-entry cap per session bounds memory; 5-minute delayed cleanup after session_end preserves feed for UI
 - [Phase 06-activity-feed]: Shell extracted to tamagotchiShell @ViewBuilder property — isolates feed changes from shell layout
 - [Phase 06-activity-feed]: Feed panel fixed at 200x120pt with LCD theme colors; window grows 300->430pt via showFeed animated bool
+- [Phase 07-ai-summary]: SummaryService uses JSONSerialization (not Codable) to match existing codebase pattern
+- [Phase 07-ai-summary]: summarizeIfConfigured tries Anthropic first — preferred provider for Claumagotchi
+- [Phase 07-ai-summary]: @MainActor Task in session_end ensures @Published updates stay on main thread
 
 ### Pending Todos
 
@@ -85,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T17:24:41.749Z
-Stopped at: Checkpoint: 06-02 Task 3 human-verify
+Last session: 2026-03-20T18:29:18.304Z
+Stopped at: Completed 07-01-PLAN.md
 Resume file: None
