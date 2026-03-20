@@ -40,9 +40,9 @@ Requirements for the polish and hardening milestone. Each maps to roadmap phases
 
 ### Notifications
 
-- [ ] **NOTIF-01**: macOS Notification Center alert fires when a permission request arrives
-- [ ] **NOTIF-02**: Notification fires when a Claude session finishes
-- [ ] **NOTIF-03**: Notification fires on tool errors or permission timeouts
+- [x] **NOTIF-01**: macOS Notification Center alert fires when a permission request arrives
+- [x] **NOTIF-02**: Notification fires when a Claude session finishes
+- [x] **NOTIF-03**: Notification fires on tool errors or permission timeouts
 - [ ] **NOTIF-04**: User can enable/disable notifications via menu bar toggle
 
 ## v2 Requirements

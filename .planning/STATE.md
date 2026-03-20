@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish + Hardening
 status: unknown
-stopped_at: Completed 03-ux-enhancements-02-PLAN.md
-last_updated: "2026-03-20T14:01:06.487Z"
+stopped_at: Completed 04-notifications-01-PLAN.md
+last_updated: "2026-03-20T14:40:00.000Z"
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 8
+  completed_plans: 7
 ---
 
 # Project State
@@ -19,11 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Users can see what Claude is doing and respond to permission requests without leaving their workflow
-**Current focus:** Phase 03 — ux-enhancements
+**Current focus:** Phase 04 — notifications
 
 ## Current Position
 
-Phase: 03 (ux-enhancements) — COMPLETE
+Phase: 04 (notifications) — EXECUTING
 Plan: 2 of 2
 
 ## Performance Metrics
@@ -46,6 +46,7 @@ Plan: 2 of 2
 | Phase 02-reliability-performance P01 | 4 | 2 tasks | 1 files |
 | Phase 03-ux-enhancements P01 | 3min | 2 tasks | 3 files |
 | Phase 03-ux-enhancements P02 | 3min | 1 task | 2 files |
+| Phase 04-notifications P01 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,10 @@ Plan: 2 of 2
 - [Phase 03-ux-enhancements]: Global + local monitor pair covers any foreground app and companion window focus
 - [Phase 03-ux-enhancements]: flags == .option strict equality rejects Cmd+Option and Ctrl+Option — avoids terminal conflicts
 - [Phase 03-ux-enhancements]: setupGlobalHotkeys called from permission events for lazy re-install after Accessibility granted post-launch
+- [Phase 04-notifications]: requestPermission() called eagerly at init to avoid missing first notification while dialog is pending
+- [Phase 04-notifications]: post_tool_error separated from pre_tool/post_tool case to allow targeted notification call
+- [Phase 04-notifications]: Nil-coalescing fallback for sendPermissionRequest (pendingPermission races with async loadPendingPermission retries)
+- [Phase 04-notifications]: Ad-hoc signing (codesign --force --deep --sign -) sufficient for local distribution — notification authorization requires code signing
 
 ### Pending Todos
 
@@ -84,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T13:55:57Z
-Stopped at: Completed 03-ux-enhancements-02-PLAN.md
+Last session: 2026-03-20T14:40:00Z
+Stopped at: Completed 04-notifications-01-PLAN.md
 Resume file: None

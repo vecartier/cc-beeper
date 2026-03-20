@@ -75,7 +75,7 @@ Plans:
   4. The menu bar includes a toggle that enables or disables all notifications, persisting across app restarts
 **Plans:** 2 plans
 Plans:
-- [ ] 04-01-PLAN.md — NotificationManager + ClaudeMonitor wiring + build.sh code signing (NOTIF-01, NOTIF-02, NOTIF-03)
+- [x] 04-01-PLAN.md — NotificationManager + ClaudeMonitor wiring + build.sh code signing (NOTIF-01, NOTIF-02, NOTIF-03)
 - [ ] 04-02-PLAN.md — Menu bar notifications toggle + end-to-end verification (NOTIF-04)
 
 ## Progress
@@ -87,4 +87,4 @@ Plans:
 | 1. Hardening | 2/2 | Complete   | 2026-03-19 |
 | 2. Reliability + Performance | 2/2 | Complete   | 2026-03-20 |
 | 3. UX Enhancements | 2/2 | Complete   | 2026-03-20 |
-| 4. Notifications | 0/2 | Not started | - |
+| 4. Notifications | 1/2 | In progress | - |
