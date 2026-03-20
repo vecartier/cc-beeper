@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Voice & Intelligence
 status: unknown
-stopped_at: Checkpoint 07-02 Task 2 — awaiting human-verify
-last_updated: "2026-03-20T18:32:53.567Z"
+stopped_at: Completed 08-voice-input-layout plan 01
+last_updated: "2026-03-20T23:20:05.658Z"
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 8
+  completed_plans: 7
 ---
 
 # Project State
@@ -19,11 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-20)
 
 **Core value:** Users can see what Claude is doing and respond to permission requests without leaving their workflow
-**Current focus:** Phase 07 — ai-summary
+**Current focus:** Phase 08 — voice-input-layout
 
 ## Current Position
 
-Phase: 07 (ai-summary) — EXECUTING
+Phase: 08 (voice-input-layout) — EXECUTING
 Plan: 1 of 2
 
 ## Performance Metrics
@@ -53,6 +53,7 @@ Plan: 1 of 2
 | Phase 06-activity-feed P01 | 2 | 2 tasks | 2 files |
 | Phase 07-ai-summary P01 | 2 | 2 tasks | 2 files |
 | Phase 07-ai-summary P02 | 2min | 1 tasks | 1 files |
+| Phase 08-voice-input-layout P01 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,9 @@ Recent decisions affecting v2.0:
 - [Phase 07-ai-summary]: summarizeIfConfigured tries Anthropic first — preferred provider for Claumagotchi
 - [Phase 07-ai-summary]: @MainActor Task in session_end ensures @Published updates stay on main thread
 - [Phase 07-ai-summary]: Summary section rendered above raw feed entries for visual prominence in the fixed-height LCD panel
+- [Phase 08-voice-input-layout]: outputFormat(forBus: 0) not inputFormat in VoiceService — avoids zero-channel crash on macOS hardware
+- [Phase 08-voice-input-layout]: VoiceService recreates AVAudioEngine on stopRecording() — reset() unreliable, instantiation is lightweight
+- [Phase 08-voice-input-layout]: CGEvent injection chunked at 20 UTF-16 units + 10ms delay to avoid dropped characters in Terminal.app
 
 ### Pending Todos
 
@@ -91,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T18:32:53.563Z
-Stopped at: Checkpoint 07-02 Task 2 — awaiting human-verify
+Last session: 2026-03-20T23:20:05.654Z
+Stopped at: Completed 08-voice-input-layout plan 01
 Resume file: None

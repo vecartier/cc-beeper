@@ -130,7 +130,10 @@ Plans:
   3. The mic button shows a clear visual recording state while voice capture is active
   4. If no terminal is focused when recording starts, the last-used terminal is automatically activated first
   5. All transcription happens on-device — no audio leaves the Mac
-**Plans**: TBD
+**Plans:** 1/2 plans executed
+Plans:
+- [ ] 08-01-PLAN.md — VoiceService (SFSpeechRecognizer + AVAudioEngine + CGEvent injection) + build.sh Info.plist permissions (VOICE-03, VOICE-04)
+- [ ] 08-02-PLAN.md — ClaudeMonitor hotkey wiring + ContentView mic button layout (VOICE-01, VOICE-02, LAYOUT-01, LAYOUT-02)
 
 ## Progress
 
@@ -145,4 +148,4 @@ Plans:
 | 5. Settings Window | v2.0 | 2/2 | Complete | 2026-03-20 |
 | 6. Activity Feed | v2.0 | 2/2 | Complete | 2026-03-20 |
 | 7. AI Summary | 2/2 | Complete   | 2026-03-20 | - |
-| 8. Voice Input + Layout | v2.0 | 0/? | Not started | - |
+| 8. Voice Input + Layout | 1/2 | In Progress|  | - |

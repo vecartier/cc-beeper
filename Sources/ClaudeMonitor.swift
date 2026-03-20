@@ -83,6 +83,7 @@ final class ClaudeMonitor: ObservableObject {
     private var sessionStates: [String: ClaudeState] = [:]
 
     private let notificationManager = NotificationManager()
+    let voiceService = VoiceService()
 
     private var fileHandle: FileHandle?
     private var source: DispatchSourceFileSystemObject?
@@ -90,6 +91,7 @@ final class ClaudeMonitor: ObservableObject {
     private var lastPruneTime: Date = .distantPast
     private var globalKeyMonitor: Any?
     private var localKeyMonitor: Any?
+    private var globalKeyUpMonitor: Any?
 
     init() {
         soundEnabled = UserDefaults.standard.object(forKey: "soundEnabled") as? Bool ?? true
@@ -100,6 +102,7 @@ final class ClaudeMonitor: ObservableObject {
         rehydrateSessions()
         setupFileWatcher()
         setupGlobalHotkeys()
+        setupKeyUpMonitor()
     }
 
     /// Pre-populate sessionStates from sessions.json so the app picks up
@@ -136,6 +139,7 @@ final class ClaudeMonitor: ObservableObject {
         idleWork?.cancel()
         if let m = globalKeyMonitor { NSEvent.removeMonitor(m) }
         if let m = localKeyMonitor { NSEvent.removeMonitor(m) }
+        if let m = globalKeyUpMonitor { NSEvent.removeMonitor(m) }
     }
 
     // MARK: Actions
@@ -443,16 +447,32 @@ final class ClaudeMonitor: ObservableObject {
     }
 
     private func handleHotKey(_ event: NSEvent) {
-        guard pendingPermission != nil else { return }
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         guard flags == .option else { return }
         switch event.keyCode {
-        case 0:  // kVK_ANSI_A
+        case 0:  // kVK_ANSI_A — allow permission
+            guard pendingPermission != nil else { return }
             DispatchQueue.main.async { self.respondToPermission(allow: true) }
-        case 2:  // kVK_ANSI_D
+        case 2:  // kVK_ANSI_D — deny permission
+            guard pendingPermission != nil else { return }
             DispatchQueue.main.async { self.respondToPermission(allow: false) }
+        case 9:  // kVK_ANSI_V — voice input (hold to talk)
+            guard !event.isARepeat else { return }
+            if !voiceService.isRecording {
+                DispatchQueue.main.async { self.voiceService.startRecording() }
+            }
         default:
             break
+        }
+    }
+
+    private func setupKeyUpMonitor() {
+        guard AXIsProcessTrusted() else { return }
+        globalKeyUpMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyUp) { [weak self] event in
+            guard let self else { return }
+            if event.keyCode == 9 { // kVK_ANSI_V — stop voice recording on key release
+                DispatchQueue.main.async { self.voiceService.stopRecording() }
+            }
         }
     }
 
