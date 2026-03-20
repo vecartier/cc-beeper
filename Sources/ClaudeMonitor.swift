@@ -257,6 +257,7 @@ final class ClaudeMonitor: ObservableObject {
             updateAggregateState()
         case "session_end":
             if !sid.isEmpty { sessionStates.removeValue(forKey: sid) }
+            lastPruneTime = .distantPast
             updateAggregateState()
         default:
             break
@@ -266,13 +267,16 @@ final class ClaudeMonitor: ObservableObject {
     /// Derive the overall state from all active sessions.
     /// Priority: needsYou > thinking > finished.
     private func updateAggregateState() {
-        // Prune sessions no longer tracked by the hook
-        if let sessionsData = FileManager.default.contents(atPath: Self.ipcDir + "/sessions.json"),
-           let sessions = try? JSONSerialization.jsonObject(with: sessionsData) as? [String: Any] {
-            let activeIds = Set(sessions.keys)
-            for key in sessionStates.keys where !activeIds.contains(key) {
-                sessionStates.removeValue(forKey: key)
+        // Prune sessions no longer tracked by the hook (at most every 30 seconds)
+        if Date().timeIntervalSince(lastPruneTime) > 30 {
+            if let sessionsData = FileManager.default.contents(atPath: Self.ipcDir + "/sessions.json"),
+               let sessions = try? JSONSerialization.jsonObject(with: sessionsData) as? [String: Any] {
+                let activeIds = Set(sessions.keys)
+                for key in sessionStates.keys where !activeIds.contains(key) {
+                    sessionStates.removeValue(forKey: key)
+                }
             }
+            lastPruneTime = Date()
         }
 
         let values = sessionStates.values
