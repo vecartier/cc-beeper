@@ -173,9 +173,9 @@ struct ContentView: View {
                 Spacer().frame(height: 6)
 
                 // Buttons — V-shaped layout (middle slightly lower)
-                HStack(alignment: .top, spacing: 5) {
+                HStack(alignment: .top, spacing: 4) {
                     if monitor.autoAccept {
-                        // YOLO mode: bolt (disable) + go-to-convo — centered, no V
+                        // YOLO mode: bolt (disable) + go-to-convo + mic
                         ActionButton(
                             symbol: "bolt.slash.fill", size: 12,
                             iconColor: .white,
@@ -184,8 +184,10 @@ struct ContentView: View {
                         .accessibilityLabel("Disable YOLO mode")
 
                         centerButton
+
+                        micButton
                     } else {
-                        // Normal mode: deny / center / allow
+                        // Normal mode: deny / center / allow / mic
                         ActionButton(
                             symbol: "xmark", size: 12,
                             iconColor: .white,
@@ -203,6 +205,8 @@ struct ContentView: View {
                             pulse: monitor.state.needsAttention
                         ) { monitor.respondToPermission(allow: true) }
                         .accessibilityLabel("Allow permission")
+
+                        micButton
                     }
                 }
                 .animation(.easeInOut(duration: 0.3), value: monitor.state)
@@ -222,6 +226,23 @@ struct ContentView: View {
             pulse: monitor.state.canGoToConvo
         ) { monitor.goToConversation() }
         .accessibilityLabel("Go to conversation")
+    }
+
+    private var micButton: some View {
+        ActionButton(
+            symbol: monitor.voiceService.isRecording ? "mic.fill" : "mic",
+            size: 12,
+            iconColor: .white,
+            active: monitor.voiceService.isRecording,
+            pulse: monitor.voiceService.isRecording
+        ) {
+            if monitor.voiceService.isRecording {
+                monitor.voiceService.stopRecording()
+            } else {
+                monitor.voiceService.startRecording()
+            }
+        }
+        .accessibilityLabel(monitor.voiceService.isRecording ? "Stop recording" : "Start voice input")
     }
 }
 
