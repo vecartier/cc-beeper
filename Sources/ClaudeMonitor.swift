@@ -32,6 +32,16 @@ struct PendingPermission: Equatable {
     let summary: String
 }
 
+// MARK: - Activity Entry
+
+struct ActivityEntry: Identifiable {
+    let id = UUID()
+    let tool: String
+    let summary: String
+    let timestamp: Date
+    let isError: Bool
+}
+
 // MARK: - Monitor
 
 final class ClaudeMonitor: ObservableObject {
@@ -52,6 +62,8 @@ final class ClaudeMonitor: ObservableObject {
         didSet { UserDefaults.standard.set(notificationsEnabled, forKey: "notificationsEnabled") }
     }
     @Published var sessionCount: Int = 0
+    /// Per-session activity log — key is session ID, value is list of activity entries.
+    @Published var sessionActivities: [String: [ActivityEntry]] = [:]
 
     /// True when a permission has been requested and user hasn't acted yet.
     /// This is the source of truth — never cleared by timeouts or external events.
@@ -278,15 +290,23 @@ final class ClaudeMonitor: ObservableObject {
         idleWork?.cancel()
 
         switch type {
-        case "pre_tool", "post_tool":
+        case "pre_tool":
+            if !sid.isEmpty { sessionStates[sid] = .thinking }
+            let preTool = event["tool"] as? String ?? ""
+            let preSummary = event["summary"] as? String ?? preTool.lowercased()
+            recordActivity(sid: sid, tool: preTool, summary: preSummary)
+            updateAggregateState()
+        case "post_tool":
             if !sid.isEmpty { sessionStates[sid] = .thinking }
             updateAggregateState()
         case "post_tool_error":
             if !sid.isEmpty { sessionStates[sid] = .thinking }
+            let errorTool = event["tool"] as? String ?? "Tool"
+            let errorSummary = event["summary"] as? String ?? errorTool.lowercased()
+            recordActivity(sid: sid, tool: errorTool, summary: errorSummary, isError: true)
             updateAggregateState()
             if notificationsEnabled {
-                let tool = event["tool"] as? String ?? "Tool"
-                notificationManager.sendToolError(tool: tool)
+                notificationManager.sendToolError(tool: errorTool)
             }
         case "stop":
             if !sid.isEmpty { sessionStates[sid] = .finished }
@@ -303,6 +323,11 @@ final class ClaudeMonitor: ObservableObject {
             updateAggregateState()
         case "session_end":
             if !sid.isEmpty { sessionStates.removeValue(forKey: sid) }
+            // Keep activities for 5 minutes after session ends, then clean up
+            let endedSid = sid
+            DispatchQueue.main.asyncAfter(deadline: .now() + 300) { [weak self] in
+                self?.sessionActivities.removeValue(forKey: endedSid)
+            }
             lastPruneTime = .distantPast
             updateAggregateState()
         default:
@@ -334,6 +359,30 @@ final class ClaudeMonitor: ObservableObject {
             state = .finished
         }
         sessionCount = sessionStates.count
+    }
+
+    // MARK: Activity Recording
+
+    /// Record an activity entry for a session. Caps at 200 entries per session to bound memory.
+    private func recordActivity(sid: String, tool: String, summary: String, isError: Bool = false) {
+        guard !sid.isEmpty else { return }
+        var entries = sessionActivities[sid, default: []]
+        if entries.count >= 200 { entries.removeFirst() }
+        entries.append(ActivityEntry(tool: tool, summary: summary, timestamp: Date(), isError: isError))
+        sessionActivities[sid] = entries
+    }
+
+    /// Activities for the most recently active session (convenience for single-session UI).
+    var currentSessionActivities: [ActivityEntry] {
+        // Prefer a thinking session, fall back to any session with activities
+        if let thinkingSid = sessionStates.first(where: { $0.value == .thinking })?.key,
+           let activities = sessionActivities[thinkingSid] {
+            return activities
+        }
+        // Fall back to the session with the most recent activity
+        return sessionActivities
+            .max(by: { ($0.value.last?.timestamp ?? .distantPast) < ($1.value.last?.timestamp ?? .distantPast) })?
+            .value ?? []
     }
 
     // MARK: Pending Permission
