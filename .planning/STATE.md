@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Voice & Intelligence
 status: unknown
-stopped_at: Completed 06-activity-feed plan 01
-last_updated: "2026-03-20T17:20:50.085Z"
+stopped_at: "Checkpoint: 06-02 Task 3 human-verify"
+last_updated: "2026-03-20T17:24:52.577Z"
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -71,6 +71,8 @@ Recent decisions affecting v2.0:
 - [Phase 05-settings-window]: Menu bar cleaned to status/permissions/YOLO/Settings/Show-Hide/Quit — all preference controls now exclusively in Settings window
 - [Phase 06-activity-feed]: Only pre_tool events create ActivityEntry records (not post_tool) to avoid duplicates; post_tool_error records with isError=true
 - [Phase 06-activity-feed]: 200-entry cap per session bounds memory; 5-minute delayed cleanup after session_end preserves feed for UI
+- [Phase 06-activity-feed]: Shell extracted to tamagotchiShell @ViewBuilder property — isolates feed changes from shell layout
+- [Phase 06-activity-feed]: Feed panel fixed at 200x120pt with LCD theme colors; window grows 300->430pt via showFeed animated bool
 
 ### Pending Todos
 
@@ -83,6 +85,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T17:20:50.081Z
-Stopped at: Completed 06-activity-feed plan 01
+Last session: 2026-03-20T17:24:41.749Z
+Stopped at: Checkpoint: 06-02 Task 3 human-verify
 Resume file: None

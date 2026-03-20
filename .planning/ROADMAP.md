@@ -101,7 +101,7 @@ Plans:
   1. User can see a per-session list of Claude's actions (files edited, commands run, tools used) in the companion window
   2. Activity feed entries appear in real-time as new hook events arrive — no manual refresh needed
   3. Feed data is derived from existing hook events without any changes to the IPC protocol
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [ ] 06-01-PLAN.md — ActivityEntry data model, hook summary enrichment, real-time storage in ClaudeMonitor (FEED-01, FEED-02, FEED-03)
 - [ ] 06-02-PLAN.md — ActivityFeedView UI, expandable panel in ContentView, human verification (FEED-01, FEED-02)
@@ -140,6 +140,6 @@ Plans:
 | 3. UX Enhancements | v1.1 | 2/2 | Complete | 2026-03-20 |
 | 4. Notifications | v1.1 | 2/2 | Complete | 2026-03-20 |
 | 5. Settings Window | v2.0 | 2/2 | Complete | 2026-03-20 |
-| 6. Activity Feed | 1/2 | In Progress|  | - |
+| 6. Activity Feed | 2/2 | Complete   | 2026-03-20 | - |
 | 7. AI Summary | v2.0 | 0/? | Not started | - |
 | 8. Voice Input + Layout | v2.0 | 0/? | Not started | - |
