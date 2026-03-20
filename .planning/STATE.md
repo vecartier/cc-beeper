@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Polish + Hardening
 status: unknown
-stopped_at: Completed 01-hardening-01-PLAN.md
-last_updated: "2026-03-19T15:01:10.929Z"
+stopped_at: Completed 02-reliability-performance-02-PLAN.md
+last_updated: "2026-03-20T11:06:31.191Z"
 progress:
   total_phases: 4
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  completed_phases: 2
+  total_plans: 4
+  completed_plans: 4
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Users can see what Claude is doing and respond to permission requests without leaving their workflow
-**Current focus:** Phase 01 — hardening
+**Current focus:** Phase 02 — reliability-performance
 
 ## Current Position
 
-Phase: 01 (hardening) — COMPLETE
-Plan: 2 of 2 (all plans complete)
+Phase: 02 (reliability-performance) — EXECUTING
+Plan: 1 of 2
 
 ## Performance Metrics
 
@@ -42,6 +42,8 @@ Plan: 2 of 2 (all plans complete)
 
 *Updated after each plan completion*
 | Phase 01-hardening P01 | 6 | 3 tasks | 2 files |
+| Phase 02-reliability-performance P02 | 3min | 2 tasks | 4 files |
+| Phase 02-reliability-performance P01 | 4 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -57,6 +59,8 @@ Plan: 2 of 2 (all plans complete)
 - [Phase 01-hardening]: EggIcon.image() takes EggIconState not Bool — extensible for future states
 - [Phase 01-hardening]: Window lookup via identifier?.rawValue == 'main', not mutable title string
 - [Phase 01-hardening]: processEvent schema validation uses is String / is Int type checks inside existing guard
+- [Phase 02-reliability-performance]: Gate animFrame increment not timer - Canvas re-render is expensive, timer tick is not
+- [Phase 02-reliability-performance]: Color.hexComponents() as shared helper for Color(hex:) and ThemeManager.darken() — single source of truth for hex parsing
 
 ### Pending Todos
 
@@ -69,6 +73,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T14:52:10.899Z
-Stopped at: Completed 01-hardening-01-PLAN.md
+Last session: 2026-03-20T11:06:18.924Z
+Stopped at: Completed 02-reliability-performance-02-PLAN.md
 Resume file: None
