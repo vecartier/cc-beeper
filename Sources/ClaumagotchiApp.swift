@@ -19,6 +19,21 @@ struct ClaumagotchiApp: App {
         .windowResizability(.contentSize)
         .defaultPosition(.topTrailing)
 
+        Window("Settings", id: "settings") {
+            Text("Settings placeholder") // Plan 02 replaces with SettingsView()
+                .environmentObject(monitor)
+                .environmentObject(themeManager)
+                .onReceive(NotificationCenter.default.publisher(for: NSWindow.willCloseNotification)
+                    .compactMap { $0.object as? NSWindow }
+                    .filter { $0.identifier?.rawValue == "settings" }
+                ) { _ in
+                    NSApp.setActivationPolicy(.accessory)
+                }
+        }
+        .windowStyle(.titleBar)
+        .windowResizability(.contentSize)
+        .defaultSize(width: 550, height: 400)
+
         MenuBarExtra {
             Text("Status: \(monitor.autoAccept ? "YOLO MODE" : monitor.state.label)")
             if let pending = monitor.pendingPermission {
@@ -40,6 +55,12 @@ struct ClaumagotchiApp: App {
                 monitor.autoAccept.toggle()
             }
             .keyboardShortcut("a", modifiers: [.command, .shift])
+            Divider()
+            Button("Settings...") {
+                ClaumagotchiApp.openSettingsWindow()
+            }
+            .keyboardShortcut(",", modifiers: .command)
+            Divider()
             Button(monitor.soundEnabled ? "Disable Sounds" : "Enable Sounds") {
                 monitor.soundEnabled.toggle()
             }
@@ -90,6 +111,19 @@ struct ClaumagotchiApp: App {
             }
             return
         }
+    }
+
+    /// Open the Settings window, bringing it to the front.
+    /// Temporarily switches to .regular activation policy so the window can receive focus.
+    static func openSettingsWindow() {
+        NSApp.setActivationPolicy(.regular)
+        for window in NSApp.windows where window.identifier?.rawValue == "settings" {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        // First time: window not yet instantiated by SwiftUI — activate to trigger creation
+        NSApp.activate(ignoringOtherApps: true)
     }
 }
 
