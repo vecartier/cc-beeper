@@ -20,15 +20,26 @@ struct ClaumagotchiApp: App {
         .defaultPosition(.topTrailing)
 
         Window("Settings", id: "settings") {
-            Text("Settings placeholder") // Plan 02 replaces with SettingsView()
-                .environmentObject(monitor)
-                .environmentObject(themeManager)
-                .onReceive(NotificationCenter.default.publisher(for: NSWindow.willCloseNotification)
-                    .compactMap { $0.object as? NSWindow }
-                    .filter { $0.identifier?.rawValue == "settings" }
-                ) { _ in
-                    NSApp.setActivationPolicy(.accessory)
-                }
+            if #available(macOS 15.0, *) {
+                SettingsView()
+                    .environmentObject(monitor)
+                    .environmentObject(themeManager)
+                    .onReceive(NotificationCenter.default.publisher(for: NSWindow.willCloseNotification)
+                        .compactMap { $0.object as? NSWindow }
+                        .filter { $0.identifier?.rawValue == "settings" }
+                    ) { _ in
+                        NSApp.setActivationPolicy(.accessory)
+                    }
+            } else {
+                Text("Settings requires macOS 15 or later.")
+                    .padding()
+                    .onReceive(NotificationCenter.default.publisher(for: NSWindow.willCloseNotification)
+                        .compactMap { $0.object as? NSWindow }
+                        .filter { $0.identifier?.rawValue == "settings" }
+                    ) { _ in
+                        NSApp.setActivationPolicy(.accessory)
+                    }
+            }
         }
         .windowStyle(.titleBar)
         .windowResizability(.contentSize)
@@ -61,31 +72,6 @@ struct ClaumagotchiApp: App {
             }
             .keyboardShortcut(",", modifiers: .command)
             Divider()
-            Button(monitor.soundEnabled ? "Disable Sounds" : "Enable Sounds") {
-                monitor.soundEnabled.toggle()
-            }
-            .keyboardShortcut("s")
-            Button(monitor.notificationsEnabled ? "Disable Notifications" : "Enable Notifications") {
-                monitor.notificationsEnabled.toggle()
-            }
-            .keyboardShortcut("n")
-            Divider()
-            Menu("Theme") {
-                Picker("Color", selection: $themeManager.currentThemeId) {
-                    ForEach(ThemeManager.themes) { theme in
-                        Text(theme.name).tag(theme.id)
-                    }
-                }
-                Divider()
-                Toggle("Dark Mode", isOn: $themeManager.darkMode)
-            }
-            Divider()
-            if !AXIsProcessTrusted() {
-                Button("Enable Global Hotkeys...") {
-                    let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-                    _ = AXIsProcessTrustedWithOptions(opts)
-                }
-            }
             Button("Show / Hide") { Self.toggleMainWindow() }
                 .keyboardShortcut("h", modifiers: [.command, .shift])
             Button("Quit Claumagotchi") { NSApp.terminate(nil) }
