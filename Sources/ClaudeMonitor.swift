@@ -32,16 +32,6 @@ struct PendingPermission: Equatable {
     let summary: String
 }
 
-// MARK: - Activity Entry
-
-struct ActivityEntry: Identifiable {
-    let id = UUID()
-    let tool: String
-    let summary: String
-    let timestamp: Date
-    let isError: Bool
-}
-
 // MARK: - Monitor
 
 final class ClaudeMonitor: ObservableObject {
@@ -62,12 +52,6 @@ final class ClaudeMonitor: ObservableObject {
         didSet { UserDefaults.standard.set(notificationsEnabled, forKey: "notificationsEnabled") }
     }
     @Published var sessionCount: Int = 0
-    /// Per-session activity log — key is session ID, value is list of activity entries.
-    @Published var sessionActivities: [String: [ActivityEntry]] = [:]
-    /// AI-generated summary for the most recent completed session.
-    @Published var sessionSummary: String?
-    /// True while an AI summary is being generated asynchronously.
-    @Published var isSummarizing: Bool = false
 
     /// True when a permission has been requested and user hasn't acted yet.
     /// This is the source of truth — never cleared by timeouts or external events.
@@ -83,7 +67,6 @@ final class ClaudeMonitor: ObservableObject {
     private var sessionStates: [String: ClaudeState] = [:]
 
     private let notificationManager = NotificationManager()
-    let voiceService = VoiceService()
 
     private var fileHandle: FileHandle?
     private var source: DispatchSourceFileSystemObject?
@@ -91,7 +74,6 @@ final class ClaudeMonitor: ObservableObject {
     private var lastPruneTime: Date = .distantPast
     private var globalKeyMonitor: Any?
     private var localKeyMonitor: Any?
-    private var globalKeyUpMonitor: Any?
 
     init() {
         soundEnabled = UserDefaults.standard.object(forKey: "soundEnabled") as? Bool ?? true
@@ -102,7 +84,6 @@ final class ClaudeMonitor: ObservableObject {
         rehydrateSessions()
         setupFileWatcher()
         setupGlobalHotkeys()
-        setupKeyUpMonitor()
     }
 
     /// Pre-populate sessionStates from sessions.json so the app picks up
@@ -139,7 +120,6 @@ final class ClaudeMonitor: ObservableObject {
         idleWork?.cancel()
         if let m = globalKeyMonitor { NSEvent.removeMonitor(m) }
         if let m = localKeyMonitor { NSEvent.removeMonitor(m) }
-        if let m = globalKeyUpMonitor { NSEvent.removeMonitor(m) }
     }
 
     // MARK: Actions
@@ -298,23 +278,15 @@ final class ClaudeMonitor: ObservableObject {
         idleWork?.cancel()
 
         switch type {
-        case "pre_tool":
-            if !sid.isEmpty { sessionStates[sid] = .thinking }
-            let preTool = event["tool"] as? String ?? ""
-            let preSummary = event["summary"] as? String ?? preTool.lowercased()
-            recordActivity(sid: sid, tool: preTool, summary: preSummary)
-            updateAggregateState()
-        case "post_tool":
+        case "pre_tool", "post_tool":
             if !sid.isEmpty { sessionStates[sid] = .thinking }
             updateAggregateState()
         case "post_tool_error":
             if !sid.isEmpty { sessionStates[sid] = .thinking }
-            let errorTool = event["tool"] as? String ?? "Tool"
-            let errorSummary = event["summary"] as? String ?? errorTool.lowercased()
-            recordActivity(sid: sid, tool: errorTool, summary: errorSummary, isError: true)
             updateAggregateState()
             if notificationsEnabled {
-                notificationManager.sendToolError(tool: errorTool)
+                let tool = event["tool"] as? String ?? "Tool"
+                notificationManager.sendToolError(tool: tool)
             }
         case "stop":
             if !sid.isEmpty { sessionStates[sid] = .finished }
@@ -328,26 +300,9 @@ final class ClaudeMonitor: ObservableObject {
             }
         case "session_start":
             if !sid.isEmpty { sessionStates[sid] = .thinking }
-            sessionSummary = nil
-            isSummarizing = false
             updateAggregateState()
         case "session_end":
             if !sid.isEmpty { sessionStates.removeValue(forKey: sid) }
-            // Generate summary from session activities before cleanup
-            let activitiesToSummarize = sessionActivities[sid] ?? []
-            if !activitiesToSummarize.isEmpty {
-                isSummarizing = true
-                Task { @MainActor [weak self] in
-                    let summary = await SummaryService.summarizeIfConfigured(activities: activitiesToSummarize)
-                    self?.sessionSummary = summary
-                    self?.isSummarizing = false
-                }
-            }
-            // Keep activities for 5 minutes after session ends, then clean up
-            let endedSid = sid
-            DispatchQueue.main.asyncAfter(deadline: .now() + 300) { [weak self] in
-                self?.sessionActivities.removeValue(forKey: endedSid)
-            }
             lastPruneTime = .distantPast
             updateAggregateState()
         default:
@@ -379,30 +334,6 @@ final class ClaudeMonitor: ObservableObject {
             state = .finished
         }
         sessionCount = sessionStates.count
-    }
-
-    // MARK: Activity Recording
-
-    /// Record an activity entry for a session. Caps at 200 entries per session to bound memory.
-    private func recordActivity(sid: String, tool: String, summary: String, isError: Bool = false) {
-        guard !sid.isEmpty else { return }
-        var entries = sessionActivities[sid, default: []]
-        if entries.count >= 200 { entries.removeFirst() }
-        entries.append(ActivityEntry(tool: tool, summary: summary, timestamp: Date(), isError: isError))
-        sessionActivities[sid] = entries
-    }
-
-    /// Activities for the most recently active session (convenience for single-session UI).
-    var currentSessionActivities: [ActivityEntry] {
-        // Prefer a thinking session, fall back to any session with activities
-        if let thinkingSid = sessionStates.first(where: { $0.value == .thinking })?.key,
-           let activities = sessionActivities[thinkingSid] {
-            return activities
-        }
-        // Fall back to the session with the most recent activity
-        return sessionActivities
-            .max(by: { ($0.value.last?.timestamp ?? .distantPast) < ($1.value.last?.timestamp ?? .distantPast) })?
-            .value ?? []
     }
 
     // MARK: Pending Permission
@@ -447,32 +378,16 @@ final class ClaudeMonitor: ObservableObject {
     }
 
     private func handleHotKey(_ event: NSEvent) {
+        guard pendingPermission != nil else { return }
         let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         guard flags == .option else { return }
         switch event.keyCode {
-        case 0:  // kVK_ANSI_A — allow permission
-            guard pendingPermission != nil else { return }
+        case 0:  // kVK_ANSI_A
             DispatchQueue.main.async { self.respondToPermission(allow: true) }
-        case 2:  // kVK_ANSI_D — deny permission
-            guard pendingPermission != nil else { return }
+        case 2:  // kVK_ANSI_D
             DispatchQueue.main.async { self.respondToPermission(allow: false) }
-        case 9:  // kVK_ANSI_V — voice input (hold to talk)
-            guard !event.isARepeat else { return }
-            if !voiceService.isRecording {
-                DispatchQueue.main.async { self.voiceService.startRecording() }
-            }
         default:
             break
-        }
-    }
-
-    private func setupKeyUpMonitor() {
-        guard AXIsProcessTrusted() else { return }
-        globalKeyUpMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyUp) { [weak self] event in
-            guard let self else { return }
-            if event.keyCode == 9 { // kVK_ANSI_V — stop voice recording on key release
-                DispatchQueue.main.async { self.voiceService.stopRecording() }
-            }
         }
     }
 

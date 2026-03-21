@@ -296,15 +296,7 @@ def main():
     if not mapped:
         return
 
-    tool_name = data.get("tool_name", "")
-    tool_input = data.get("tool_input", {})
-    out = {
-        "event": mapped,
-        "tool": tool_name,
-        "summary": summarize_input(tool_name, tool_input) if tool_input else tool_name.lower(),
-        "ts": int(time.time()),
-        "sid": session_id,
-    }
+    out = {"event": mapped, "tool": data.get("tool_name", ""), "ts": int(time.time()), "sid": session_id}
 
     if event_name == "Notification":
         out["type"] = data.get("notification_type", "")

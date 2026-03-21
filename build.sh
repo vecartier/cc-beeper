@@ -59,10 +59,6 @@ cat > Claumagotchi.app/Contents/Info.plist << 'PLIST'
     <string>AppIcon</string>
     <key>NSHighResolutionCapable</key>
     <true/>
-    <key>NSSpeechRecognitionUsageDescription</key>
-    <string>Claumagotchi uses on-device speech recognition to transcribe your voice into terminal commands. No audio leaves your Mac.</string>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>Claumagotchi needs microphone access to record your voice for on-device transcription.</string>
 </dict>
 </plist>
 PLIST

@@ -5,58 +5,9 @@ struct ContentView: View {
     @EnvironmentObject var themeManager: ThemeManager
 
     private let shellW: CGFloat = 186
-    private let shellH: CGFloat = 244
-
-    @State private var showFeed = false
+    private let shellH: CGFloat = 224
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Existing Tamagotchi shell
-            tamagotchiShell
-
-            // Feed toggle button — small tab at bottom of shell
-            Button(action: { withAnimation(.easeInOut(duration: 0.25)) { showFeed.toggle() } }) {
-                HStack(spacing: 3) {
-                    Image(systemName: showFeed ? "chevron.down" : "chevron.up")
-                        .font(.system(size: 6, weight: .bold))
-                    if !monitor.currentSessionActivities.isEmpty {
-                        Text("\(monitor.currentSessionActivities.count)")
-                            .font(.system(size: 6, weight: .bold, design: .monospaced))
-                    }
-                }
-                .foregroundStyle(themeManager.lcdOn.opacity(0.4))
-                .frame(width: 40, height: 12)
-                .background(
-                    Capsule()
-                        .fill(themeManager.lcdBg.opacity(0.6))
-                )
-            }
-            .buttonStyle(.plain)
-            .offset(y: -6)
-
-            // Activity feed panel
-            if showFeed {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(themeManager.lcdBg)
-                    RoundedRectangle(cornerRadius: 8)
-                        .strokeBorder(themeManager.lcdOn.opacity(0.1), lineWidth: 0.5)
-
-                    ActivityFeedView()
-                }
-                .frame(width: 200, height: 120)
-                .transition(.move(edge: .top).combined(with: .opacity))
-            }
-        }
-        .frame(width: 250, height: showFeed ? 450 : 320)
-        .background(Color.clear)
-        .contextMenu {
-            Button("Quit Claumagotchi") { NSApplication.shared.terminate(nil) }
-        }
-    }
-
-    @ViewBuilder
-    private var tamagotchiShell: some View {
         ZStack {
             // Diffused drop shadow
             Ellipse()
@@ -173,9 +124,9 @@ struct ContentView: View {
                 Spacer().frame(height: 6)
 
                 // Buttons — V-shaped layout (middle slightly lower)
-                HStack(alignment: .top, spacing: 4) {
+                HStack(alignment: .top, spacing: 5) {
                     if monitor.autoAccept {
-                        // YOLO mode: bolt (disable) + go-to-convo + mic — V-shape
+                        // YOLO mode: bolt (disable) + go-to-convo — centered, no V
                         ActionButton(
                             symbol: "bolt.slash.fill", size: 12,
                             iconColor: .white,
@@ -184,11 +135,8 @@ struct ContentView: View {
                         .accessibilityLabel("Disable YOLO mode")
 
                         centerButton
-                            .offset(y: 5)
-
-                        micButton
                     } else {
-                        // Normal mode: deny / center / allow / mic — W-shape
+                        // Normal mode: deny / center / allow
                         ActionButton(
                             symbol: "xmark", size: 12,
                             iconColor: .white,
@@ -206,9 +154,6 @@ struct ContentView: View {
                             pulse: monitor.state.needsAttention
                         ) { monitor.respondToPermission(allow: true) }
                         .accessibilityLabel("Allow permission")
-
-                        micButton
-                            .offset(y: 5)
                     }
                 }
                 .animation(.easeInOut(duration: 0.3), value: monitor.state)
@@ -217,7 +162,11 @@ struct ContentView: View {
                 .offset(y: -8)
             }
         }
-        .frame(width: 250, height: 320)
+        .frame(width: 250, height: 300)
+        .background(Color.clear)
+        .contextMenu {
+            Button("Quit Claumagotchi") { NSApplication.shared.terminate(nil) }
+        }
     }
 
     private var centerButton: some View {
@@ -229,23 +178,6 @@ struct ContentView: View {
         ) { monitor.goToConversation() }
         .accessibilityLabel("Go to conversation")
     }
-
-    private var micButton: some View {
-        ActionButton(
-            symbol: monitor.voiceService.isRecording ? "mic.fill" : "mic",
-            size: 12,
-            iconColor: .white,
-            active: true,
-            pulse: monitor.voiceService.isRecording
-        ) {
-            if monitor.voiceService.isRecording {
-                monitor.voiceService.stopRecording()
-            } else {
-                monitor.voiceService.startRecording()
-            }
-        }
-        .accessibilityLabel(monitor.voiceService.isRecording ? "Stop recording" : "Start voice input")
-    }
 }
 
 // MARK: - Noise Texture
@@ -254,7 +186,7 @@ struct NoiseView: View {
     // Render once, cache forever — noise is deterministic (seeded RNG)
     private static let cachedImage: NSImage = {
         let width = 186
-        let height = 244
+        let height = 224
         let step: CGFloat = 1.5
         let img = NSImage(size: NSSize(width: width, height: height))
         img.lockFocus()
