@@ -5,7 +5,7 @@ struct ContentView: View {
     @EnvironmentObject var themeManager: ThemeManager
 
     private let shellW: CGFloat = 186
-    private let shellH: CGFloat = 224
+    private let shellH: CGFloat = 244
 
     @State private var showFeed = false
 
@@ -48,7 +48,7 @@ struct ContentView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .frame(width: 250, height: showFeed ? 430 : 300)
+        .frame(width: 250, height: showFeed ? 450 : 320)
         .background(Color.clear)
         .contextMenu {
             Button("Quit Claumagotchi") { NSApplication.shared.terminate(nil) }
@@ -175,7 +175,7 @@ struct ContentView: View {
                 // Buttons — V-shaped layout (middle slightly lower)
                 HStack(alignment: .top, spacing: 4) {
                     if monitor.autoAccept {
-                        // YOLO mode: bolt (disable) + go-to-convo + mic
+                        // YOLO mode: bolt (disable) + go-to-convo + mic — V-shape
                         ActionButton(
                             symbol: "bolt.slash.fill", size: 12,
                             iconColor: .white,
@@ -184,10 +184,11 @@ struct ContentView: View {
                         .accessibilityLabel("Disable YOLO mode")
 
                         centerButton
+                            .offset(y: 5)
 
                         micButton
                     } else {
-                        // Normal mode: deny / center / allow / mic
+                        // Normal mode: deny / center / allow / mic — W-shape
                         ActionButton(
                             symbol: "xmark", size: 12,
                             iconColor: .white,
@@ -207,6 +208,7 @@ struct ContentView: View {
                         .accessibilityLabel("Allow permission")
 
                         micButton
+                            .offset(y: 5)
                     }
                 }
                 .animation(.easeInOut(duration: 0.3), value: monitor.state)
@@ -215,7 +217,7 @@ struct ContentView: View {
                 .offset(y: -8)
             }
         }
-        .frame(width: 250, height: 300)
+        .frame(width: 250, height: 320)
     }
 
     private var centerButton: some View {
@@ -252,7 +254,7 @@ struct NoiseView: View {
     // Render once, cache forever — noise is deterministic (seeded RNG)
     private static let cachedImage: NSImage = {
         let width = 186
-        let height = 224
+        let height = 244
         let step: CGFloat = 1.5
         let img = NSImage(size: NSSize(width: width, height: height))
         img.lockFocus()

@@ -60,10 +60,14 @@ final class VoiceService: ObservableObject {
         recognitionTask = recognizer.recognitionTask(with: request) { [weak self] result, error in
             if let result, result.isFinal {
                 let text = result.bestTranscription.formattedString
+                self?.recognitionTask = nil
                 DispatchQueue.main.async { self?.handleTranscript(text) }
-                self?.stopRecording()
             }
-            if error != nil { self?.stopRecording() }
+            if let error, (error as NSError).code != 216 { // 216 = "request was cancelled" — ignore
+                self?.recognitionTask?.cancel()
+                self?.recognitionTask = nil
+                DispatchQueue.main.async { self?.isRecording = false }
+            }
         }
 
         audioEngine.prepare()
@@ -72,12 +76,13 @@ final class VoiceService: ObservableObject {
     }
 
     func stopRecording() {
+        guard isRecording else { return }
         audioEngine.inputNode.removeTap(onBus: 0)
         audioEngine.stop()
+        // Signal end of audio — this triggers the final recognition result
+        // Do NOT cancel the task here — let the callback fire with isFinal first
         recognitionRequest?.endAudio()
-        recognitionTask?.cancel()
         recognitionRequest = nil
-        recognitionTask = nil
         // Recreate engine — reset() is unreliable; AVAudioEngine is lightweight to instantiate
         audioEngine = AVAudioEngine()
         DispatchQueue.main.async { self.isRecording = false }

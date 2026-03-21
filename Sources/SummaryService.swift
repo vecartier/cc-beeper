@@ -31,16 +31,19 @@ enum SummaryService {
         // Try Anthropic first
         if let anthropicKey = KeychainHelper.load(key: APIProvider.anthropic.keychainKey),
            !anthropicKey.isEmpty {
+            print("[SummaryService] Using Anthropic key (\(anthropicKey.prefix(8))...) for \(activities.count) activities")
             return await generateSummary(activities: activities, provider: .anthropic, apiKey: anthropicKey)
         }
 
         // Fall back to OpenAI
         if let openAIKey = KeychainHelper.load(key: APIProvider.openAI.keychainKey),
            !openAIKey.isEmpty {
+            print("[SummaryService] Using OpenAI key (\(openAIKey.prefix(8))...) for \(activities.count) activities")
             return await generateSummary(activities: activities, provider: .openAI, apiKey: openAIKey)
         }
 
         // No key configured — return nil silently
+        print("[SummaryService] No API key found in Keychain")
         return nil
     }
 
@@ -67,6 +70,9 @@ enum SummaryService {
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+                print("[SummaryService] Anthropic failed: HTTP \(code)")
+                if let body = String(data: data, encoding: .utf8) { print("[SummaryService] \(body)") }
                 return nil
             }
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -103,6 +109,9 @@ enum SummaryService {
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+                print("[SummaryService] OpenAI failed: HTTP \(code)")
+                if let body = String(data: data, encoding: .utf8) { print("[SummaryService] \(body)") }
                 return nil
             }
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
