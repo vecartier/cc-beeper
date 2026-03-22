@@ -4,11 +4,11 @@
 
 - ✅ **v1.1 Polish + Hardening** - Phases 1-4 (shipped 2026-03-20)
 - ❌ **v2.0 Voice & Intelligence** - Phases 5-8 (reverted 2026-03-21)
-- 🚧 **v2.0 Game Boy** - Phases 9-13 (in progress)
+- 🚧 **v2.0 Voice Loop** - Phases 9-11 (in progress)
 
 ## Overview
 
-v1.1 hardened the foundation. The first v2.0 attempt (settings, activity feed, AI summaries, voice) was reverted due to reliability issues. v2.0 Game Boy is a fresh take: a Game Boy Color form factor with voice input, auto-speak summaries, and a full button panel — so users never need to touch the terminal. Built on lessons from the VoiceLoop prototype.
+v1.1 hardened the foundation. The first v2.0 attempt was reverted due to reliability issues. v2.0 Voice Loop keeps the same egg shell but adds a 4th button (Speak), smarter screen content per state, voice input with invisible terminal injection, and auto-speak summaries via Apple Intelligence. Built on lessons from the VoiceLoop prototype.
 
 ## Phases
 
@@ -29,73 +29,58 @@ v1.1 hardened the foundation. The first v2.0 attempt (settings, activity feed, A
 
 </details>
 
-### v2.0 Game Boy (In Progress)
+### v2.0 Voice Loop (In Progress)
 
-**Milestone Goal:** Transform Claumagotchi from a Tamagotchi egg into a Game Boy Color companion with voice I/O, auto-speak summaries, and hands-free interaction across all sessions.
+**Milestone Goal:** Add voice I/O and smarter screen content to the existing egg shell — users can speak to Claude, hear what it did, and manage everything from 4 buttons + menu bar. Never touch the terminal.
 
 ## Phase Details
 
-### Phase 9: Game Boy Shell + Screen
-**Goal**: The widget looks and feels like a Game Boy Color — skeuomorphic shell with a larger screen that shows richer information
+### Phase 9: UI + Controls
+**Goal**: The egg has 4 buttons (Deny/Accept/Speak/Terminal), smarter screen content per state, and all control toggles in the menu bar
 **Depends on**: v1.1 (phases 1-4)
-**Requirements**: UI-01, UI-02, UI-03, UI-04
+**Requirements**: UI-01, UI-02, UI-03, CTRL-01, CTRL-02, CTRL-03, CTRL-04, CTRL-05, INFRA-02, INFRA-03
 **Success Criteria** (what must be TRUE):
-  1. The widget displays a Game Boy Color body with plastic texture, bevels, and rim highlights matching the current theme
-  2. The screen area is visibly larger than v1.1 and displays the character animation, session status, and "CLAUMAGOTCHI" pixel title
-  3. A/B buttons, D-pad (visual), Select/Start buttons, speaker grille, and power LED are rendered as physical-looking controls below the screen
-  4. When a permission request arrives, the screen shows the tool name, file path, and action description — not just "NEEDS YOU"
+  1. Four buttons visible below the screen: Deny (left), Accept (left-center), Speak (right-center), Go to terminal (right)
+  2. Screen shows state-specific content — THINKING: tool name + elapsed time; DONE: 1-line summary; NEEDS YOU: tool + file path + risk label (FILE WRITE / SHELL CMD); IDLE: character animation
+  3. Speak button shows recording state (color change, pulse) — but recording logic is Phase 10
+  4. Menu bar has toggles for: YOLO mode, power on/off, show/hide, sound effects, auto-speak
+  5. Power off makes the widget visually dormant (dimmed) — no monitoring, no sounds, no permission handling
+  6. Hide removes the widget from screen but monitoring continues; show restores it
+  7. Every button has a hotkey (Accept, Deny, Speak, Terminal)
+  8. Accept/Deny buttons work with existing permission flow (preserve v1.1 behavior)
 
-### Phase 10: Infrastructure + Hook
-**Goal**: The summary hook, cross-session support, and menu bar controls are wired so all downstream features have a foundation
-**Depends on**: Phase 9
-**Requirements**: INFRA-01, INFRA-04, INFRA-05
-**Success Criteria** (what must be TRUE):
-  1. When Claude finishes a response in any project, the summary hook writes the last assistant text to `~/.claude/claumagotchi/last_summary.txt`
-  2. The app watches `last_summary.txt` and detects changes in real-time
-  3. Menu bar provides toggles for: show/hide widget, sound effects on/off, auto-speak on/off, and power on/off
-  4. Switching between Claude Code sessions in different projects does not break monitoring or summary detection
-
-### Phase 11: Voice Input + Injection
+### Phase 10: Voice Input + Injection
 **Goal**: Users can speak to Claude from any app — voice is recorded, transcribed on-device, and injected into the terminal without the user seeing the switch
-**Depends on**: Phase 10
-**Requirements**: VOICE-01, VOICE-02
-**Success Criteria** (what must be TRUE):
-  1. Pressing the Select button (or hotkey) starts recording; pressing again stops and submits
-  2. The mic button shows a clear visual recording state (color change, animation)
-  3. After transcription, text is injected into the terminal and Enter is pressed — then the previous app is refocused within 500ms
-  4. Voice input works while the user is in any app (Figma, browser, etc.) — they never see the terminal switch
-
-### Phase 12: Auto-Speak + TTS
-**Goal**: When Claude finishes and auto-speak is enabled, the response is summarized and spoken aloud — users hear what Claude did without looking at the terminal
-**Depends on**: Phase 10, Phase 11
-**Requirements**: VOICE-03, VOICE-04
-**Success Criteria** (what must be TRUE):
-  1. When auto-speak is enabled and Claude finishes, the last response is summarized via Apple Intelligence and spoken using Ava Premium TTS
-  2. When auto-speak is disabled, no TTS fires — the summary file is still written but not spoken
-  3. User can press the mute button (or hotkey) to stop TTS mid-sentence
-  4. Pressing record while TTS is speaking immediately cuts the voice and starts recording
-  5. When Apple Intelligence is unavailable, the last paragraph of the response is spoken as fallback
-
-### Phase 13: Controls + Hotkeys
-**Goal**: Every action has a button and a hotkey — YOLO, power, hide, accept, deny — and hotkeys are viewable and remappable
 **Depends on**: Phase 9
-**Requirements**: CTRL-01, CTRL-02, CTRL-03, CTRL-04, CTRL-05, INFRA-02, INFRA-03
+**Requirements**: VOICE-01, VOICE-02, INFRA-04
 **Success Criteria** (what must be TRUE):
-  1. A button accepts and B button denies a pending permission (with hotkeys)
-  2. YOLO toggle on the shell enables/disables auto-accept with a visual slider state change
-  3. Power off disables all monitoring, sounds, and permission handling — power on re-enables
-  4. Hide minimizes the widget; show restores it from the menu bar
-  5. Every button action has a keyboard shortcut
-  6. User can view all hotkeys and remap them from the menu bar
+  1. Pressing Speak button (or hotkey) starts recording; pressing again stops and submits
+  2. Transcribed text is injected into the terminal via CGEvent HID and Enter is pressed
+  3. After injection, the previous app is refocused within 500ms — user never sees the terminal
+  4. Voice input works while the user is in any app (Figma, Chrome, etc.)
+  5. Works across all projects and Claude Code sessions on the same machine
+  6. Audio engine handles headphone changes and recovers from errors without crashing
+
+### Phase 11: Auto-Speak + Summary Hook
+**Goal**: When Claude finishes and auto-speak is on, the response is summarized and spoken aloud — completing the hands-free loop
+**Depends on**: Phase 10
+**Requirements**: VOICE-03, VOICE-04, INFRA-01
+**Success Criteria** (what must be TRUE):
+  1. Summary hook (Python) fires on Claude stop, extracts last assistant text from session JSONL, writes to `~/.claude/claumagotchi/last_summary.txt`
+  2. App watches the summary file and auto-speaks when it changes (if auto-speak enabled)
+  3. Summary is processed via Apple Intelligence to extract the key conclusion in 1-2 sentences
+  4. When Apple Intelligence is unavailable, the last paragraph is spoken as fallback
+  5. Pressing Speak while TTS is playing immediately cuts TTS and starts recording
+  6. The spoken summary is also displayed on the screen as the DONE state content
+  7. Auto-speak is off by default, toggled from menu bar
+  8. Recording has absolute priority — incoming summaries never interrupt an active recording
 
 ## Progress
 
-**Execution Order:** 9 -> 10 -> 11 -> 12 -> 13
+**Execution Order:** 9 -> 10 -> 11
 
 | Phase | Milestone | Plans Complete | Status |
 |-------|-----------|----------------|--------|
-| 9. Game Boy Shell + Screen | v2.0 | 0/? | Pending |
-| 10. Infrastructure + Hook | v2.0 | 0/? | Pending |
-| 11. Voice Input + Injection | v2.0 | 0/? | Pending |
-| 12. Auto-Speak + TTS | v2.0 | 0/? | Pending |
-| 13. Controls + Hotkeys | v2.0 | 0/? | Pending |
+| 9. UI + Controls | v2.0 | 0/? | Pending |
+| 10. Voice Input + Injection | v2.0 | 0/? | Pending |
+| 11. Auto-Speak + Summary Hook | v2.0 | 0/? | Pending |

@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 Phase: Not started (roadmap created)
 Plan: —
 Status: Ready for phase planning
-Last activity: 2026-03-22 — Roadmap created (5 phases, 18 requirements)
+Last activity: 2026-03-22 — Roadmap revised (3 phases, 16 requirements)
 
 ## Accumulated Context
 
