@@ -5,9 +5,7 @@ import SwiftUI
 struct ShellTheme: Identifiable, Equatable {
     let id: String
     let name: String
-    let shell: [String]
-    let accent: String
-    let accentDark: String
+    let shellImage: String  // filename in Resources: "shell-orange.png"
     let titleMain: String
     let titleGlow: String
     let titleShadow: String
@@ -17,51 +15,33 @@ struct ShellTheme: Identifiable, Equatable {
 
 final class ThemeManager: ObservableObject {
     static let themes: [ShellTheme] = [
-        // Orange shell + Purple accents (complementary)
-        ShellTheme(id: "sunset", name: "Sunset",
-                   shell: ["F09050", "E07838", "D06828", "C05820"],
-                   accent: "6030A0", accentDark: "401870",
-                   titleMain: "A060D0", titleGlow: "C890F0", titleShadow: "3A1060"),
-        // Pink shell + Teal accents (complementary)
-        ShellTheme(id: "sakura", name: "Sakura",
-                   shell: ["F078A0", "E06088", "D05078", "C04068"],
-                   accent: "208888", accentDark: "186068",
-                   titleMain: "40B0B0", titleGlow: "70D8D8", titleShadow: "104848"),
-        // Blue shell + Coral accents (complementary)
-        ShellTheme(id: "ocean", name: "Ocean",
-                   shell: ["5098F0", "3880E0", "2870D0", "2060C0"],
-                   accent: "C05030", accentDark: "903820",
-                   titleMain: "E08060", titleGlow: "F0A888", titleShadow: "602818"),
-        // Green shell + Purple accents (complementary)
-        ShellTheme(id: "forest", name: "Forest",
-                   shell: ["58C878", "40B060", "30A050", "209040"],
-                   accent: "8040A0", accentDark: "582878",
-                   titleMain: "A868C8", titleGlow: "C898E0", titleShadow: "402058"),
-        // Purple shell + Gold accents (complementary)
-        ShellTheme(id: "lavender", name: "Lavender",
-                   shell: ["A078F0", "8860E0", "7850D0", "6840C0"],
-                   accent: "A08820", accentDark: "786018",
-                   titleMain: "D0B840", titleGlow: "E8D070", titleShadow: "584010"),
-        // Yellow shell + Indigo accents (complementary)
-        ShellTheme(id: "honey", name: "Honey",
-                   shell: ["F0C058", "E0A840", "D09830", "C08828"],
-                   accent: "4838A0", accentDark: "302070",
-                   titleMain: "6858C0", titleGlow: "9080E0", titleShadow: "281848"),
-        // Teal shell + Rose accents (complementary)
+        ShellTheme(id: "orange", name: "Orange",
+                   shellImage: "shell-orange.png",
+                   titleMain: "EBC7B1", titleGlow: "F0D8C8", titleShadow: "6A3A20"),
+        ShellTheme(id: "pink", name: "Pink",
+                   shellImage: "shell-pink.png",
+                   titleMain: "F0C8D8", titleGlow: "F8E0E8", titleShadow: "6A2040"),
+        ShellTheme(id: "blue", name: "Blue",
+                   shellImage: "shell-blue.png",
+                   titleMain: "B8D0F0", titleGlow: "D0E0F8", titleShadow: "203860"),
+        ShellTheme(id: "green", name: "Green",
+                   shellImage: "shell-green.png",
+                   titleMain: "B8E8C8", titleGlow: "D0F0D8", titleShadow: "1A4828"),
+        ShellTheme(id: "purple", name: "Purple",
+                   shellImage: "shell-purple.png",
+                   titleMain: "D0B8F0", titleGlow: "E0D0F8", titleShadow: "302060"),
+        ShellTheme(id: "yellow", name: "Yellow",
+                   shellImage: "shell-yellow.png",
+                   titleMain: "F0E0B0", titleGlow: "F8ECC8", titleShadow: "605020"),
         ShellTheme(id: "mint", name: "Mint",
-                   shell: ["58D0C0", "40B8A8", "30A898", "209888"],
-                   accent: "C04870", accentDark: "903050",
-                   titleMain: "D06888", titleGlow: "E898B0", titleShadow: "582038"),
-        // Magenta shell + Teal accents (complementary)
-        ShellTheme(id: "berry", name: "Berry",
-                   shell: ["D058C0", "B840A8", "A83098", "982888"],
-                   accent: "209880", accentDark: "187060",
-                   titleMain: "48C0A8", titleGlow: "78E0C8", titleShadow: "104838"),
-        // Black shell + Cyan accents
-        ShellTheme(id: "noir", name: "Noir",
-                   shell: ["484848", "383838", "2C2C2C", "1E1E1E"],
-                   accent: "2090A0", accentDark: "186878",
-                   titleMain: "40C0D0", titleGlow: "78E0F0", titleShadow: "104850"),
+                   shellImage: "shell-mint.png",
+                   titleMain: "B0E8E0", titleGlow: "C8F0E8", titleShadow: "184840"),
+        ShellTheme(id: "black", name: "Black",
+                   shellImage: "shell-black.png",
+                   titleMain: "A0A0A0", titleGlow: "C0C0C0", titleShadow: "303030"),
+        ShellTheme(id: "white", name: "White",
+                   shellImage: "shell-white.png",
+                   titleMain: "808080", titleGlow: "A0A0A0", titleShadow: "404040"),
     ]
 
     @Published var currentThemeId: String {
@@ -76,35 +56,28 @@ final class ThemeManager: ObservableObject {
     }
 
     init() {
-        currentThemeId = UserDefaults.standard.string(forKey: "themeId") ?? "sunset"
+        currentThemeId = UserDefaults.standard.string(forKey: "themeId") ?? "orange"
         darkMode = UserDefaults.standard.bool(forKey: "darkMode")
     }
 
-    // MARK: - Computed Colors
+    // MARK: - Shell Image
 
-    var shellColors: [Color] {
-        theme.shell.map { darkMode ? Self.darken($0, by: 0.6) : Color(hex: $0) }
-    }
+    var shellImageName: String { theme.shellImage }
 
-    var accentBase: Color {
-        darkMode ? Self.darken(theme.accent, by: 0.2) : Color(hex: theme.accent)
-    }
-
-    var accentDark: Color {
-        darkMode ? Self.darken(theme.accentDark, by: 0.2) : Color(hex: theme.accentDark)
-    }
+    // MARK: - Title Colors (used by PixelTitle if still rendered in code)
 
     var titleColor: Color { Color(hex: theme.titleMain) }
     var titleHighlight: Color { Color(hex: theme.titleGlow) }
     var titleShadow: Color { Color(hex: theme.titleShadow) }
 
+    // MARK: - LCD Colors (dark mode only changes these)
+
     var lcdBg: Color { darkMode ? Color(hex: "1E2012") : Color(hex: "A8AA6A") }
     var lcdOn: Color { darkMode ? Color(hex: "7A8050") : Color(hex: "3A3A2E") }
 
-    // MARK: - Helpers
+    // MARK: - Legacy (kept for any code still referencing these)
 
-    private static func darken(_ hex: String, by factor: Double) -> Color {
-        let c = Color.hexComponents(hex)
-        return Color(.sRGB, red: c.r * (1 - factor), green: c.g * (1 - factor), blue: c.b * (1 - factor))
-    }
+    var shellColors: [Color] { [Color.clear] }
+    var accentBase: Color { Color(hex: "1C1C1C") }
+    var accentDark: Color { Color(hex: "141414") }
 }

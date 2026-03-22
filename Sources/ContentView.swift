@@ -10,8 +10,8 @@ struct ContentView: View {
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            // Shell background image (exported from Figma — includes bezel, title, speaker dots)
-            Image(nsImage: Self.shellImage)
+            // Shell background image — themed
+            Image(nsImage: loadShellImage(themeManager.shellImageName))
                 .resizable()
                 .frame(width: canvasW, height: canvasH)
 
@@ -66,12 +66,16 @@ struct ContentView: View {
     }
 
 
-    // Load the shell PNG — try bundle Resources, then source tree (dev fallback)
-    private static let shellImage: NSImage = {
+    // Load shell image by theme name — try bundle Resources, then source tree
+    private func loadShellImage(_ name: String) -> NSImage {
+        if let path = Bundle.main.resourcePath,
+           let img = NSImage(contentsOfFile: path + "/" + name) { return img }
+        if let img = NSImage(contentsOfFile: "/Users/vcartier/Desktop/Claumagotchi/Sources/shells/" + name) { return img }
+        // Fallback to default
         if let path = Bundle.main.resourcePath,
            let img = NSImage(contentsOfFile: path + "/shell.png") { return img }
-        if let img = NSImage(contentsOfFile: "/Users/vcartier/Desktop/Claumagotchi/Sources/shell.png") { return img }
+        if let img = NSImage(contentsOfFile: "/Users/vcartier/Desktop/Claumagotchi/Sources/shells/shell-orange.png") { return img }
         return NSImage()
-    }()
+    }
 }
 
