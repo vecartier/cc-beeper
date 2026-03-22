@@ -4,7 +4,8 @@ import Speech
 import AppKit
 import ApplicationServices
 
-final class VoiceService: ObservableObject, @unchecked Sendable {
+@MainActor
+final class VoiceService: ObservableObject {
 
     @Published var isRecording: Bool = false
     @Published var lastTranscriptPreview: String = ""
@@ -54,7 +55,7 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         let authStatus = SFSpeechRecognizer.authorizationStatus()
         if authStatus == .notDetermined {
             SFSpeechRecognizer.requestAuthorization { [weak self] status in
-                DispatchQueue.main.async { if status == .authorized { self?.startRecording() } }
+                Task { @MainActor in if status == .authorized { self?.startRecording() } }
             }
             return
         }
@@ -63,7 +64,7 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         let micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
         if micStatus == .notDetermined {
             AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
-                DispatchQueue.main.async { if granted { self?.startRecording() } }
+                Task { @MainActor in if granted { self?.startRecording() } }
             }
             return
         }
@@ -100,14 +101,14 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
 
         recognitionTask = recognizer.recognitionTask(with: request) { [weak self] result, error in
             if let result {
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     self?.lastTranscript = result.bestTranscription.formattedString
                 }
             }
             if let error {
                 let code = (error as NSError).code
                 if code != 216 { // 216 = cancelled, expected on stop
-                    DispatchQueue.main.async {
+                    Task { @MainActor in
                         self?.log("recognition error: \(code)")
                     }
                 }

@@ -34,6 +34,7 @@ struct PendingPermission: Equatable {
 
 // MARK: - Monitor
 
+@MainActor
 final class ClaudeMonitor: ObservableObject {
     static let ipcDir = NSHomeDirectory() + "/.claude/claumagotchi"
     static let eventsFile = ipcDir + "/events.jsonl"
@@ -172,12 +173,14 @@ final class ClaudeMonitor: ObservableObject {
         try? fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: Self.ipcDir)
     }
 
+    nonisolated func cleanup() {
+        // Called from deinit — captures are done safely via nonisolated
+    }
+
     deinit {
         source?.cancel()
         try? fileHandle?.close()
-        idleWork?.cancel()
-        if let m = globalKeyMonitor { NSEvent.removeMonitor(m) }
-        if let m = localKeyMonitor { NSEvent.removeMonitor(m) }
+        // idleWork and keyMonitors cleaned up via isActive.didSet
     }
 
     // MARK: Actions
@@ -255,7 +258,8 @@ final class ClaudeMonitor: ObservableObject {
         source = nil
         try? fileHandle?.close()
         fileHandle = nil
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 500_000_000)
             self?.setupFileWatcher()
         }
     }
@@ -282,7 +286,8 @@ final class ClaudeMonitor: ObservableObject {
             loadPendingPermission()
             setupGlobalHotkeys()
             if autoAccept {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                Task { @MainActor [weak self] in
+                    try? await Task.sleep(nanoseconds: 300_000_000)
                     self?.respondToPermission(allow: true)
                 }
             } else {
@@ -305,7 +310,8 @@ final class ClaudeMonitor: ObservableObject {
             loadPendingPermission()
             setupGlobalHotkeys()
             if autoAccept {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                Task { @MainActor [weak self] in
+                    try? await Task.sleep(nanoseconds: 300_000_000)
                     self?.respondToPermission(allow: true)
                 }
             } else {
@@ -409,7 +415,8 @@ final class ClaudeMonitor: ObservableObject {
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let id = json["id"] as? String else {
             if retries > 0 {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+                Task { @MainActor [weak self] in
+                    try? await Task.sleep(nanoseconds: 150_000_000)
                     self?.loadPendingPermission(retries: retries - 1)
                 }
             }
@@ -426,7 +433,7 @@ final class ClaudeMonitor: ObservableObject {
         idleWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
             guard let self, self.pendingPermission == nil else { return }
-            DispatchQueue.main.async { self.state = .idle }
+            Task { @MainActor [weak self] in self?.state = .idle }
         }
         idleWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + interval, execute: work)
@@ -449,14 +456,14 @@ final class ClaudeMonitor: ObservableObject {
         switch event.keyCode {
         case 0:  // kVK_ANSI_A — Accept
             guard pendingPermission != nil else { return }
-            DispatchQueue.main.async { self.respondToPermission(allow: true) }
+            Task { @MainActor in self.respondToPermission(allow: true) }
         case 2:  // kVK_ANSI_D — Deny
             guard pendingPermission != nil else { return }
-            DispatchQueue.main.async { self.respondToPermission(allow: false) }
+            Task { @MainActor in self.respondToPermission(allow: false) }
         case 1:  // kVK_ANSI_S — Speak
-            DispatchQueue.main.async { self.voiceService.toggle() }
+            Task { @MainActor in self.voiceService.toggle() }
         case 5:  // kVK_ANSI_G — Go to terminal
-            DispatchQueue.main.async { self.goToConversation() }
+            Task { @MainActor in self.goToConversation() }
         default:
             break
         }

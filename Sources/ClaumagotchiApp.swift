@@ -67,7 +67,8 @@ struct ClaumagotchiApp: App {
 
             if !AXIsProcessTrusted() {
                 Button("Enable Global Hotkeys...") {
-                    let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+                    let key = "AXTrustedCheckOptionPrompt" as CFString
+                    let opts = [key as String: true] as CFDictionary
                     _ = AXIsProcessTrustedWithOptions(opts)
                 }
             }
