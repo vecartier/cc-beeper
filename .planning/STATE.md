@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Voice Loop
-status: unknown
-stopped_at: Completed 09-02-PLAN.md
-last_updated: "2026-03-22T09:56:58.724Z"
+status: phase-complete
+stopped_at: Completed 09-03-PLAN.md
+last_updated: "2026-03-22T13:56:29.643Z"
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -23,8 +23,8 @@ See: .planning/PROJECT.md (updated 2026-03-21)
 
 ## Current Position
 
-Phase: 09 (ui-controls) — EXECUTING
-Plan: 2 of 3
+Phase: 09 (ui-controls) — COMPLETE (3/3 plans)
+Next: Phase 10 — Voice Input + Injection
 
 ## Accumulated Context
 
@@ -40,6 +40,8 @@ Plan: 2 of 3
 - thinkingStartTime only resets when transitioning INTO thinking (session state was not .thinking)
 - [Phase 09-ui-controls]: 4 buttons always visible in fixed layout — YOLO mode only affects screen text, not button visibility
 - [Phase 09-ui-controls]: ScreenContentView drives state-specific status text; ScreenView is a thin passthrough wrapper
+- [Phase 09-ui-controls]: Show/Hide Widget and Power Off are independent controls — Show/Hide preserves isActive, Power Off sets it false
+- [Phase 09-ui-controls]: Menu bar icon greyed only when powered off (EggIconState.hidden) — not when widget is merely hidden
 
 ### Pending Todos
 
@@ -53,6 +55,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T09:56:58.716Z
-Stopped at: Completed 09-02-PLAN.md
+Last session: 2026-03-22T13:56:29.633Z
+Stopped at: Completed 09-03-PLAN.md
 Resume file: None

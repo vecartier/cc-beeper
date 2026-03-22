@@ -24,7 +24,7 @@ Requirements for the Voice Loop milestone. Each maps to roadmap phases.
 
 - [x] **CTRL-01**: User can accept a pending permission via Accept button or hotkey
 - [x] **CTRL-02**: User can deny a pending permission via Deny button or hotkey
-- [ ] **CTRL-03**: User can toggle YOLO mode (auto-accept all permissions) from the menu bar
+- [x] **CTRL-03**: User can toggle YOLO mode (auto-accept all permissions) from the menu bar
 - [x] **CTRL-04**: User can power off the companion (visible but dormant — no monitoring, no sounds, no permissions) and power back on, from the menu bar
 - [x] **CTRL-05**: User can hide the widget to the menu bar and restore it from the menu — hidden mode still monitors and speaks if enabled
 
@@ -32,7 +32,7 @@ Requirements for the Voice Loop milestone. Each maps to roadmap phases.
 
 - [ ] **INFRA-01**: A Python hook fires on Claude Code stop events, extracts the last assistant text from the session JSONL, and writes it to `~/.claude/claumagotchi/last_summary.txt`
 - [x] **INFRA-02**: Every button action has a keyboard shortcut (hotkey)
-- [ ] **INFRA-03**: Menu bar provides toggles for: show/hide widget, sound effects, auto-speak, YOLO mode, and power on/off
+- [x] **INFRA-03**: Menu bar provides toggles for: show/hide widget, sound effects, auto-speak, YOLO mode, and power on/off
 - [ ] **INFRA-04**: All features work across all projects and Claude Code sessions on the same machine
 
 ## Future Requirements
@@ -75,12 +75,12 @@ Requirements for the Voice Loop milestone. Each maps to roadmap phases.
 | VOICE-04 | Phase 11 | Pending |
 | CTRL-01 | Phase 9 | Complete (09-01) |
 | CTRL-02 | Phase 9 | Complete (09-01) |
-| CTRL-03 | Phase 9 | Pending |
+| CTRL-03 | Phase 9 | Complete |
 | CTRL-04 | Phase 9 | Complete (09-01) |
 | CTRL-05 | Phase 9 | Complete (09-01) |
 | INFRA-01 | Phase 11 | Pending |
 | INFRA-02 | Phase 9 | Complete (09-01) |
-| INFRA-03 | Phase 9 | Pending |
+| INFRA-03 | Phase 9 | Complete |
 | INFRA-04 | Phase 10 | Pending |
 
 **Coverage:**

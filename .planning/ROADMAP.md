@@ -39,11 +39,11 @@ v1.1 hardened the foundation. The first v2.0 attempt was reverted due to reliabi
 **Goal**: The egg has 4 buttons (Deny/Accept/Speak/Terminal), smarter screen content per state, and all control toggles in the menu bar
 **Depends on**: v1.1 (phases 1-4)
 **Requirements**: UI-01, UI-02, UI-03, CTRL-01, CTRL-02, CTRL-03, CTRL-04, CTRL-05, INFRA-02, INFRA-03
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 Plans:
 - [x] 09-01-PLAN.md -- Extract components + extend ClaudeMonitor with new properties and hotkeys
-- [ ] 09-02-PLAN.md -- 4-button layout, state-specific screen content, skeuomorphic enhancements
-- [ ] 09-03-PLAN.md -- Menu bar reorganization + power toggle
+- [x] 09-02-PLAN.md -- 4-button layout, state-specific screen content, skeuomorphic enhancements
+- [x] 09-03-PLAN.md -- Menu bar reorganization + power toggle
 **Success Criteria** (what must be TRUE):
   1. Four buttons visible below the screen: Deny (left), Accept (left-center), Speak (right-center), Go to terminal (right)
   2. Screen shows state-specific content — THINKING: tool name + elapsed time; DONE: 1-line summary; NEEDS YOU: tool + file path + risk label (FILE WRITE / SHELL CMD); IDLE: character animation
@@ -58,6 +58,9 @@ Plans:
 **Goal**: Users can speak to Claude from any app — voice is recorded, transcribed on-device, and injected into the terminal without the user seeing the switch
 **Depends on**: Phase 9
 **Requirements**: VOICE-01, VOICE-02, INFRA-04
+**Plans:** 1 plan
+Plans:
+- [ ] 10-01-PLAN.md -- Create VoiceService + wire into ClaudeMonitor and ContentView
 **Success Criteria** (what must be TRUE):
   1. Pressing Speak button (or hotkey) starts recording; pressing again stops and submits
   2. Transcribed text is injected into the terminal via CGEvent HID and Enter is pressed
@@ -86,6 +89,6 @@ Plans:
 
 | Phase | Milestone | Plans Complete | Status |
 |-------|-----------|----------------|--------|
-| 9. UI + Controls | 2/3 | In Progress|  |
-| 10. Voice Input + Injection | v2.0 | 0/? | Pending |
+| 9. UI + Controls | 3/3 | Complete   | 2026-03-22 |
+| 10. Voice Input + Injection | v2.0 | 0/1 | Planned |
 | 11. Auto-Speak + Summary Hook | v2.0 | 0/? | Pending |
