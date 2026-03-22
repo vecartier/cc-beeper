@@ -10,6 +10,9 @@ final class VoiceService: ObservableObject {
     @Published var isRecording: Bool = false
     @Published var lastTranscriptPreview: String = ""
 
+    /// Set by ClaudeMonitor after both services are created. Used to cut TTS before recording.
+    var ttsService: TTSService?
+
     private var audioEngine = AVAudioEngine()
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognitionTask: SFSpeechRecognitionTask?
@@ -37,6 +40,10 @@ final class VoiceService: ObservableObject {
         if isRecording {
             stopRecording()
         } else {
+            // Cut TTS immediately — recording has absolute priority
+            if let tts = ttsService, tts.isSpeaking {
+                tts.stopSpeaking()
+            }
             startRecording()
         }
     }
@@ -49,6 +56,13 @@ final class VoiceService: ObservableObject {
 
     private func startRecording() {
         log("=== START ===")
+
+        // Recording has absolute priority — kill TTS first
+        if let tts = ttsService, tts.isSpeaking {
+            tts.stopSpeaking()
+            usleep(200_000) // additional wait for full audio session release (stopSpeaking already has 100ms)
+            log("killed TTS before recording")
+        }
 
         guard let recognizer else { log("no recognizer"); return }
 

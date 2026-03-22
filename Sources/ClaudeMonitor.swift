@@ -61,13 +61,16 @@ final class ClaudeMonitor: ObservableObject {
             if isActive {
                 // Guard against double-setup — restartFileWatcher handles cleanup
                 restartFileWatcher()
+                setupSummaryWatcher()
                 setupGlobalHotkeys()
             } else {
-                // Stop any active recording before tearing down
+                // Stop any active recording and TTS before tearing down
                 voiceService.stopIfRecording()
+                ttsService.stopSpeaking()
                 // Tear down all monitoring
                 source?.cancel(); source = nil
                 try? fileHandle?.close(); fileHandle = nil
+                summarySource?.cancel(); summarySource = nil
                 idleWork?.cancel()
                 // Remove hotkey monitors so keypresses don't fire when powered off
                 if let m = globalKeyMonitor { NSEvent.removeMonitor(m); globalKeyMonitor = nil }
@@ -91,12 +94,20 @@ final class ClaudeMonitor: ObservableObject {
     /// Whether voice is recording — mirrored from VoiceService via Combine (read-only outside ClaudeMonitor).
     @Published private(set) var isRecording: Bool = false
 
+    /// Whether TTS is speaking — mirrored from TTSService via Combine (read-only outside ClaudeMonitor).
+    @Published private(set) var isSpeaking: Bool = false
+
     let voiceService = VoiceService()
+    let ttsService = TTSService()
 
     /// Whether auto-speak is enabled (Phase 11 uses this; Phase 9 shows toggle).
     @Published var autoSpeak: Bool = false {
         didSet { UserDefaults.standard.set(autoSpeak, forKey: "autoSpeak") }
     }
+
+    private static let summaryFile = ipcDir + "/last_summary.txt"
+    private var summarySource: DispatchSourceFileSystemObject?
+    private var lastSummaryHash: Int = 0
 
     /// Computed: seconds elapsed since thinking started.
     var elapsedSeconds: Int {
@@ -135,14 +146,21 @@ final class ClaudeMonitor: ObservableObject {
         notificationManager.requestPermission()
         rehydrateSessions()
         setupFileWatcher()
+        setupSummaryWatcher()
         setupGlobalHotkeys()
         // Set after watcher is running so didSet fires only on external mutation
         autoSpeak = UserDefaults.standard.bool(forKey: "autoSpeak")
         isActive = UserDefaults.standard.object(forKey: "isActive") as? Bool ?? true
+        // Wire ttsService into voiceService so recording cuts TTS
+        voiceService.ttsService = ttsService
         // Mirror VoiceService.isRecording into ClaudeMonitor.isRecording for UI binding
         voiceService.$isRecording
             .receive(on: DispatchQueue.main)
             .assign(to: &$isRecording)
+        // Mirror TTSService.isSpeaking into ClaudeMonitor.isSpeaking for UI binding
+        ttsService.$isSpeaking
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$isSpeaking)
     }
 
     /// Pre-populate sessionStates from sessions.json so the app picks up
@@ -180,6 +198,8 @@ final class ClaudeMonitor: ObservableObject {
     deinit {
         source?.cancel()
         try? fileHandle?.close()
+        summarySource?.cancel()
+        ttsService.stopSpeaking()
         // idleWork and keyMonitors cleaned up via isActive.didSet
     }
 
@@ -261,6 +281,53 @@ final class ClaudeMonitor: ObservableObject {
         Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 500_000_000)
             self?.setupFileWatcher()
+        }
+    }
+
+    // MARK: Summary File Watcher
+
+    private func setupSummaryWatcher() {
+        // Cancel existing watcher before creating a new one
+        summarySource?.cancel()
+        summarySource = nil
+
+        let fm = FileManager.default
+        if !fm.fileExists(atPath: Self.summaryFile) {
+            fm.createFile(atPath: Self.summaryFile, contents: nil)
+        }
+        if let data = fm.contents(atPath: Self.summaryFile) {
+            lastSummaryHash = data.hashValue
+        }
+
+        let fd = open(Self.summaryFile, O_EVTONLY)
+        guard fd >= 0 else { return }
+        let source = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: fd, eventMask: [.write, .extend, .rename, .delete], queue: .main
+        )
+        source.setEventHandler { [weak self] in self?.onSummaryFileChanged() }
+        source.setCancelHandler { close(fd) }
+        source.resume()
+        self.summarySource = source
+    }
+
+    private func onSummaryFileChanged() {
+        guard let data = FileManager.default.contents(atPath: Self.summaryFile),
+              let text = String(data: data, encoding: .utf8),
+              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        let hash = data.hashValue
+        guard hash != lastSummaryHash else { return }
+        lastSummaryHash = hash
+
+        // NEVER interrupt recording — recording has absolute priority
+        guard autoSpeak, !isRecording else { return }
+
+        Task {
+            let summary = await ttsService.speakSummary(text)
+            await MainActor.run {
+                // Re-check after async summarization — user might have started recording
+                guard !self.isRecording else { return }
+                self.lastSummary = summary
+            }
         }
     }
 
