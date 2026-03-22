@@ -73,6 +73,10 @@ Plans:
 **Goal**: When Claude finishes and auto-speak is on, the response is summarized and spoken aloud — completing the hands-free loop
 **Depends on**: Phase 10
 **Requirements**: VOICE-03, VOICE-04, INFRA-01
+**Plans:** 2 plans
+Plans:
+- [ ] 11-01-PLAN.md -- Summary hook script + TTSService with Apple Intelligence summarization
+- [ ] 11-02-PLAN.md -- Wire summary watcher + TTS into ClaudeMonitor, recording priority
 **Success Criteria** (what must be TRUE):
   1. Summary hook (Python) fires on Claude stop, extracts last assistant text from session JSONL, writes to `~/.claude/claumagotchi/last_summary.txt`
   2. App watches the summary file and auto-speaks when it changes (if auto-speak enabled)
@@ -91,4 +95,4 @@ Plans:
 |-------|-----------|----------------|--------|
 | 9. UI + Controls | 3/3 | Complete   | 2026-03-22 |
 | 10. Voice Input + Injection | 1/1 | Complete   | 2026-03-22 |
-| 11. Auto-Speak + Summary Hook | v2.0 | 0/? | Pending |
+| 11. Auto-Speak + Summary Hook | v2.0 | 0/2 | Planning |
