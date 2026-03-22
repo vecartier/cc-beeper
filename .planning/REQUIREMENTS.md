@@ -18,7 +18,7 @@ Requirements for the Voice Loop milestone. Each maps to roadmap phases.
 - [x] **VOICE-01**: User can toggle voice recording (tap to start, tap to stop) via Speak button or hotkey
 - [x] **VOICE-02**: Transcribed voice text is injected into the terminal and submitted (Enter), then the previous app is refocused — user never sees the terminal switch
 - [x] **VOICE-03**: When Claude finishes and auto-speak is enabled, the last response is summarized via Apple Intelligence and spoken aloud using Ava Premium TTS
-- [ ] **VOICE-04**: User can stop TTS mid-sentence by pressing Speak (which also starts recording) or via hotkey
+- [x] **VOICE-04**: User can stop TTS mid-sentence by pressing Speak (which also starts recording) or via hotkey
 
 ### Controls
 
@@ -72,7 +72,7 @@ Requirements for the Voice Loop milestone. Each maps to roadmap phases.
 | VOICE-01 | Phase 10 | Complete |
 | VOICE-02 | Phase 10 | Complete |
 | VOICE-03 | Phase 11 | Complete |
-| VOICE-04 | Phase 11 | Pending |
+| VOICE-04 | Phase 11 | Complete |
 | CTRL-01 | Phase 9 | Complete (09-01) |
 | CTRL-02 | Phase 9 | Complete (09-01) |
 | CTRL-03 | Phase 9 | Complete |

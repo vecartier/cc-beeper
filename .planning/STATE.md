@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Voice Loop
 status: unknown
-stopped_at: Completed 11-01-PLAN.md — summary hook + TTSService done, Phase 11 Plan 02 pending
-last_updated: "2026-03-22T21:58:48.602Z"
+stopped_at: "Completed 11-02 auto tasks — awaiting checkpoint:human-verify for Task 3"
+last_updated: "2026-03-22T22:02:49.385Z"
 progress:
   total_phases: 3
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -46,6 +46,8 @@ Plan: 1 of 2
 - [Phase 10-voice-input-injection]: isRecording on ClaudeMonitor is private(set), driven exclusively by Combine from VoiceService; previousAppPID captured before startRecording for correct refocus target
 - [Phase 11]: ClaudeMonitor and VoiceService marked @MainActor (Swift 6 idiomatic pattern for ObservableObject)
 - [Phase 11]: Package.swift upgraded to swift-tools-version 6.2 and macOS .v26 for FoundationModels framework
+- [Phase 11-02]: Tasks 1+2 committed atomically due to cross-file dependency (VoiceService.ttsService referenced in ClaudeMonitor.init)
+- [Phase 11-02]: 300ms total TTS release: 100ms in stopSpeaking() + 200ms in startRecording() — matches VoiceLoop prototype
 
 ### Pending Todos
 
@@ -59,6 +61,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T21:58:48.600Z
-Stopped at: Completed 11-01-PLAN.md — summary hook + TTSService done, Phase 11 Plan 02 pending
+Last session: 2026-03-22T22:02:49.383Z
+Stopped at: Completed 11-02 auto tasks — awaiting checkpoint:human-verify for Task 3
 Resume file: None
