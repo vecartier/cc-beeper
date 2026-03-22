@@ -2,15 +2,14 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Voice Loop
-status: planning
-stopped_at: Phase 9 context gathered
-last_updated: "2026-03-22T09:14:40.103Z"
-last_activity: 2026-03-22 — Roadmap revised (3 phases, 16 requirements)
+status: in-progress
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-03-22T09:49:22Z"
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 3
+  completed_plans: 1
 ---
 
 # Project State
@@ -20,14 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Users can see what Claude is doing, respond to it, and give it instructions — without leaving their current workflow
-**Current focus:** Defining v2.0 requirements
+**Current focus:** Phase 09 — ui-controls
 
 ## Current Position
 
-Phase: Not started (roadmap created)
-Plan: —
-Status: Ready for phase planning
-Last activity: 2026-03-22 — Roadmap revised (3 phases, 16 requirements)
+Phase: 09 (ui-controls) — EXECUTING
+Plan: 2 of 3
 
 ## Accumulated Context
 
@@ -37,6 +34,10 @@ Last activity: 2026-03-22 — Roadmap revised (3 phases, 16 requirements)
 - v2.0 previously attempted (phases 5-8) and reverted — voice/settings/summary unreliable
 - VoiceLoop prototype validates: voice input, auto-speak, hook-based summary, CGEvent injection
 - Lessons: use regular window (not NSPanel), nil audio format, Apple Dev signing, nil CGEvent source
+- Extracted types to separate files following SwiftUI Pro one-type-per-file rule
+- isActive initialized in init body after setupFileWatcher so didSet only fires on external mutation
+- Hotkey guard pendingPermission moved into A/D cases only — S and G work without pending permission
+- thinkingStartTime only resets when transitioning INTO thinking (session state was not .thinking)
 
 ### Pending Todos
 
@@ -50,6 +51,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T09:14:40.097Z
-Stopped at: Phase 9 context gathered
-Resume file: .planning/phases/09-ui-controls/09-CONTEXT.md
+Last session: 2026-03-22T09:49:22Z
+Stopped at: Completed 09-01-PLAN.md
+Resume file: .planning/phases/09-ui-controls/09-01-SUMMARY.md
