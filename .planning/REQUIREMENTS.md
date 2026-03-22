@@ -17,7 +17,7 @@ Requirements for the Voice Loop milestone. Each maps to roadmap phases.
 
 - [x] **VOICE-01**: User can toggle voice recording (tap to start, tap to stop) via Speak button or hotkey
 - [x] **VOICE-02**: Transcribed voice text is injected into the terminal and submitted (Enter), then the previous app is refocused — user never sees the terminal switch
-- [ ] **VOICE-03**: When Claude finishes and auto-speak is enabled, the last response is summarized via Apple Intelligence and spoken aloud using Ava Premium TTS
+- [x] **VOICE-03**: When Claude finishes and auto-speak is enabled, the last response is summarized via Apple Intelligence and spoken aloud using Ava Premium TTS
 - [ ] **VOICE-04**: User can stop TTS mid-sentence by pressing Speak (which also starts recording) or via hotkey
 
 ### Controls
@@ -30,7 +30,7 @@ Requirements for the Voice Loop milestone. Each maps to roadmap phases.
 
 ### Infrastructure
 
-- [ ] **INFRA-01**: A Python hook fires on Claude Code stop events, extracts the last assistant text from the session JSONL, and writes it to `~/.claude/claumagotchi/last_summary.txt`
+- [x] **INFRA-01**: A Python hook fires on Claude Code stop events, extracts the last assistant text from the session JSONL, and writes it to `~/.claude/claumagotchi/last_summary.txt`
 - [x] **INFRA-02**: Every button action has a keyboard shortcut (hotkey)
 - [x] **INFRA-03**: Menu bar provides toggles for: show/hide widget, sound effects, auto-speak, YOLO mode, and power on/off
 - [x] **INFRA-04**: All features work across all projects and Claude Code sessions on the same machine
@@ -71,14 +71,14 @@ Requirements for the Voice Loop milestone. Each maps to roadmap phases.
 | UI-03 | Phase 9 | Complete |
 | VOICE-01 | Phase 10 | Complete |
 | VOICE-02 | Phase 10 | Complete |
-| VOICE-03 | Phase 11 | Pending |
+| VOICE-03 | Phase 11 | Complete |
 | VOICE-04 | Phase 11 | Pending |
 | CTRL-01 | Phase 9 | Complete (09-01) |
 | CTRL-02 | Phase 9 | Complete (09-01) |
 | CTRL-03 | Phase 9 | Complete |
 | CTRL-04 | Phase 9 | Complete (09-01) |
 | CTRL-05 | Phase 9 | Complete (09-01) |
-| INFRA-01 | Phase 11 | Pending |
+| INFRA-01 | Phase 11 | Complete |
 | INFRA-02 | Phase 9 | Complete (09-01) |
 | INFRA-03 | Phase 9 | Complete |
 | INFRA-04 | Phase 10 | Complete |

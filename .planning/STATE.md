@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Voice Loop
-status: in-progress
-stopped_at: "Completed 10-01-PLAN.md — Phase 10 done, Phase 11 pending"
-last_updated: "2026-03-22T15:00:00.000Z"
+status: unknown
+stopped_at: Completed 11-01-PLAN.md — summary hook + TTSService done, Phase 11 Plan 02 pending
+last_updated: "2026-03-22T21:58:48.602Z"
 progress:
   total_phases: 3
-  completed_phases: 3
-  total_plans: 5
+  completed_phases: 2
+  total_plans: 6
   completed_plans: 5
 ---
 
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-21)
 
 **Core value:** Users can see what Claude is doing, respond to it, and give it instructions — without leaving their current workflow
-**Current focus:** Phase 10 — voice-input-injection
+**Current focus:** Phase 11 — auto-speak-summary-hook
 
 ## Current Position
 
-Phase: 11 (auto-speak-summary-hook) — NEXT
-Plan: Phase 10 complete (1/1 plans done)
+Phase: 11 (auto-speak-summary-hook) — EXECUTING
+Plan: 1 of 2
 
 ## Accumulated Context
 
@@ -44,6 +44,8 @@ Plan: Phase 10 complete (1/1 plans done)
 - [Phase 09-ui-controls]: Menu bar icon greyed only when powered off (EggIconState.hidden) — not when widget is merely hidden
 - [Phase 10-voice-input-injection]: VoiceService uses format:nil in installTap, nil CGEvent source, keyboardSetUnicodeString on keyDown+keyUp, /usr/bin/open -a for terminal focus — exact VoiceLoop prototype patterns
 - [Phase 10-voice-input-injection]: isRecording on ClaudeMonitor is private(set), driven exclusively by Combine from VoiceService; previousAppPID captured before startRecording for correct refocus target
+- [Phase 11]: ClaudeMonitor and VoiceService marked @MainActor (Swift 6 idiomatic pattern for ObservableObject)
+- [Phase 11]: Package.swift upgraded to swift-tools-version 6.2 and macOS .v26 for FoundationModels framework
 
 ### Pending Todos
 
@@ -57,6 +59,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T15:00:00.000Z
-Stopped at: Completed 10-01-PLAN.md — Phase 10 complete, Phase 11 pending
+Last session: 2026-03-22T21:58:48.600Z
+Stopped at: Completed 11-01-PLAN.md — summary hook + TTSService done, Phase 11 Plan 02 pending
 Resume file: None
