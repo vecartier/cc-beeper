@@ -14,41 +14,69 @@ struct ScreenContentView: View {
 
     var body: some View {
         ZStack {
-            Rectangle().fill(themeManager.lcdBg)
+            Rectangle().fill(themeManager.darkMode ? themeManager.lcdBg : Color.clear)
 
-            VStack(spacing: 2) {
-                Spacer(minLength: 2)
+            HStack(spacing: 8) {
+                // Character — smaller
+                PixelCharacterView(
+                    state: monitor.state,
+                    frame: animFrame,
+                    onColor: themeManager.lcdOn,
+                    isYolo: isYoloActive
+                )
+                .frame(width: 34, height: 26)
 
-                // Character animation — centered
-                PixelCharacterView(state: monitor.state, frame: animFrame,
-                                   onColor: themeManager.lcdOn,
-                                   isYolo: isYoloActive)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
+                // Status: big title + small detail
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(titleText)
+                        .font(.system(size: 13, weight: .heavy, design: .monospaced))
+                        .foregroundColor(themeManager.lcdOn)
+                        .opacity(monitor.state.needsAttention
+                                 ? (animFrame % 2 == 0 ? 1 : 0.15) : 1)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
 
-                // Status text — 1 line, centered
-                Text(statusText)
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .foregroundColor(themeManager.lcdOn)
-                    .opacity(monitor.state.needsAttention
-                             ? (animFrame % 2 == 0 ? 1 : 0.15) : 1)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.horizontal, 4)
+                    if let detail = detailText {
+                        Text(detail)
+                            .font(.system(size: 8, weight: .medium, design: .monospaced))
+                            .foregroundColor(themeManager.lcdOn.opacity(0.7))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                Spacer(minLength: 2)
+                // YOLO badge
+                if isYoloActive {
+                    Text("YOLO")
+                        .font(.system(size: 6, weight: .black, design: .monospaced))
+                        .foregroundColor(themeManager.lcdOn.opacity(0.6))
+                        .padding(.horizontal, 3)
+                        .padding(.vertical, 1)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 2)
+                                .stroke(themeManager.lcdOn.opacity(0.3), lineWidth: 0.5)
+                        )
+                }
             }
-            .padding(.horizontal, 4)
+            .padding(.leading, 10)
+            .padding(.trailing, 6)
+            .padding(.vertical, 3)
 
-            // Pixel grid overlay — retro LCD effect
+            // Vignette
+            RadialGradient(
+                colors: [.clear, Color(hex: "1A3008").opacity(0.25)],
+                center: .center,
+                startRadius: 60,
+                endRadius: 160
+            )
+            .allowsHitTesting(false)
+
+            // Pixel grid
             Canvas { context, size in
-                let lineColor = themeManager.darkMode
-                    ? Color.white.opacity(0.04)
-                    : themeManager.lcdOn.opacity(0.08)
-                let spacing: CGFloat = 3.0
-                let lineW: CGFloat = 0.35
+                let lineColor = Color(hex: "2A4A10").opacity(themeManager.darkMode ? 0.25 : 0.12)
+                let spacing: CGFloat = 2.0
+                let lineW: CGFloat = 0.5
 
                 var x: CGFloat = spacing
                 while x < size.width {
@@ -68,12 +96,19 @@ struct ScreenContentView: View {
                 }
             }
             .allowsHitTesting(false)
+
+            // Inner shadow top
+            LinearGradient(
+                colors: [Color(hex: "1A3008").opacity(0.15), .clear],
+                startPoint: .top,
+                endPoint: .center
+            )
+            .allowsHitTesting(false)
         }
         .onReceive(animTimer) { _ in
             if isWindowVisible { animFrame += 1 }
         }
         .onReceive(ticker) { _ in
-            // Force re-render so elapsedSeconds updates
             tick += 1
         }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didChangeOcclusionStateNotification)) { notification in
@@ -83,26 +118,41 @@ struct ScreenContentView: View {
         }
     }
 
-    private var statusText: String {
-        if isYoloActive && monitor.state != .needsYou {
-            return "YOLO MODE"
-        }
+    // MARK: - Text
+
+    private var titleText: String {
         switch monitor.state {
         case .thinking:
-            let tool = humanToolName(monitor.currentTool ?? "Working")
+            return "Working..."
+        case .finished:
+            return "Done!"
+        case .needsYou:
+            return "Needs you!"
+        case .idle:
+            return "ZZZ..."
+        }
+    }
+
+    private var detailText: String? {
+        switch monitor.state {
+        case .thinking:
+            let tool = humanToolName(monitor.currentTool ?? "")
             let elapsed = monitor.elapsedSeconds
             return "\(tool) · \(elapsed)s"
-        case .finished:
-            return monitor.lastSummary ?? "Done!"
         case .needsYou:
             if let p = monitor.pendingPermission {
                 let tool = humanToolName(p.tool)
                 let file = truncateFilename(p.summary)
                 return "\(tool) · \(file)"
             }
-            return "Needs you!"
+            return nil
+        case .finished:
+            if let summary = monitor.lastSummary, summary != "Done!" {
+                return truncate(summary, to: 36)
+            }
+            return nil
         case .idle:
-            return "ZZZ..."
+            return nil
         }
     }
 
@@ -127,6 +177,6 @@ struct ScreenContentView: View {
 
     private func truncateFilename(_ s: String) -> String {
         let last = s.split(separator: "/").last.map(String.init) ?? s
-        return truncate(last, to: 14)
+        return truncate(last, to: 22)
     }
 }

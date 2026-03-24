@@ -36,6 +36,8 @@ struct ClaumagotchiApp: App {
                 .keyboardShortcut("s")
             Toggle("Notifications", isOn: $monitor.notificationsEnabled)
                 .keyboardShortcut("n")
+            Toggle("Vibration", isOn: $monitor.vibrationEnabled)
+                .keyboardShortcut("v")
 
             Divider()
 

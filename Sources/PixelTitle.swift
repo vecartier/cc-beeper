@@ -24,9 +24,9 @@ struct PixelTitle: View {
 
     var body: some View {
         Canvas { context, size in
-            let color = themeManager.titleColor
-            let highlight = themeManager.titleHighlight
-            let shadow = themeManager.titleShadow
+            let color = themeManager.lcdOn
+            let highlight = themeManager.lcdOn.opacity(0.4)
+            let shadow = themeManager.lcdOn.opacity(0.2)
 
             let text: [Character] = Array("CLAUMAGOTCHI")
 

@@ -1,0 +1,26 @@
+name: Claumagotchi
+options:
+  deploymentTarget:
+    macOS: "26.0"
+  xcodeVersion: "26.0"
+settings:
+  SWIFT_VERSION: "6.2"
+  MACOSX_DEPLOYMENT_TARGET: "26.0"
+targets:
+  Claumagotchi:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources
+        excludes:
+          - "**/*.png"
+          - "**/*.svg"
+          - "shells"
+          - "buttons"
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.claumagotchi.app
+      INFOPLIST_GENERATION_MODE: GeneratedFile
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: ""
+      OTHER_LDFLAGS:
+        - "-framework"
+        - "FoundationModels"

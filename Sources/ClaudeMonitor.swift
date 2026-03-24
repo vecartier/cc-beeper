@@ -52,6 +52,9 @@ final class ClaudeMonitor: ObservableObject {
     @Published var notificationsEnabled: Bool {
         didSet { UserDefaults.standard.set(notificationsEnabled, forKey: "notificationsEnabled") }
     }
+    @Published var vibrationEnabled: Bool {
+        didSet { UserDefaults.standard.set(vibrationEnabled, forKey: "vibrationEnabled") }
+    }
     @Published var sessionCount: Int = 0
 
     /// Controls whether the widget is active. False = hidden + monitoring stopped.
@@ -142,6 +145,7 @@ final class ClaudeMonitor: ObservableObject {
         soundEnabled = UserDefaults.standard.object(forKey: "soundEnabled") as? Bool ?? true
         autoAccept = UserDefaults.standard.object(forKey: "autoAccept") as? Bool ?? false
         notificationsEnabled = UserDefaults.standard.object(forKey: "notificationsEnabled") as? Bool ?? true
+        vibrationEnabled = UserDefaults.standard.object(forKey: "vibrationEnabled") as? Bool ?? true
         ensureIPCDir()
         notificationManager.requestPermission()
         rehydrateSessions()

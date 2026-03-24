@@ -1,149 +1,152 @@
 import SwiftUI
+import AppKit
 
-// MARK: - Right-Side Button (rotated -15°, light from topLeading)
+// MARK: - Button Image Loader
 
-struct ActionButton: View {
-    let symbol: String
-    var size: CGFloat = 10
+func loadButtonImage(_ name: String) -> NSImage {
+    if let path = Bundle.main.resourcePath,
+       let img = NSImage(contentsOfFile: path + "/" + name) { return img }
+    if let img = NSImage(contentsOfFile: "/Users/vcartier/Desktop/Claumagotchi/Sources/buttons/" + name) { return img }
+    return NSImage()
+}
+
+// MARK: - Button sizes (@4x)
+
+// Pill: 488×270 @4x → 122×68
+private let pillW: CGFloat = 122
+private let pillH: CGFloat = 68
+// Individual: 312×270 @4x → 78×68
+private let btnW: CGFloat = 78
+private let btnH: CGFloat = 68
+
+// MARK: - Accept / Deny Pill (dual tap zones)
+
+struct AcceptDenyPill: View {
     let active: Bool
-    var pulse: Bool = false
-    let action: () -> Void
+    let onAccept: () -> Void
+    let onDeny: () -> Void
 
-    @State private var animating = false
+    @GestureState private var acceptPressed = false
+    @GestureState private var denyPressed = false
+
+    private var imageName: String {
+        if !active { return "pill-disabled.png" }
+        if acceptPressed { return "pill-check-pressed.png" }
+        if denyPressed { return "pill-cross-pressed.png" }
+        return "pill-normal.png"
+    }
 
     var body: some View {
-        Button(action: action) {
-            ZStack {
-                // Background shadow shape: 40×28, blurred
-                Ellipse()
-                    .fill(LinearGradient(
-                        colors: [Color.black.opacity(0.56), Color.black.opacity(0)],
-                        startPoint: .top, endPoint: .bottom
-                    ))
-                    .frame(width: 40, height: 28)
-                    .blur(radius: 2)
+        ZStack {
+            Image(nsImage: loadButtonImage(imageName))
+                .resizable()
+                .interpolation(.high)
+                .allowsHitTesting(false)
 
-                // Button face: 36×24, #1C1C1C
-                Ellipse()
-                    .fill(Color(hex: "1C1C1C"))
-                    .frame(width: 36, height: 24)
-
-                // Top specular highlight
-                Ellipse()
-                    .fill(LinearGradient(
-                        colors: [.white.opacity(0.10), .clear],
-                        startPoint: .top, endPoint: .center
-                    ))
-                    .frame(width: 30, height: 16)
-                    .offset(y: -2)
-
-                // Inner shadow — light on topLeading
-                Ellipse()
-                    .stroke(LinearGradient(
-                        colors: [.white.opacity(0.06), .clear, .clear, .black.opacity(0.15)],
-                        startPoint: .topLeading, endPoint: .bottomTrailing
-                    ), lineWidth: 0.75)
-                    .frame(width: 35, height: 23)
-
-                // Icon
-                Image(systemName: symbol)
-                    .font(.system(size: size, weight: .bold))
-                    .foregroundColor(active ? Color(white: 0.72, opacity: 0.80) : Color(white: 0.62, opacity: 0.3))
-                    .shadow(color: Color(red: 0, green: 0.07, blue: 0.18).opacity(0.32), radius: 4)
-                    .rotationEffect(.degrees(15))
-            }
-            .frame(width: 46, height: 34)
-            .rotationEffect(.degrees(-15))
-            //.scaleEffect(pulse && animating ? 1.08 : 1.0)
-        }
-        .buttonStyle(ShellButtonStyle())
-        .disabled(!active)
-        .onChange(of: pulse) {
-            if pulse {
-                withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) { animating = true }
-            } else {
-                withAnimation(.none) { animating = false }
+            if active {
+                HStack(spacing: 0) {
+                    Rectangle()
+                        .fill(Color.clear)
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .updating($acceptPressed) { _, state, _ in state = true }
+                                .onEnded { _ in onAccept() }
+                        )
+                    Rectangle()
+                        .fill(Color.clear)
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .updating($denyPressed) { _, state, _ in state = true }
+                                .onEnded { _ in onDeny() }
+                        )
+                }
             }
         }
+        .frame(width: pillW, height: pillH)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Accept or Deny")
     }
 }
 
-// MARK: - Left-Side Button (rotated +15°, light from topTrailing)
+// MARK: - Record Button
 
-struct LeftActionButton: View {
-    let symbol: String
-    var size: CGFloat = 10
-    let active: Bool
-    var pulse: Bool = false
-    var iconColor: Color? = nil
+struct RecordButton: View {
+    let isRecording: Bool
     let action: () -> Void
-
-    @State private var animating = false
 
     var body: some View {
         Button(action: action) {
-            ZStack {
-                // Background shadow shape: 40×28, blurred
-                Ellipse()
-                    .fill(LinearGradient(
-                        colors: [Color.black.opacity(0.56), Color.black.opacity(0)],
-                        startPoint: .top, endPoint: .bottom
-                    ))
-                    .frame(width: 40, height: 28)
-                    .blur(radius: 2)
-
-                // Button face: 36×24, #1C1C1C
-                Ellipse()
-                    .fill(Color(hex: "1C1C1C"))
-                    .frame(width: 36, height: 24)
-
-                // Top specular highlight
-                Ellipse()
-                    .fill(LinearGradient(
-                        colors: [.white.opacity(0.10), .clear],
-                        startPoint: .top, endPoint: .center
-                    ))
-                    .frame(width: 30, height: 16)
-                    .offset(y: -2)
-
-                // Inner shadow — light on topTrailing (mirrored)
-                Ellipse()
-                    .stroke(LinearGradient(
-                        colors: [.white.opacity(0.06), .clear, .clear, .black.opacity(0.15)],
-                        startPoint: .topTrailing, endPoint: .bottomLeading
-                    ), lineWidth: 0.75)
-                    .frame(width: 35, height: 23)
-
-                // Icon
-                Image(systemName: symbol)
-                    .font(.system(size: size, weight: .bold))
-                    .foregroundColor(iconColor ?? (active ? Color(white: 0.72, opacity: 0.80) : Color(white: 0.62, opacity: 0.3)))
-                    .shadow(color: Color(red: 0, green: 0.07, blue: 0.18).opacity(0.32), radius: 4)
-                    .rotationEffect(.degrees(-15))
-            }
-            .frame(width: 46, height: 34)
-            .rotationEffect(.degrees(15))
-            //.scaleEffect(pulse && animating ? 1.08 : 1.0)
+            Color.clear.frame(width: btnW, height: btnH)
         }
-        .buttonStyle(ShellButtonStyle())
-        .disabled(!active)
-        .onChange(of: pulse) {
-            if pulse {
-                withAnimation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true)) { animating = true }
-            } else {
-                withAnimation(.none) { animating = false }
-            }
-        }
+        .buttonStyle(ImageButtonStyle(
+            normalImage: isRecording ? "record-recording.png" : "record-normal.png",
+            pressedImage: isRecording ? "record-recording-pressed.png" : "record-pressed.png",
+            width: btnW, height: btnH
+        ))
+        .accessibilityLabel(isRecording ? "Stop recording" : "Record")
     }
 }
 
-// MARK: - Shell Button Style
+// MARK: - Terminal Button
 
-struct ShellButtonStyle: ButtonStyle {
+struct TerminalButton: View {
+    let enabled: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Color.clear.frame(width: btnW, height: btnH)
+        }
+        .buttonStyle(ImageButtonStyle(
+            normalImage: enabled ? "terminal-normal.png" : "terminal-disabled.png",
+            pressedImage: "terminal-pressed.png",
+            width: btnW, height: btnH
+        ))
+        .disabled(!enabled)
+        .accessibilityLabel("Go to terminal")
+    }
+}
+
+// MARK: - Sound / Mute Button
+
+struct SoundMuteButton: View {
+    let autoSpeak: Bool
+    let action: () -> Void
+
+    private var normalImage: String {
+        autoSpeak ? "sound-normal.png" : "mute-normal.png"
+    }
+    private var pressedImage: String {
+        autoSpeak ? "sound-pressed.png" : "mute-pressed.png"
+    }
+
+    var body: some View {
+        Button(action: action) {
+            Color.clear.frame(width: btnW, height: btnH)
+        }
+        .buttonStyle(ImageButtonStyle(
+            normalImage: normalImage,
+            pressedImage: pressedImage,
+            width: btnW, height: btnH
+        ))
+        .accessibilityLabel(autoSpeak ? "Mute" : "Unmute")
+    }
+}
+
+// MARK: - Generic PNG Button Style
+
+struct ImageButtonStyle: ButtonStyle {
+    let normalImage: String
+    let pressedImage: String
+    let width: CGFloat
+    let height: CGFloat
+
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.94 : 1.0)
-            .brightness(configuration.isPressed ? 0.15 : 0)
-            .animation(.easeOut(duration: 0.08), value: configuration.isPressed)
+        Image(nsImage: loadButtonImage(configuration.isPressed ? pressedImage : normalImage))
+            .resizable()
+            .interpolation(.high)
+            .frame(width: width, height: height)
     }
 }
