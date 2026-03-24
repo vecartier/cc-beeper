@@ -20,6 +20,16 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
     private var recordingStartTime: Date?
     private var previousAppPID: pid_t? = nil
 
+    // Groq WAV recording
+    private var wavFileURL: URL?
+    private var wavAudioFile: AVAudioFile?
+
+    // MARK: - Groq Mode
+
+    private var useGroq: Bool {
+        KeychainService.load(account: KeychainService.groqAccount) != nil
+    }
+
     // MARK: - Logging
 
     private func log(_ msg: String) {
@@ -68,6 +78,65 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
             log("killed TTS before recording")
         }
 
+        if isRecording { stopRecording() }
+
+        // Capture previous app BEFORE focusing terminal
+        previousAppPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
+
+        // Recreate AVAudioEngine each session — do not reuse (prevents headphone corruption)
+        audioEngine = AVAudioEngine()
+        let inputNode = audioEngine.inputNode
+        let nativeFormat = inputNode.outputFormat(forBus: 0)
+        log("format: \(nativeFormat.sampleRate)Hz, \(nativeFormat.channelCount)ch")
+
+        guard nativeFormat.sampleRate > 0, nativeFormat.channelCount > 0 else {
+            log("bad format")
+            return
+        }
+
+        if useGroq {
+            startRecordingGroq(inputNode: inputNode, nativeFormat: nativeFormat)
+        } else {
+            startRecordingSFSpeech(inputNode: inputNode)
+        }
+    }
+
+    // MARK: - Groq Recording Path
+
+    private func startRecordingGroq(inputNode: AVAudioInputNode, nativeFormat: AVAudioFormat) {
+        log("Groq mode: recording WAV")
+
+        let tempURL = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("voice-\(UUID().uuidString).wav")
+
+        do {
+            wavAudioFile = try AVAudioFile(forWriting: tempURL, settings: nativeFormat.settings)
+        } catch {
+            log("Groq mode: failed to create WAV file: \(error)")
+            return
+        }
+        wavFileURL = tempURL
+
+        // Install tap that writes buffers to WAV file
+        inputNode.installTap(onBus: 0, bufferSize: 4096, format: nil) { [weak self] buffer, _ in
+            try? self?.wavAudioFile?.write(from: buffer)
+        }
+        log("Groq mode: tap installed")
+
+        audioEngine.prepare()
+        do {
+            try audioEngine.start()
+            isRecording = true
+            recordingStartTime = Date()
+            log("Groq mode: recording...")
+        } catch {
+            log("Groq mode: engine failed: \(error)")
+        }
+    }
+
+    // MARK: - SFSpeech Recording Path
+
+    private func startRecordingSFSpeech(inputNode: AVAudioInputNode) {
         guard let recognizer else { log("no recognizer"); return }
 
         let authStatus = SFSpeechRecognizer.authorizationStatus()
@@ -88,34 +157,18 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         }
         guard micStatus == .authorized else { log("mic not authorized"); return }
 
-        if isRecording { stopRecording() }
-
-        // Capture previous app BEFORE focusing terminal
-        previousAppPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
-
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.requiresOnDeviceRecognition = true
         request.shouldReportPartialResults = true
         recognitionRequest = request
         lastTranscript = ""
 
-        // Recreate AVAudioEngine each session — do not reuse (prevents headphone corruption)
-        audioEngine = AVAudioEngine()
-        let inputNode = audioEngine.inputNode
-        let nativeFormat = inputNode.outputFormat(forBus: 0)
-        log("format: \(nativeFormat.sampleRate)Hz, \(nativeFormat.channelCount)ch")
-
-        guard nativeFormat.sampleRate > 0, nativeFormat.channelCount > 0 else {
-            log("bad format")
-            return
-        }
-
         // format: nil lets the system pick optimal format (works with headphones)
         let capturedRequest = request
         inputNode.installTap(onBus: 0, bufferSize: 4096, format: nil) { buffer, _ in
             capturedRequest.append(buffer)
         }
-        log("tap installed")
+        log("SFSpeech mode: tap installed")
 
         recognitionTask = recognizer.recognitionTask(with: request) { [weak self] result, error in
             guard let self else { return }
@@ -147,7 +200,7 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
             try audioEngine.start()
             isRecording = true
             recordingStartTime = Date()
-            log("recording...")
+            log("SFSpeech mode: recording...")
         } catch {
             log("engine failed: \(error)")
         }
@@ -159,29 +212,56 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         audioEngine.inputNode.removeTap(onBus: 0)
         audioEngine.inputNode.removeTap(onBus: 0)
         audioEngine.stop()
-        recognitionRequest?.endAudio()
-        recognitionRequest = nil
-        // Don't cancel the recognition task — let it deliver the final result
-        // Recreate engine per session — prevents corruption on subsequent recordings
-        audioEngine = AVAudioEngine()
         isRecording = false
-        log("stopped — waiting for final result")
 
-        // Wait up to 2 seconds for the final transcript to arrive via the callback
-        // The recognition callback will set lastTranscript and call injectAndSubmit
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            guard let self else { return }
-            // If the callback already handled it, recognitionTask will be nil
-            if self.recognitionTask != nil {
-                // Timed out — use whatever partial we have
-                let text = self.lastTranscript
-                self.lastTranscript = ""
-                self.recognitionTask?.cancel()
-                self.recognitionTask = nil
-                self.log("timeout, using partial: '\(text)'")
-                if !text.isEmpty {
-                    self.lastTranscriptPreview = text
-                    self.injectAndSubmit(text)
+        if wavAudioFile != nil {
+            // Groq mode — close WAV file and dispatch transcription
+            wavAudioFile = nil
+            let capturedURL = wavFileURL
+            wavFileURL = nil
+            // Recreate engine per session — prevents corruption on subsequent recordings
+            audioEngine = AVAudioEngine()
+            log("Groq mode: stopped — dispatching transcription")
+
+            if let url = capturedURL, let key = KeychainService.load(account: KeychainService.groqAccount) {
+                Task {
+                    do {
+                        let text = try await GroqTranscriptionService.transcribe(wavURL: url, apiKey: key)
+                        await MainActor.run {
+                            self.lastTranscriptPreview = text
+                            if !text.isEmpty { self.injectAndSubmit(text) }
+                        }
+                    } catch {
+                        self.log("Groq transcription failed: \(error)")
+                        await MainActor.run { self.lastTranscriptPreview = "Groq error" }
+                    }
+                }
+            }
+        } else {
+            // SFSpeech mode — endAudio and wait for final result
+            recognitionRequest?.endAudio()
+            recognitionRequest = nil
+            // Don't cancel the recognition task — let it deliver the final result
+            // Recreate engine per session — prevents corruption on subsequent recordings
+            audioEngine = AVAudioEngine()
+            log("SFSpeech mode: stopped — waiting for final result")
+
+            // Wait up to 2 seconds for the final transcript to arrive via the callback
+            // The recognition callback will set lastTranscript and call injectAndSubmit
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+                guard let self else { return }
+                // If the callback already handled it, recognitionTask will be nil
+                if self.recognitionTask != nil {
+                    // Timed out — use whatever partial we have
+                    let text = self.lastTranscript
+                    self.lastTranscript = ""
+                    self.recognitionTask?.cancel()
+                    self.recognitionTask = nil
+                    self.log("timeout, using partial: '\(text)'")
+                    if !text.isEmpty {
+                        self.lastTranscriptPreview = text
+                        self.injectAndSubmit(text)
+                    }
                 }
             }
         }

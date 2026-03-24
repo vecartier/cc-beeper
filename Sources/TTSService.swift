@@ -9,6 +9,10 @@ final class TTSService: ObservableObject, @unchecked Sendable {
     private let synthesizer = AVSpeechSynthesizer()
     private var speechDelegate: TTSSpeechDelegate?
 
+    // OpenAI TTS playback (must be instance property — prevents ARC deallocation during playback)
+    private var audioPlayer: AVAudioPlayer?
+    private var playerDelegate: OpenAITTSDelegate?
+
     // MARK: - Logging
 
     private func log(_ msg: String) {
@@ -34,6 +38,8 @@ final class TTSService: ObservableObject, @unchecked Sendable {
 
     func stopSpeaking() {
         synthesizer.stopSpeaking(at: .immediate)
+        audioPlayer?.stop()
+        audioPlayer = nil
         isSpeaking = false
         // Give audio session time to fully release
         usleep(100_000)
@@ -76,9 +82,77 @@ final class TTSService: ObservableObject, @unchecked Sendable {
             .last ?? text
     }
 
-    // MARK: - TTS
+    // MARK: - TTS Dispatcher
 
     private func speak(_ text: String) {
+        guard !text.isEmpty else { return }
+        if let openAIKey = KeychainService.load(account: KeychainService.openAIAccount) {
+            speakWithOpenAI(text, apiKey: openAIKey)
+        } else {
+            speakWithAva(text)
+        }
+    }
+
+    // MARK: - OpenAI TTS Path
+
+    private func speakWithOpenAI(_ text: String, apiKey: String) {
+        log("OpenAI TTS: speaking: \(text.prefix(200))")
+        isSpeaking = true
+
+        Task {
+            do {
+                var request = URLRequest(url: URL(string: "https://api.openai.com/v1/audio/speech")!)
+                request.httpMethod = "POST"
+                // OpenAI requires capital-B "Bearer" (unlike Groq which requires lowercase)
+                request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+                let body: [String: Any] = [
+                    "model": "tts-1",
+                    "input": text,
+                    "voice": "nova",
+                    "response_format": "mp3",
+                    "speed": 0.95
+                ]
+                request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+                let (data, response) = try await URLSession.shared.data(for: request)
+
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+                    let bodyStr = String(data: data, encoding: .utf8) ?? "(no body)"
+                    log("OpenAI TTS error \(httpResponse.statusCode): \(bodyStr)")
+                    await MainActor.run { self.speakWithAva(text) }
+                    return
+                }
+
+                await MainActor.run {
+                    do {
+                        let player = try AVAudioPlayer(data: data, fileTypeHint: AVFileType.mp3.rawValue)
+                        self.playerDelegate = OpenAITTSDelegate { [weak self] in
+                            Task { @MainActor in
+                                self?.isSpeaking = false
+                                self?.audioPlayer = nil
+                            }
+                        }
+                        player.delegate = self.playerDelegate
+                        self.audioPlayer = player
+                        player.play()
+                        self.log("OpenAI TTS: playback started")
+                    } catch {
+                        self.log("OpenAI TTS: AVAudioPlayer failed: \(error)")
+                        self.speakWithAva(text)
+                    }
+                }
+            } catch {
+                log("OpenAI TTS: network error: \(error)")
+                await MainActor.run { self.speakWithAva(text) }
+            }
+        }
+    }
+
+    // MARK: - Ava TTS Path
+
+    private func speakWithAva(_ text: String) {
         guard !text.isEmpty else { return }
         log("speaking: \(text.prefix(200))")
         if isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
@@ -102,11 +176,18 @@ final class TTSService: ObservableObject, @unchecked Sendable {
     }
 }
 
-// MARK: - Speech Delegate
+// MARK: - Speech Delegates
 
 final class TTSSpeechDelegate: NSObject, AVSpeechSynthesizerDelegate, @unchecked Sendable {
     let onFinish: () -> Void
     init(onFinish: @escaping () -> Void) { self.onFinish = onFinish }
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) { onFinish() }
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) { onFinish() }
+}
+
+final class OpenAITTSDelegate: NSObject, AVAudioPlayerDelegate, @unchecked Sendable {
+    let onFinish: () -> Void
+    init(onFinish: @escaping () -> Void) { self.onFinish = onFinish }
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) { onFinish() }
+    func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) { onFinish() }
 }
