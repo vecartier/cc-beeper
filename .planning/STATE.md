@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Public Launch
 status: unknown
-stopped_at: Completed 13-03-PLAN.md
-last_updated: "2026-03-24T19:00:25.579Z"
+stopped_at: Completed 14-01-PLAN.md
+last_updated: "2026-03-24T20:24:39.790Z"
 progress:
   total_phases: 7
   completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 8
+  completed_plans: 7
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-24)
 
 **Core value:** Users can see what Claude is doing, respond to it, and give it instructions — without leaving their current workflow
-**Current focus:** Phase 13 — Onboarding
+**Current focus:** Phase 14 — Menu Bar Popover
 
 ## Current Position
 
-Phase: 13 (Onboarding) — EXECUTING
-Plan: 2 of 4
+Phase: 14 (Menu Bar Popover) — EXECUTING
+Plan: 1 of 2
 
 ## Performance Metrics
 
@@ -46,6 +46,7 @@ Plan: 2 of 4
 | Phase 13-onboarding P01 | 3 | 2 tasks | 8 files |
 | Phase 13-onboarding P02 | 3 | 2 tasks | 9 files |
 | Phase 13-onboarding P03 | 25 | 2 tasks | 1 files |
+| Phase 14-menu-bar-popover P01 | 2 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,8 @@ Plan: 2 of 4
 - [Phase 13-onboarding]: Deep links live in OnboardingViewModel methods; step views call viewModel.open*Settings() — correct encapsulation
 - [Phase 13-onboarding]: Color.accentColor (not .accent) for foregroundStyle — ShapeStyle has no .accent member on macOS 26
 - [Phase 13-onboarding]: @Environment(\.openWindow) must live in App struct not AppDelegate — AppDelegate is not in the SwiftUI environment
+- [Phase 14-menu-bar-popover]: MenuBarExtra uses .window style (not .menu) to render SwiftUI popover instead of native dropdown
+- [Phase 14-menu-bar-popover]: Settings window scene added alongside existing main/onboarding windows with id: settings
 
 ### Pending Todos
 
@@ -81,6 +84,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-24T19:00:25.575Z
-Stopped at: Completed 13-03-PLAN.md
+Last session: 2026-03-24T20:24:39.786Z
+Stopped at: Completed 14-01-PLAN.md
 Resume file: None
