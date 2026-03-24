@@ -13,6 +13,9 @@ let package = Package(
                 "buttons",
                 "shell.svg",
             ],
+            resources: [
+                .copy("claumagotchi-hook.py"),
+            ],
             swiftSettings: [
                 .swiftLanguageMode(.v5),
             ],
