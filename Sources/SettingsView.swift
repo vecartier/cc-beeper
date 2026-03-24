@@ -8,16 +8,16 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("Audio") {
-                Text("Audio settings")
+                SettingsAudioSection()
             }
             Section("Permissions") {
-                Text("Permissions")
+                SettingsPermissionsSection(viewModel: viewModel)
             }
             Section("Voice") {
-                Text("Voice")
+                SettingsVoiceSection(viewModel: viewModel)
             }
             Section("About") {
-                Text("About")
+                SettingsAboutSection()
             }
         }
         .frame(width: 460, height: 520)
