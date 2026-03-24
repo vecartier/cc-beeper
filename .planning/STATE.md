@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Public Launch
 status: unknown
-stopped_at: Completed 13-00-PLAN.md
-last_updated: "2026-03-24T18:17:16.286Z"
+stopped_at: Completed 13-01-PLAN.md
+last_updated: "2026-03-24T18:23:04.873Z"
 progress:
   total_phases: 7
   completed_phases: 1
   total_plans: 6
-  completed_plans: 3
+  completed_plans: 4
 ---
 
 # Project State
@@ -43,6 +43,7 @@ Plan: 1 of 4
 | Phase 12-code-quality P01 | 10 | 2 tasks | 13 files |
 | Phase 12-code-quality P02 | 3 | 2 tasks | 5 files |
 | Phase 13-onboarding P00 | 2 | 1 tasks | 4 files |
+| Phase 13-onboarding P01 | 3 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -59,6 +60,9 @@ Plan: 1 of 4
 - [Phase 12-code-quality]: BuzzService takes vibrationEnabled/soundEnabled as parameters — no direct ClaudeMonitor reference, one-directional dependency
 - [Phase 12-code-quality]: AppDelegate colocated with @main ClaumagotchiApp — acceptable exception to one-type-per-file rule
 - [Phase 13-onboarding]: testTarget has no dependencies on executable target — @testable import not supported for .executableTarget; stubs use XCTest only
+- [Phase 13-onboarding]: Hook script copied into Sources/ (not ../hooks/ path) — SPM resource path must be within target's path: directory
+- [Phase 13-onboarding]: AppMover uses fm.copyItem as primary operation — fm.moveItem fails cross-volume from DMG
+- [Phase 13-onboarding]: ClaudeDetector scans ~/.nvm/versions/node/ with contentsOfDirectory sorted newest-first — PATH in macOS app is minimal
 
 ### Pending Todos
 
@@ -71,6 +75,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-24T18:17:16.279Z
-Stopped at: Completed 13-00-PLAN.md
+Last session: 2026-03-24T18:23:04.869Z
+Stopped at: Completed 13-01-PLAN.md
 Resume file: None
