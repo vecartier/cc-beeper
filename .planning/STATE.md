@@ -1,53 +1,44 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: Voice Loop
-status: unknown
-stopped_at: "Completed 11-02 auto tasks — awaiting checkpoint:human-verify for Task 3"
-last_updated: "2026-03-22T22:02:49.385Z"
+milestone: v3.0
+milestone_name: Public Launch
+status: defining_requirements
+stopped_at: "Defining requirements for v3.0"
+last_updated: "2026-03-24"
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-21)
+See: .planning/PROJECT.md (updated 2026-03-24)
 
 **Core value:** Users can see what Claude is doing, respond to it, and give it instructions — without leaving their current workflow
-**Current focus:** Phase 11 — auto-speak-summary-hook
+**Current focus:** Defining v3.0 Public Launch requirements
 
 ## Current Position
 
-Phase: 11 (auto-speak-summary-hook) — EXECUTING
-Plan: 1 of 2
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-24 — Milestone v3.0 started
 
 ## Accumulated Context
 
 ### Decisions
 
-- v1.1 complete: All 4 phases shipped (hardening, reliability, UX, notifications)
-- v2.0 previously attempted (phases 5-8) and reverted — voice/settings/summary unreliable
-- VoiceLoop prototype validates: voice input, auto-speak, hook-based summary, CGEvent injection
-- Lessons: use regular window (not NSPanel), nil audio format, Apple Dev signing, nil CGEvent source
-- Extracted types to separate files following SwiftUI Pro one-type-per-file rule
-- isActive initialized in init body after setupFileWatcher so didSet only fires on external mutation
-- Hotkey guard pendingPermission moved into A/D cases only — S and G work without pending permission
-- thinkingStartTime only resets when transitioning INTO thinking (session state was not .thinking)
-- [Phase 09-ui-controls]: 4 buttons always visible in fixed layout — YOLO mode only affects screen text, not button visibility
-- [Phase 09-ui-controls]: ScreenContentView drives state-specific status text; ScreenView is a thin passthrough wrapper
-- [Phase 09-ui-controls]: Show/Hide Widget and Power Off are independent controls — Show/Hide preserves isActive, Power Off sets it false
-- [Phase 09-ui-controls]: Menu bar icon greyed only when powered off (EggIconState.hidden) — not when widget is merely hidden
-- [Phase 10-voice-input-injection]: VoiceService uses format:nil in installTap, nil CGEvent source, keyboardSetUnicodeString on keyDown+keyUp, /usr/bin/open -a for terminal focus — exact VoiceLoop prototype patterns
-- [Phase 10-voice-input-injection]: isRecording on ClaudeMonitor is private(set), driven exclusively by Combine from VoiceService; previousAppPID captured before startRecording for correct refocus target
-- [Phase 11]: ClaudeMonitor and VoiceService marked @MainActor (Swift 6 idiomatic pattern for ObservableObject)
-- [Phase 11]: Package.swift upgraded to swift-tools-version 6.2 and macOS .v26 for FoundationModels framework
-- [Phase 11-02]: Tasks 1+2 committed atomically due to cross-file dependency (VoiceService.ttsService referenced in ClaudeMonitor.init)
-- [Phase 11-02]: 300ms total TTS release: 100ms in stopSpeaking() + 200ms in startRecording() — matches VoiceLoop prototype
+- v1.1 complete: 4 phases shipped (hardening, reliability, UX, notifications)
+- v2.0 Voice Loop complete: 3 phases shipped (UI+controls, voice input, auto-speak)
+- v3.0-pre: Code Beeper UI redesign done in manual session (horizontal pager, PNG buttons, 8 shells, LEDs, vibration, marquee text)
+- Window-based vibration prevents blur (not view offset)
+- LED pulse uses Timer toggle (not SwiftUI animation) to avoid compositing bleed
+- Shell shadow causes text blur — removed
+- Second screen rendering causes apparent blur (not a code issue)
 
 ### Pending Todos
 
@@ -55,12 +46,6 @@ None yet.
 
 ### Blockers/Concerns
 
-- Audio engine corruption from rapid start/stop — mitigated by recreating AVAudioEngine each session
-- Accessibility permission requires Apple Development signing to persist across rebuilds
-- Apple Intelligence availability varies — need graceful fallback when unavailable
-
-## Session Continuity
-
-Last session: 2026-03-22T22:02:49.383Z
-Stopped at: Completed 11-02 auto tasks — awaiting checkpoint:human-verify for Task 3
-Resume file: None
+- Notarization requires Apple Developer Program ($99/yr) — may need Homebrew tap as alternative
+- Voice approach (SFSpeechRecognizer) is flaky on macOS — evaluate Groq Whisper
+- Summary flow needs redesign (manual trigger vs auto)
