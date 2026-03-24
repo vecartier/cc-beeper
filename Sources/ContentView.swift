@@ -1,4 +1,6 @@
 import SwiftUI
+import AVFoundation
+import AppKit
 
 struct ContentView: View {
     @EnvironmentObject var monitor: ClaudeMonitor
@@ -12,18 +14,19 @@ struct ContentView: View {
     private let lcdH: CGFloat = 45
 
     // Vibration
-    @State private var shakeOffset: CGFloat = 0
     @State private var lastVibrateState: ClaudeState?
     @State private var reminderTimer: Timer?
 
     // LED pulse
     @State private var ledPulse = false
+    private let ledTimer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
 
     var body: some View {
         ZStack(alignment: .topLeading) {
             // Shell background
             Image(nsImage: loadShellImage(themeManager.shellImageName))
                 .resizable()
+                .interpolation(.high)
                 .frame(width: shellW, height: shellH)
 
             // LED indicators — top right of bezel
@@ -43,7 +46,7 @@ struct ContentView: View {
             // LCD screen
             ScreenView()
                 .frame(width: lcdW, height: lcdH)
-                .clipShape(RoundedRectangle(cornerRadius: 2))
+                .clipped()
                 .offset(x: 40, y: 33)
                 .allowsHitTesting(false)
 
@@ -61,8 +64,8 @@ struct ContentView: View {
                         action: { monitor.voiceService.toggle() }
                     )
                     SoundMuteButton(
-                        autoSpeak: monitor.autoSpeak,
-                        action: { monitor.autoSpeak.toggle() }
+                        autoSpeak: monitor.ttsService.isSpeaking,
+                        action: { monitor.ttsService.stopSpeaking() }
                     )
                 }
 
@@ -74,9 +77,7 @@ struct ContentView: View {
             .offset(x: 16, y: shellH - 72)
         }
         .frame(width: shellW, height: shellH)
-        .shadow(color: .black.opacity(0.25), radius: 20, x: 0, y: 6)
         .padding(40)
-        .offset(x: shakeOffset)
         .background(Color.clear)
         .contextMenu {
             Button("Quit Claumagotchi") { NSApplication.shared.terminate(nil) }
@@ -84,20 +85,19 @@ struct ContentView: View {
         .onReceive(monitor.$state) { newState in
             handleStateChange(newState)
         }
+        .onReceive(ledTimer) { _ in
+            if monitor.state == .thinking || monitor.state == .needsYou {
+                ledPulse.toggle()
+            }
+        }
     }
 
     // MARK: - State handling
 
     private func handleStateChange(_ newState: ClaudeState) {
-        // LED pulse animation
-        if newState == .thinking || newState == .needsYou {
-            withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
-                ledPulse = true
-            }
-        } else {
-            withAnimation(.easeOut(duration: 0.3)) {
-                ledPulse = false
-            }
+        // LED pulse
+        if !(newState == .thinking || newState == .needsYou) {
+            ledPulse = false
         }
 
         // Vibration on done
@@ -110,13 +110,11 @@ struct ContentView: View {
         // Needs permission: vibrate now + repeat every 15s
         if newState == .needsYou {
             if lastVibrateState != newState {
-                // First vibration
                 if monitor.vibrationEnabled {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                         vibrate()
                     }
                 }
-                // Start reminder timer
                 reminderTimer?.invalidate()
                 reminderTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { _ in
                     if monitor.state == .needsYou && monitor.vibrationEnabled {
@@ -125,7 +123,6 @@ struct ContentView: View {
                 }
             }
         } else {
-            // Stop reminder timer when no longer needs attention
             reminderTimer?.invalidate()
             reminderTimer = nil
         }
@@ -157,24 +154,37 @@ struct ContentView: View {
         monitor.state == .thinking || monitor.state == .needsYou
     }
 
-    // MARK: - Vibration
+    // MARK: - Vibration (window-based, no view offset)
 
     private func vibrate() {
-        let shakes = 12
-        let distance: CGFloat = 4
-        let total = 0.42  // total duration
+        // 3 short beeps
+        playBeeps()
+
+        // Shake the window
+        guard let window = NSApp.windows.first(where: { $0.identifier?.rawValue == "main" }) else { return }
+        let origin = window.frame.origin
+        let shakes = 60
+        let distance: CGFloat = 3
+        let total = 3.0
         let interval = total / Double(shakes)
 
         for i in 0..<shakes {
             DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(i)) {
-                withAnimation(.linear(duration: interval * 0.5)) {
-                    shakeOffset = (i % 2 == 0) ? distance : -distance
-                }
+                let dx: CGFloat = (i % 2 == 0) ? distance : -distance
+                window.setFrameOrigin(NSPoint(x: origin.x + dx, y: origin.y))
             }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + total) {
-            withAnimation(.linear(duration: 0.05)) {
-                shakeOffset = 0
+            window.setFrameOrigin(origin)
+        }
+    }
+
+    private func playBeeps() {
+        guard monitor.soundEnabled else { return }
+        // 3 short beeps with pauses
+        for i in 0..<3 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.3) {
+                NSSound(named: "Tink")?.play()
             }
         }
     }
@@ -182,7 +192,6 @@ struct ContentView: View {
     private func loadShellImage(_ name: String) -> NSImage {
         if let path = Bundle.main.resourcePath,
            let img = NSImage(contentsOfFile: path + "/" + name) { return img }
-        if let img = NSImage(contentsOfFile: "/Users/vcartier/Desktop/Claumagotchi/Sources/shells/" + name) { return img }
         return NSImage()
     }
 }

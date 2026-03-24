@@ -6,7 +6,6 @@ import AppKit
 func loadButtonImage(_ name: String) -> NSImage {
     if let path = Bundle.main.resourcePath,
        let img = NSImage(contentsOfFile: path + "/" + name) { return img }
-    if let img = NSImage(contentsOfFile: "/Users/vcartier/Desktop/Claumagotchi/Sources/buttons/" + name) { return img }
     return NSImage()
 }
 

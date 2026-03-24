@@ -16,10 +16,7 @@ mkdir -p "$APP_DIR" "$RESOURCES_DIR"
 cp "$BINARY" "$APP_DIR/"
 
 # Copy shell image assets
-cp Sources/shells/shell-*.png "$RESOURCES_DIR/" 2>/dev/null
 cp Sources/shells/beeper-*.png "$RESOURCES_DIR/" 2>/dev/null
-# Default shell for fallback
-cp Sources/shells/shell-orange.png "$RESOURCES_DIR/shell.png" 2>/dev/null
 
 # Copy button image assets
 cp Sources/buttons/*.png "$RESOURCES_DIR/" 2>/dev/null
