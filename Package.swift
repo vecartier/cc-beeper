@@ -8,6 +8,11 @@ let package = Package(
         .executableTarget(
             name: "Claumagotchi",
             path: "Sources",
+            exclude: [
+                "shells",
+                "buttons",
+                "shell.svg",
+            ],
             swiftSettings: [
                 .swiftLanguageMode(.v5),
             ],

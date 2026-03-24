@@ -116,9 +116,12 @@ struct ContentView: View {
                     }
                 }
                 reminderTimer?.invalidate()
-                reminderTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { _ in
-                    if monitor.state == .needsYou && monitor.vibrationEnabled {
-                        vibrate()
+                reminderTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak monitor] _ in
+                    Task { @MainActor in
+                        guard let monitor else { return }
+                        if monitor.state == .needsYou && monitor.vibrationEnabled {
+                            vibrate()
+                        }
                     }
                 }
             }
