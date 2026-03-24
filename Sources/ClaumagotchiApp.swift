@@ -111,55 +111,6 @@ struct ClaumagotchiApp: App {
     }
 }
 
-// MARK: - Egg-shaped menu bar icon
-
-enum EggIconState {
-    case normal
-    case attention   // needsYou — orange
-    case yolo        // autoAccept — purple
-    case hidden      // powered off — dimmed
-}
-
-enum EggIcon {
-    static func image(state: EggIconState) -> NSImage {
-        let size = NSSize(width: 18, height: 18)
-        let color: NSColor = switch state {
-        case .normal:    .black
-        case .attention: .systemOrange
-        case .yolo:      .systemPurple
-        case .hidden:    .gray
-        }
-
-        let img = NSImage(size: size, flipped: true) { _ in
-            let eggRect = NSRect(x: 2, y: 1, width: 14, height: 16)
-            let egg = NSBezierPath(ovalIn: eggRect)
-            color.setFill()
-            egg.fill()
-
-            let screen = NSRect(x: 5, y: 4, width: 8, height: 6)
-            let screenPath = NSBezierPath(roundedRect: screen, xRadius: 1, yRadius: 1)
-            NSGraphicsContext.current?.compositingOperation = .copy
-            NSColor.clear.setFill()
-            screenPath.fill()
-
-            NSGraphicsContext.current?.compositingOperation = .sourceOver
-            color.setFill()
-            NSRect(x: 7, y: 6, width: 1.5, height: 1.5).fill()
-            NSRect(x: 10, y: 6, width: 1.5, height: 1.5).fill()
-            NSRect(x: 8, y: 8, width: 3, height: 1).fill()
-
-            NSGraphicsContext.current?.compositingOperation = .copy
-            NSColor.clear.setFill()
-            for dx: CGFloat in [5.5, 8.5, 11.5] {
-                NSBezierPath(ovalIn: NSRect(x: dx, y: 12, width: 1.5, height: 1.5)).fill()
-            }
-            return true
-        }
-        img.isTemplate = (state == .normal)
-        return img
-    }
-}
-
 // MARK: - App Delegate
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -226,52 +177,3 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-// MARK: - Window Configurator
-
-struct WindowConfigurator: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
-        DispatchQueue.main.async {
-            guard let window = view.window else { return }
-            window.backgroundColor = .clear
-            window.isOpaque = false
-            window.hasShadow = false
-            window.level = .floating
-            window.isMovableByWindowBackground = true
-            window.titlebarAppearsTransparent = true
-            window.titleVisibility = .hidden
-            window.styleMask.insert(.fullSizeContentView)
-            // Remove all title bar buttons
-            window.styleMask.remove(.titled)
-            window.standardWindowButton(.closeButton)?.isHidden = true
-            window.standardWindowButton(.miniaturizeButton)?.isHidden = true
-            window.standardWindowButton(.zoomButton)?.isHidden = true
-            window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-
-            // Constrain to screen bounds
-            constrainToScreen(window)
-            NotificationCenter.default.addObserver(
-                forName: NSWindow.didMoveNotification,
-                object: window, queue: .main
-            ) { _ in constrainToScreen(window) }
-        }
-        return view
-    }
-
-    func updateNSView(_ nsView: NSView, context: Context) {}
-}
-
-private func constrainToScreen(_ window: NSWindow) {
-    guard let screen = window.screen ?? NSScreen.main else { return }
-    let visible = screen.visibleFrame
-    var frame = window.frame
-
-    if frame.minX < visible.minX { frame.origin.x = visible.minX }
-    if frame.minY < visible.minY { frame.origin.y = visible.minY }
-    if frame.maxX > visible.maxX { frame.origin.x = visible.maxX - frame.width }
-    if frame.maxY > visible.maxY { frame.origin.y = visible.maxY - frame.height }
-
-    if frame != window.frame {
-        window.setFrame(frame, display: false)
-    }
-}
