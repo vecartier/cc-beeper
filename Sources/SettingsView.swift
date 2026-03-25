@@ -21,7 +21,8 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(minWidth: 400, minHeight: 450)
+        .frame(width: 460, height: 520)
+        .scrollContentBackground(.visible)
         .onAppear { viewModel.startPolling() }
         .onDisappear { viewModel.stopPolling() }
     }

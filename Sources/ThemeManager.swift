@@ -13,9 +13,11 @@ struct ShellTheme: Identifiable, Equatable {
 final class ThemeManager: ObservableObject {
     static let themes: [ShellTheme] = [
         ShellTheme(id: "black", name: "Black", shellImage: "beeper-black.png"),
-        ShellTheme(id: "orange", name: "Orange", shellImage: "beeper-orange.png"),
         ShellTheme(id: "blue", name: "Blue", shellImage: "beeper-blue.png"),
         ShellTheme(id: "green", name: "Green", shellImage: "beeper-green.png"),
+        ShellTheme(id: "mint", name: "Mint", shellImage: "beeper-mint.png"),
+        ShellTheme(id: "orange", name: "Orange", shellImage: "beeper-orange.png"),
+        ShellTheme(id: "pink", name: "Pink", shellImage: "beeper-pink.png"),
         ShellTheme(id: "purple", name: "Purple", shellImage: "beeper-purple.png"),
         ShellTheme(id: "red", name: "Red", shellImage: "beeper-red.png"),
         ShellTheme(id: "white", name: "White", shellImage: "beeper-white.png"),

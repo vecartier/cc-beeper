@@ -91,9 +91,11 @@ struct MenuBarPopoverView: View {
     private func colorForTheme(_ id: String) -> Color {
         switch id {
         case "black": return Color(white: 0.15)
-        case "orange": return .orange
         case "blue": return .blue
         case "green": return .green
+        case "mint": return .mint
+        case "orange": return .orange
+        case "pink": return .pink
         case "purple": return .purple
         case "red": return .red
         case "white": return Color(white: 0.85)
