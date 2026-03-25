@@ -1,150 +1,137 @@
-# Claumagotchi
-
+<!-- Replace docs/demo.gif with your screen recording when ready -->
 <p align="center">
-  <img src="screenshot.png" alt="Claumagotchi" width="280">
+  <img src="docs/demo.gif" alt="CC-Beeper in action" width="600">
 </p>
 
-A Tamagotchi-style desktop companion for [Claude Code](https://docs.anthropic.com/en/docs/claude-code). It floats above your windows and shows you what Claude is doing across all your sessions — thinking, done, or waiting for permission. You can approve or deny tool requests directly from the widget.
+# CC-Beeper
 
-## Requirements
+<p align="center">
+  A retro pager companion for Claude Code. Floats on your screen. Shows what Claude is doing. Lets you talk back.
+</p>
 
-- macOS 14+
-- Swift 5.10+ (comes with Xcode or Xcode Command Line Tools)
-- Python 3 (comes with macOS)
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
+<p align="center">
+  <img src="https://img.shields.io/badge/macOS-14%2B-black?style=flat-square" alt="macOS 14+">
+  <img src="https://img.shields.io/badge/Swift-6-orange?style=flat-square" alt="Swift 6">
+  <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT License">
+</p>
+
+<p align="center">
+  <a href="https://github.com/vecartier/Claumagotchi/releases/latest"><strong>⬇ Download DMG</strong></a>
+</p>
+
+---
 
 ## Install
 
-### Quick install (DMG)
+### Download (recommended)
 
-Download the latest `Claumagotchi.dmg` from [Releases](https://github.com/vecartier/Claumagotchi/releases), open it, and drag **Claumagotchi.app** to **Applications**. Then register the hooks:
-
-```bash
-cd ~/Claumagotchi   # or wherever you cloned the repo
-python3 setup.py
-open /Applications/Claumagotchi.app
-```
-
-To build the DMG yourself:
-
-```bash
-make dmg
-```
+[Download CC-Beeper.dmg](https://github.com/vecartier/Claumagotchi/releases/latest) — open, double-click CC-Beeper.app, and follow the setup wizard. No Terminal required.
 
 ### Build from source
 
 ```bash
-git clone https://github.com/vecartier/Claumagotchi.git ~/Claumagotchi
-cd ~/Claumagotchi
+git clone https://github.com/vecartier/Claumagotchi.git
+cd Claumagotchi
 make install
 ```
 
-That's it. The app builds, hooks are registered, and the widget launches. It will auto-launch every time you start a Claude Code session.
+`make install` builds the app, installs hooks, and launches CC-Beeper. Requires Swift (via Xcode Command Line Tools).
 
-To build without installing hooks or launching:
+---
 
-```bash
-make build
-```
+## What is CC-Beeper?
 
-To launch manually:
+CC-Beeper is a floating macOS desktop widget that shows you what Claude Code is doing across all your sessions — and lets you respond without touching the terminal. It sits on screen like a retro pager, updating its LCD display in real time.
 
-```bash
-open Claumagotchi.app
-```
+| State | Meaning |
+|-------|---------|
+| THINKING | Claude is working — tool calls, file edits, reasoning |
+| DONE | Claude finished and is waiting for your next message |
+| NEEDS YOU | Claude needs permission to run a tool |
+
+---
+
+## Features
+
+<table>
+<tr>
+<td align="center"><strong>Monitor</strong></td>
+<td align="center"><strong>Voice</strong></td>
+<td align="center"><strong>Permissions</strong></td>
+<td align="center"><strong>Themes</strong></td>
+</tr>
+<tr>
+<td>🖥️ Floating LCD pager shows Claude's state in real time across all sessions</td>
+<td>🎙️ Press Speak, dictate your message, CC-Beeper injects it into Claude Code</td>
+<td>✅ Approve or deny tool requests — file writes, shell commands, network calls — without touching the terminal</td>
+<td>🎨 10 color shells: black, blue, green, mint, orange, pink, purple, red, white, yellow</td>
+</tr>
+</table>
+
+- **YOLO mode** — auto-approve all tool requests (shows YOLO on LCD when active)
+- **Vibration alerts** — haptic-style window shake when Claude needs you
+- **Global hotkeys** — control CC-Beeper without switching focus
+- **Auto-speak** — CC-Beeper reads Claude's summaries aloud when it finishes
+
+---
+
+## Shell Themes
+
+<!-- docs/cover.png = your cover image showing all 10 shells on black background -->
+<p align="center"><img src="docs/cover.png" alt="All 10 CC-Beeper color shells" width="700"></p>
+
+Choose from 10 color shells — black, blue, green, mint, orange, pink, purple, red, white, yellow. Dark mode supported.
+
+---
 
 ## How it works
 
-Claumagotchi uses Claude Code's [hooks system](https://docs.anthropic.com/en/docs/claude-code/hooks) to monitor sessions. A Python hook script receives events from Claude Code and writes them to `/tmp/claumagotchi-events.jsonl`. The SwiftUI app watches that file and updates the display in real time.
+CC-Beeper uses Claude Code's [hooks system](https://docs.anthropic.com/en/docs/claude-code/hooks) to monitor sessions. A Python hook script receives events from Claude Code and writes them to a shared IPC directory. The macOS app watches those files and updates in real time.
 
 ```
-Claude Code  -->  Hook (Python)  -->  /tmp/*.jsonl  -->  SwiftUI App
-                       |                                      |
-                  Permission? -----> /tmp/pending.json -----> Show UI
-                       ^                                      |
-                       +--------  /tmp/response.json  <-------+
+Claude Code  ──►  Hook (Python)  ──►  /tmp/cc-beeper/*.jsonl  ──►  CC-Beeper.app
+                       │                                                │
+                  Permission? ───►  /tmp/cc-beeper/pending.json ───────►  Show NEEDS YOU
+                       ▲                                                │
+                       └────────  /tmp/cc-beeper/response.json  ◄──────┘
 ```
 
-The events file auto-truncates at 50KB to prevent unbounded growth.
+---
 
-### States
+## Requirements
 
-| State | What it means |
-|-------|--------------|
-| **THINKING...** | Claude is actively working (tool calls, reasoning) |
-| **DONE!** | Claude finished and is waiting for your next message |
-| **NEEDS YOU!** | Claude needs permission to use a tool |
+- macOS 14 or later
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI installed
+- (Optional) Groq API key for higher-quality voice transcription
+- (Optional) OpenAI API key for AI-powered text-to-speech
 
-### Buttons
-
-Three buttons in an inverted-V layout on dark purple translucent backgrounds:
-
-- **Left** (red X) — deny the permission request
-- **Right** (green checkmark) — approve the permission request
-- **Center** (purple arrow) — switch to your terminal
-
-Permission state persists until you explicitly act — it won't disappear on its own.
-
-## Menu bar
-
-Click the egg icon in your menu bar for:
-
-- **Allow / Deny** — handle permissions without touching the widget
-- **Go to Conversation** — jump to your terminal
-- **Enable/Disable Auto-Accept** — automatically approve all permission requests (shows "YOLO" on the LCD when active)
-- **Enable/Disable Sounds** — toggle notification sounds
-- **Theme** — pick a color pairing (Sunset, Sakura, Ocean, Forest, Lavender, Honey, Mint, Berry) and toggle dark mode
-- **Show / Hide** — toggle the floating widget
-- **Quit**
-
-## Settings
-
-Settings persist across restarts via UserDefaults:
-
-- **Auto-Accept** — approve all tool permissions automatically (off by default). When active, a blinking "YOLO" indicator appears on the LCD screen.
-- **Sounds** — play a chime when Claude finishes or needs permission (on by default)
-- **Theme** — 8 color pairings for the shell and buttons (default: Sunset)
-- **Dark Mode** — darkened shell and inverted LCD for low-light use
-
-## Uninstall
-
-```bash
-cd ~/Claumagotchi
-make uninstall
-```
-
-This removes the hooks from Claude Code settings, stops the app, and cleans up temp files. You can then delete the folder.
-
-## Project structure
-
-```
-Claumagotchi/
-  Package.swift          # Swift package manifest (macOS 14+, Swift 5.10)
-  Makefile               # build / install / uninstall / dmg
-  build.sh               # Builds the .app bundle
-  create-dmg.sh          # Packages the app into a DMG for distribution
-  setup.py               # Registers hooks with Claude Code
-  uninstall.py           # Removes hooks and cleans up
-  Sources/
-    ClaumagotchiApp.swift # App entry, menu bar, window config
-    ClaudeMonitor.swift   # State machine, file watcher, event processing
-    ContentView.swift     # Egg shell UI, buttons, pixel title
-    ScreenView.swift      # LCD screen, pixel character sprites
-    ThemeManager.swift    # Color themes and dark mode
-  hooks/
-    claumagotchi-hook.py  # Claude Code hook script (installed to ~/.claude/hooks/)
-```
+---
 
 ## Important disclaimer
 
-Claumagotchi lets you approve or deny Claude Code tool requests (file writes, shell commands, etc.) directly from the widget. **You are responsible for reviewing what you approve.** Clicking "Allow" grants Claude Code permission to execute the requested action on your machine.
+> CC-Beeper lets you approve or deny Claude Code tool requests directly from the widget. **You are responsible for reviewing what you approve.** Clicking "Allow" grants Claude Code permission to execute the requested action on your machine.
+>
+> **YOLO mode** automatically approves every permission request without prompting. When enabled, Claude Code will execute all tool calls — including file modifications, shell commands, and network requests — without asking for confirmation. **Use YOLO mode at your own risk.**
+>
+> The authors are not liable for any damage, data loss, or unintended consequences. By using CC-Beeper, you accept these risks.
 
-**Auto-Accept mode** automatically approves every permission request without prompting you. When enabled, Claude Code will execute all tool calls — including file modifications, shell commands, and network requests — without asking for confirmation. **Use Auto-Accept at your own risk.** It is disabled by default for a reason.
+---
 
-The authors of this software are not liable for any damage, data loss, or unintended consequences resulting from approved tool executions, whether approved manually or via Auto-Accept. By using this software, you acknowledge that you understand and accept these risks.
+## Contributing
 
-Always review permission details in the widget or menu bar before approving, especially for destructive operations.
+Contributions are welcome.
+
+1. Fork the repo and create a feature branch
+2. CC-Beeper is a Swift Package — open `Package.swift` in Xcode or build with `make build`
+3. Submit a pull request with a clear description
+
+CC-Beeper uses Claude Code's hooks system. See [Hooks docs](https://docs.anthropic.com/en/docs/claude-code/hooks) for how the IPC layer works.
+
+- **Bug reports:** open a GitHub issue
+- **Feature requests:** open a GitHub discussion
+
+---
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE)

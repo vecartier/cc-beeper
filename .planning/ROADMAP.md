@@ -70,7 +70,7 @@ v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and aut
 - [x] **Phase 14: Menu Bar Popover** - Replace dropdown with rich popover panel (toggles, settings, permissions, about) (completed 2026-03-24)
 - [x] **Phase 15: Voice Fixes** - Polish on-device SFSpeech, add optional BYOK Groq Whisper + OpenAI TTS, store API keys in Keychain (completed 2026-03-25)
 - [x] **Phase 16: Visual Polish** - Deep rename to CC-Beeper, LCD bounce animation, dark mode verification, button feedback, vibration bug fixes, Settings sidebar (completed 2026-03-25)
-- [ ] **Phase 17: Distribution** - DMG packaging, code signing, notarization, auto-install to /Applications
+- [x] **Phase 17: Distribution** - DMG packaging, code signing, notarization, auto-install to /Applications (completed 2026-03-25)
 - [ ] **Phase 18: GitHub README** - Landing-style README with hero GIF, feature grid, install command, theme screenshots
 
 ## Phase Details
@@ -177,9 +177,11 @@ Plans:
   1. README opens with a hero GIF showing the beeper reacting to a live Claude Code session
   2. A feature grid with icons covers the four pillars: monitoring, voice, permissions, themes
   3. A one-liner install command and a DMG download link are prominently placed above the fold
-  4. Screenshots of all 8 shell color themes are displayed in the README
+  4. Screenshots of all 10 shell color themes are displayed in the README
   5. A contributing guide and license section are present at the bottom
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 18-01-PLAN.md — Full landing-page README: hero, feature grid, install, themes, contributing, license
 
 ## Progress
 
@@ -197,5 +199,5 @@ Note: Phase 15 (Voice Fixes) depends only on Phase 12 and can be executed in par
 | 14. Menu Bar Popover | 2/2 | Complete    | 2026-03-24 | - |
 | 15. Voice Fixes | 2/2 | Complete    | 2026-03-25 | - |
 | 16. Visual Polish | 3/3 | Complete    | 2026-03-25 | - |
-| 17. Distribution | 1/2 | In Progress|  | - |
-| 18. GitHub README | v3.0 Public Launch | 0/TBD | Not started | - |
+| 17. Distribution | 2/2 | Complete    | 2026-03-25 | - |
+| 18. GitHub README | v3.0 Public Launch | 0/1 | Not started | - |

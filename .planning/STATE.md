@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Public Launch
 status: unknown
-stopped_at: Completed 17-01-PLAN.md — DMG packaging scripts updated for CC-Beeper distribution
-last_updated: "2026-03-25T10:57:30.642Z"
+stopped_at: Completed 17-02-PLAN.md — GitHub Actions release workflow and notarization docs
+last_updated: "2026-03-25T11:22:43.700Z"
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 15
-  completed_plans: 14
+  completed_plans: 15
 ---
 
 # Project State
@@ -54,6 +54,7 @@ Plan: 2 of 2
 | Phase 16-visual-polish P02 | 2 | 2 tasks | 3 files |
 | Phase 16 P03 | 4 | 1 tasks | 2 files |
 | Phase 17-distribution P01 | 38min | 2 tasks | 3 files |
+| Phase 17-distribution P02 | 6min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -97,6 +98,8 @@ Plan: 2 of 2
 - [Phase 16-visual-polish]: Settings window frame updated to 580x420 — wider for sidebar+detail layout, shorter since only one section visible at a time
 - [Phase 17-distribution]: Ad-hoc signing (-) is the SIGNING_IDENTITY default — local users never need a Developer ID; distribution builds override via env var
 - [Phase 17-distribution]: autoupdate plist retains legacy name com.claumagotchi.autoupdate.plist — rename out of scope for distribution plan
+- [Phase 17-distribution]: Notarization is opt-in (commented out in workflow) — Apple Developer Program enrollment required, not assumed
+- [Phase 17-distribution]: softprops/action-gh-release@v2 used for GitHub Release creation (actions/create-release is deprecated)
 
 ### Pending Todos
 
@@ -109,6 +112,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T10:57:30.638Z
-Stopped at: Completed 17-01-PLAN.md — DMG packaging scripts updated for CC-Beeper distribution
+Last session: 2026-03-25T11:22:43.696Z
+Stopped at: Completed 17-02-PLAN.md — GitHub Actions release workflow and notarization docs
 Resume file: None
