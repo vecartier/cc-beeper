@@ -6,6 +6,7 @@ struct ScreenContentView: View {
     @State private var animFrame = 0
     @State private var tick = 0
     @State private var isWindowVisible = true
+    @State private var bounceOffset: CGFloat = 0
 
     private let animTimer = Timer.publish(every: 0.45, on: .main, in: .common).autoconnect()
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -25,6 +26,7 @@ struct ScreenContentView: View {
                     isYolo: isYoloActive
                 )
                 .frame(width: 35, height: 30)
+                .offset(y: bounceOffset)
 
                 // Status: big title + scrolling detail
                 VStack(alignment: .leading, spacing: 1) {
@@ -114,6 +116,17 @@ struct ScreenContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didChangeOcclusionStateNotification)) { notification in
             if let window = notification.object as? NSWindow {
                 isWindowVisible = window.occlusionState.contains(.visible)
+            }
+        }
+        .onChange(of: monitor.state) { oldState, newState in
+            guard oldState != newState else { return }
+            withAnimation(.easeOut(duration: 0.1)) {
+                bounceOffset = -4
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.easeIn(duration: 0.15)) {
+                    bounceOffset = 0
+                }
             }
         }
     }
