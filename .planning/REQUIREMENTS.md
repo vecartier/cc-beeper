@@ -43,11 +43,11 @@ Requirements for Public Launch milestone. Each maps to roadmap phases.
 
 ### GitHub
 
-- [ ] **GH-01**: Landing-style README with hero GIF showing the beeper in action
-- [ ] **GH-02**: Feature grid with icons (monitoring, voice, permissions, themes)
-- [ ] **GH-03**: One-liner install command + DMG download link
-- [ ] **GH-04**: Screenshots of all shell color themes
-- [ ] **GH-05**: Contributing guide and license
+- [x] **GH-01**: Landing-style README with hero GIF showing the beeper in action
+- [x] **GH-02**: Feature grid with icons (monitoring, voice, permissions, themes)
+- [x] **GH-03**: One-liner install command + DMG download link
+- [x] **GH-04**: Screenshots of all shell color themes
+- [x] **GH-05**: Contributing guide and license
 
 ### Visual Polish
 
@@ -107,11 +107,11 @@ Requirements for Public Launch milestone. Each maps to roadmap phases.
 | DIST-02 | Phase 17 | Complete |
 | DIST-03 | Phase 17 | Complete |
 | DIST-04 | Phase 17 | Complete |
-| GH-01 | Phase 18 | Pending |
-| GH-02 | Phase 18 | Pending |
-| GH-03 | Phase 18 | Pending |
-| GH-04 | Phase 18 | Pending |
-| GH-05 | Phase 18 | Pending |
+| GH-01 | Phase 18 | Complete |
+| GH-02 | Phase 18 | Complete |
+| GH-03 | Phase 18 | Complete |
+| GH-04 | Phase 18 | Complete |
+| GH-05 | Phase 18 | Complete |
 | VFX-01 | Phase 16 | Complete |
 | VFX-02 | Phase 16 | Complete |
 | VFX-03 | Phase 16 | Complete |
