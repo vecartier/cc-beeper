@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Public Launch
 status: unknown
-stopped_at: Completed 16-03-PLAN.md — Settings NavigationSplitView sidebar
-last_updated: "2026-03-25T09:45:36.198Z"
+stopped_at: Completed 16-02-PLAN.md — visual polish bounce animation and vibration fixes
+last_updated: "2026-03-25T09:46:45.828Z"
 progress:
   total_phases: 7
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 13
-  completed_plans: 12
+  completed_plans: 13
 ---
 
 # Project State
@@ -51,6 +51,7 @@ Plan: 1 of 3
 | Phase 15-voice-fixes P01 | 3 | 2 tasks | 4 files |
 | Phase 15-voice-fixes P02 | 45 | 3 tasks | 10 files |
 | Phase 16-visual-polish P01 | 7 | 2 tasks | 19 files |
+| Phase 16-visual-polish P02 | 2 | 2 tasks | 3 files |
 | Phase 16 P03 | 4 | 1 tasks | 2 files |
 
 ## Accumulated Context
@@ -88,6 +89,9 @@ Plan: 1 of 3
 - [Phase 16-visual-polish]: PixelTitle LCD screen updated from CLAUMAGOTCHI to CC-BEEPER with new pixel font glyphs for B, E, P, R, dash
 - [Phase 16-visual-polish]: IPC directory migration runs in applicationDidFinishLaunching before PID check — ensures existing users' data carries over to cc-beeper path
 - [Phase 16-visual-polish]: Keychain migration is lazy (load-time per account, not startup sweep) — com.claumagotchi.apikeys falls back to com.vecartier.cc-beeper.apikeys
+- [Phase 16-visual-polish P02]: Text swap instant, only PixelCharacterView bounces on state change — Text views have no animation
+- [Phase 16-visual-polish P02]: cancelVibration() does NOT stop reminderTimer — click cancels current buzz only, 15s reminders continue
+- [Phase 16-visual-polish P02]: Shake reset uses current window frame.origin (not captured) — correct position after drag-during-shake
 - [Phase 16-visual-polish]: SettingsTab enum placed in SettingsView.swift (not separate file) — only used by SettingsView, no external consumers
 - [Phase 16-visual-polish]: Settings window frame updated to 580x420 — wider for sidebar+detail layout, shorter since only one section visible at a time
 
@@ -102,6 +106,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T09:45:36.193Z
-Stopped at: Completed 16-03-PLAN.md — Settings NavigationSplitView sidebar
+Last session: 2026-03-25T09:46:45.824Z
+Stopped at: Completed 16-02-PLAN.md — visual polish bounce animation and vibration fixes
 Resume file: None
