@@ -1,6 +1,6 @@
-# Requirements: CC-Beeper (Claumagotchi)
+# Requirements: CC-Beeper
 
-**Defined:** 2026-03-24
+**Defined:** 2026-03-24 | **Updated:** 2026-03-25
 **Core Value:** Users can see what Claude is doing, respond to it, and give it instructions — without leaving their current workflow
 
 ## v3.0 Requirements
@@ -61,6 +61,32 @@ Requirements for Public Launch milestone. Each maps to roadmap phases.
 - [x] **VOICE-06**: API key stored in macOS Keychain (prompted during onboarding if voice enabled)
 - [x] **VOICE-07**: Summary flow: manual "Summarize" button when Claude finishes, not just auto-speak
 
+## v3.1 Requirements
+
+Requirements for Polish & Fixes milestone.
+
+### Cleanup
+
+- [x] **CLN-01**: All Claumagotchi references removed from laptop (old .app in /Applications, Desktop PNG assets, .claude/memory entries)
+- [x] **CLN-02**: Zero "Claumagotchi" mentions remain in the CC-Beeper codebase (code, comments, configs, scripts)
+
+### GitHub Presence
+
+- [ ] **GH2-01**: README uses the new multi-shell cover image as hero
+- [ ] **GH2-02**: README copy is rewritten — exciting, concise, zero Claumagotchi mentions
+- [ ] **GH2-03**: GitHub repo description and metadata updated to match new branding
+
+### Bug Fixes
+
+- [ ] **FIX-01**: Auto-speak TTS works end-to-end — Claude Code stops → summary-hook fires → TTS speaks the summary
+- [ ] **FIX-02**: TTS falls back gracefully (OpenAI TTS if key set, Apple Ava if not)
+
+### Branding
+
+- [ ] **BRD-01**: Menu bar icon is a beeper-shaped silhouette (replaces current icon)
+- [ ] **BRD-02**: Custom app icon integrated (user provides Figma export)
+- [ ] **BRD-03**: DMG window uses CC-Beeper branding (volume name, background if provided)
+
 ## Future Requirements
 
 ### Post-Launch
@@ -77,8 +103,7 @@ Requirements for Public Launch milestone. Each maps to roadmap phases.
 |---------|--------|
 | iOS/iPad companion | macOS only |
 | App Store distribution | GitHub + DMG for v3.0 |
-| BYOK API keys (beyond Groq) | Groq free tier sufficient |
-| External TTS (OpenAI, ElevenLabs) | Ava Premium is adequate |
+| FluidVoice integration | GPLv3 full app, not a library — investigated and ruled out |
 | Dropdown menu | Replaced by popover panel |
 
 ## Traceability
@@ -118,11 +143,27 @@ Requirements for Public Launch milestone. Each maps to roadmap phases.
 | VOICE-05 | Phase 15 | Complete |
 | VOICE-06 | Phase 15 | Complete |
 | VOICE-07 | Phase 15 | Complete |
+| CLN-01 | Phase 19 | Complete |
+| CLN-02 | Phase 19 | Complete |
+| GH2-01 | Phase 21 | Pending |
+| GH2-02 | Phase 21 | Pending |
+| GH2-03 | Phase 21 | Pending |
+| FIX-01 | Phase 20 | Pending |
+| FIX-02 | Phase 20 | Pending |
+| BRD-01 | Phase 21 | Pending |
+| BRD-02 | Phase 22 | Pending |
+| BRD-03 | Phase 22 | Pending |
 
 **Coverage:**
 - v3.0 requirements: 33 total
 - Mapped to phases: 33
 - Unmapped: 0 ✓
 
+**v3.1 Coverage:**
+- v3.1 requirements: 10 total
+- Mapped to phases: 10
+- Unmapped: 0 ✓
+
 ---
 *Requirements defined: 2026-03-24*
+*Updated: 2026-03-25 after v3.1 roadmap (Phases 19-22) created*

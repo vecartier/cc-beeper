@@ -157,7 +157,7 @@ v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and aut
 
 **Milestone Goal:** Erase all Claumagotchi traces (laptop-wide + in-repo), fix the broken auto-speak TTS flow, refresh GitHub presence with new cover art and rewritten copy, add a beeper-shaped menu bar icon, and complete a final branding pass (app icon + DMG) once the user provides Figma-exported assets.
 
-- [ ] **Phase 19: Cleanup** - Purge all Claumagotchi references from the laptop and the codebase
+- [x] **Phase 19: Cleanup** - Purge all Claumagotchi references from the laptop and the codebase (completed 2026-03-25)
 - [ ] **Phase 20: Fix Auto-Speak TTS** - Wire summary-hook into hook registration so TTS fires end-to-end
 - [ ] **Phase 21: GitHub & Branding** - Rewrite README with new cover image, update repo metadata, ship beeper menu bar icon
 - [ ] **Phase 22: Final Branding** - Integrate custom app icon and DMG branding once user provides Figma exports
@@ -176,8 +176,8 @@ v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and aut
 **Plans**: 2 plans
 
 Plans:
-- [ ] 19-01: Laptop-wide Claumagotchi purge — remove old .app, Desktop assets, .claude/memory refs
-- [ ] 19-02: In-repo code purge — sweep all Swift, Python, config, and comment files for remaining "Claumagotchi" strings
+- [x] 19-01: Laptop-wide Claumagotchi purge — remove old .app, Desktop assets, .claude/memory refs
+- [x] 19-02: In-repo code purge — sweep all Swift, Python, config, and comment files for remaining "Claumagotchi" strings
 
 ### Phase 20: Fix Auto-Speak TTS
 **Goal**: When Claude Code finishes a session, the summary-hook fires automatically, and the app speaks the summary aloud — with a graceful fallback if no OpenAI key is set
@@ -243,7 +243,7 @@ Note: Phase 20 (Fix Auto-Speak TTS) and Phase 21 (GitHub & Branding) both depend
 | 16. Visual Polish | v3.0 Public Launch | 3/3 | Complete | 2026-03-25 |
 | 17. Distribution | v3.0 Public Launch | 2/2 | Complete | 2026-03-25 |
 | 18. GitHub README | v3.0 Public Launch | 1/1 | Complete | 2026-03-25 |
-| 19. Cleanup | v3.1 Polish & Fixes | 0/2 | Not started | - |
+| 19. Cleanup | v3.1 Polish & Fixes | 2/2 | Complete   | 2026-03-25 |
 | 20. Fix Auto-Speak TTS | v3.1 Polish & Fixes | 0/2 | Not started | - |
 | 21. GitHub & Branding | v3.1 Polish & Fixes | 0/2 | Not started | - |
 | 22. Final Branding | v3.1 Polish & Fixes | 0/2 | Not started | - |
