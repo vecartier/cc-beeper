@@ -9,24 +9,24 @@ cd "$(dirname "$0")"
 echo "Creating DMG..."
 
 # Clean up any previous staging
-rm -rf /tmp/claumagotchi-dmg Claumagotchi.dmg
+rm -rf /tmp/cc-beeper-dmg CC-Beeper.dmg
 
 # Stage the DMG contents
-mkdir -p /tmp/claumagotchi-dmg
-cp -R Claumagotchi.app /tmp/claumagotchi-dmg/
-ln -s /Applications /tmp/claumagotchi-dmg/Applications
+mkdir -p /tmp/cc-beeper-dmg
+cp -R CC-Beeper.app /tmp/cc-beeper-dmg/
+ln -s /Applications /tmp/cc-beeper-dmg/Applications
 
 # Create compressed DMG
 hdiutil create \
-    -volname "Claumagotchi" \
-    -srcfolder /tmp/claumagotchi-dmg \
+    -volname "CC-Beeper" \
+    -srcfolder /tmp/cc-beeper-dmg \
     -ov \
     -format UDZO \
-    Claumagotchi.dmg
+    CC-Beeper.dmg
 
 # Clean up staging
-rm -rf /tmp/claumagotchi-dmg
+rm -rf /tmp/cc-beeper-dmg
 
 echo ""
-echo "Created Claumagotchi.dmg"
-echo "Share it — users just drag Claumagotchi.app to Applications."
+echo "Created CC-Beeper.dmg"
+echo "Share it — users just drag CC-Beeper.app to Applications."

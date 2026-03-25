@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# Code signing identity.
+# Default is ad-hoc (-) for local development.
+# Set SIGNING_IDENTITY='Developer ID Application: Name (TEAMID)' for distribution builds.
+# Example: SIGNING_IDENTITY='Developer ID Application: Jane Smith (ABCDE12345)' make dmg
+SIGNING_IDENTITY="${SIGNING_IDENTITY:--}"
+
 cd "$(dirname "$0")"
 
 echo "Building CC-Beeper..."
@@ -59,6 +65,8 @@ cat > CC-Beeper.app/Contents/Info.plist << 'PLIST'
     <string>APPL</string>
     <key>CFBundleVersion</key>
     <string>1.0</string>
+    <key>CFBundleShortVersionString</key>
+    <string>3.0</string>
     <key>LSUIElement</key>
     <true/>
     <key>CFBundleIconFile</key>
@@ -75,5 +83,5 @@ PLIST
 
 echo "Built CC-Beeper.app"
 
-codesign --force --deep --sign "Apple Development" CC-Beeper.app
-echo "Signed CC-Beeper.app (Apple Development)"
+codesign --force --deep --sign "$SIGNING_IDENTITY" CC-Beeper.app
+echo "Signed CC-Beeper.app (identity: $SIGNING_IDENTITY)"
