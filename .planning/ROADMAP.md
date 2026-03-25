@@ -193,6 +193,6 @@ Note: Phase 15 (Voice Fixes) depends only on Phase 12 and can be executed in par
 | 13. Onboarding | 4/4 | Complete    | 2026-03-24 | - |
 | 14. Menu Bar Popover | 2/2 | Complete    | 2026-03-24 | - |
 | 15. Voice Fixes | 2/2 | Complete    | 2026-03-25 | - |
-| 16. Visual Polish | v3.0 Public Launch | 0/3 | Not started | - |
+| 16. Visual Polish | 1/3 | In Progress|  | - |
 | 17. Distribution | v3.0 Public Launch | 0/TBD | Not started | - |
 | 18. GitHub README | v3.0 Public Launch | 0/TBD | Not started | - |

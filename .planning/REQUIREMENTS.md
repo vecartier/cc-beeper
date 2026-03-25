@@ -51,9 +51,9 @@ Requirements for Public Launch milestone. Each maps to roadmap phases.
 
 ### Visual Polish
 
-- [ ] **VFX-01**: Smooth state transitions on LCD (fade between states, not instant swap)
-- [ ] **VFX-02**: Dark mode shell variants render correctly with LCD overlay
-- [ ] **VFX-03**: Consistent button press feedback across all buttons
+- [x] **VFX-01**: Smooth state transitions on LCD (fade between states, not instant swap)
+- [x] **VFX-02**: Dark mode shell variants render correctly with LCD overlay
+- [x] **VFX-03**: Consistent button press feedback across all buttons
 
 ### Voice
 
@@ -112,9 +112,9 @@ Requirements for Public Launch milestone. Each maps to roadmap phases.
 | GH-03 | Phase 18 | Pending |
 | GH-04 | Phase 18 | Pending |
 | GH-05 | Phase 18 | Pending |
-| VFX-01 | Phase 16 | Pending |
-| VFX-02 | Phase 16 | Pending |
-| VFX-03 | Phase 16 | Pending |
+| VFX-01 | Phase 16 | Complete |
+| VFX-02 | Phase 16 | Complete |
+| VFX-03 | Phase 16 | Complete |
 | VOICE-05 | Phase 15 | Complete |
 | VOICE-06 | Phase 15 | Complete |
 | VOICE-07 | Phase 15 | Complete |

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Public Launch
 status: unknown
-stopped_at: Completed 15-02-PLAN.md — Phase 15 voice fixes complete
-last_updated: "2026-03-25T08:32:01.604Z"
+stopped_at: Completed 16-01-PLAN.md — CC-Beeper deep rename complete
+last_updated: "2026-03-25T09:41:16.263Z"
 progress:
   total_phases: 7
   completed_phases: 4
-  total_plans: 10
-  completed_plans: 10
+  total_plans: 13
+  completed_plans: 11
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-24)
 
 **Core value:** Users can see what Claude is doing, respond to it, and give it instructions — without leaving their current workflow
-**Current focus:** Phase 15 — Voice Fixes
+**Current focus:** Phase 16 — Visual Polish
 
 ## Current Position
 
-Phase: 15 (Voice Fixes) — EXECUTING
-Plan: 2 of 2
+Phase: 16 (Visual Polish) — EXECUTING
+Plan: 1 of 3
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Plan: 2 of 2
 | Phase 14-menu-bar-popover P02 | 45 | 2 tasks | 9 files |
 | Phase 15-voice-fixes P01 | 3 | 2 tasks | 4 files |
 | Phase 15-voice-fixes P02 | 45 | 3 tasks | 10 files |
+| Phase 16-visual-polish P01 | 7 | 2 tasks | 19 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,9 @@ Plan: 2 of 2
 - [Phase 15-voice-fixes]: Groq path skips SFSpeech entirely in startRecording — prevents timeout race between Groq transcription and 2-second SFSpeech fallback
 - [Phase 15-voice-fixes]: AVAudioPlayer stored as TTSService instance property (not local) — prevents ARC deallocation during OpenAI MP3 playback
 - [Phase 15-voice-fixes]: WAV recording uses native AVAudioEngine format without AVAudioConverter — Groq auto-downsamples, simplifies implementation
+- [Phase 16-visual-polish]: PixelTitle LCD screen updated from CLAUMAGOTCHI to CC-BEEPER with new pixel font glyphs for B, E, P, R, dash
+- [Phase 16-visual-polish]: IPC directory migration runs in applicationDidFinishLaunching before PID check — ensures existing users' data carries over to cc-beeper path
+- [Phase 16-visual-polish]: Keychain migration is lazy (load-time per account, not startup sweep) — com.claumagotchi.apikeys falls back to com.vecartier.cc-beeper.apikeys
 
 ### Pending Todos
 
@@ -95,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-25T08:32:01.587Z
-Stopped at: Completed 15-02-PLAN.md — Phase 15 voice fixes complete
+Last session: 2026-03-25T09:41:16.259Z
+Stopped at: Completed 16-01-PLAN.md — CC-Beeper deep rename complete
 Resume file: None
