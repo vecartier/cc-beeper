@@ -1,12 +1,11 @@
-<!-- Replace docs/demo.gif with your screen recording when ready -->
 <p align="center">
-  <img src="docs/demo.gif" alt="CC-Beeper in action" width="600">
+  <img src="docs/cover.png" alt="CC-Beeper — all 10 color shells" width="700">
 </p>
 
 # CC-Beeper
 
 <p align="center">
-  A retro pager companion for Claude Code. Floats on your screen. Shows what Claude is doing. Lets you talk back.
+  A desktop companion for Claude Code. See what Claude is doing. Talk back.
 </p>
 
 <p align="center">
@@ -16,7 +15,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/vecartier/cc-beeper/releases/latest"><strong>⬇ Download DMG</strong></a>
+  <a href="https://github.com/vecartier/cc-beeper/releases/latest"><strong>Download CC-Beeper</strong></a>
 </p>
 
 ---
@@ -25,7 +24,7 @@
 
 ### Download (recommended)
 
-[Download CC-Beeper.dmg](https://github.com/vecartier/cc-beeper/releases/latest) — open, double-click CC-Beeper.app, and follow the setup wizard. No Terminal required.
+[Download CC-Beeper.dmg](https://github.com/vecartier/cc-beeper/releases/latest) — open, drag CC-Beeper.app to Applications, and follow the one-time setup wizard. No Terminal required.
 
 ### Build from source
 
@@ -35,19 +34,19 @@ cd cc-beeper
 make install
 ```
 
-`make install` builds the app, installs hooks, and launches CC-Beeper. Requires Swift (via Xcode Command Line Tools).
+`make install` builds the app, installs the Claude Code hooks, and launches CC-Beeper. Requires Swift (via Xcode Command Line Tools).
 
 ---
 
 ## What is CC-Beeper?
 
-CC-Beeper is a floating macOS desktop widget that shows you what Claude Code is doing across all your sessions — and lets you respond without touching the terminal. It sits on screen like a retro pager, updating its LCD display in real time.
+CC-Beeper is a floating macOS widget that lives on your desktop like a retro pager — updating its LCD display in real time as Claude Code works across your sessions. No tab-switching. No terminal watching. Just a glanceable companion that tells you what Claude is doing and lets you respond instantly.
 
-| State | Meaning |
-|-------|---------|
-| THINKING | Claude is working — tool calls, file edits, reasoning |
-| DONE | Claude finished and is waiting for your next message |
-| NEEDS YOU | Claude needs permission to run a tool |
+| State | What it means |
+|-------|--------------|
+| **THINKING** | Claude is working — tool calls, file edits, reasoning in progress |
+| **DONE** | Claude finished. Your next message is waiting. |
+| **NEEDS YOU** | Claude needs permission to run a tool. Approve or deny from the widget. |
 
 ---
 
@@ -61,39 +60,36 @@ CC-Beeper is a floating macOS desktop widget that shows you what Claude Code is 
 <td align="center"><strong>Themes</strong></td>
 </tr>
 <tr>
-<td>🖥️ Floating LCD pager shows Claude's state in real time across all sessions</td>
-<td>🎙️ Press Speak, dictate your message, CC-Beeper injects it into Claude Code</td>
-<td>✅ Approve or deny tool requests — file writes, shell commands, network calls — without touching the terminal</td>
-<td>🎨 10 color shells: black, blue, green, mint, orange, pink, purple, red, white, yellow</td>
+<td>Floating LCD pager shows Claude's live state across all sessions — no terminal watching required</td>
+<td>Press Speak, dictate your message, CC-Beeper injects it directly into Claude Code</td>
+<td>Approve or deny file writes, shell commands, and network calls without touching the terminal</td>
+<td>10 color shells: black, blue, green, mint, orange, pink, purple, red, white, yellow</td>
 </tr>
 </table>
 
-- **YOLO mode** — auto-approve all tool requests (shows YOLO on LCD when active)
-- **Vibration alerts** — haptic-style window shake when Claude needs you
+- **YOLO mode** — auto-approve all tool requests (YOLO badge on LCD when active)
+- **Vibration alerts** — haptic-style window shake when Claude needs your attention
 - **Global hotkeys** — control CC-Beeper without switching focus
-- **Auto-speak** — CC-Beeper reads Claude's summaries aloud when it finishes
+- **Auto-speak** — CC-Beeper reads Claude's summaries aloud when it finishes working
 
 ---
 
 ## Shell Themes
 
-<!-- docs/cover.png = your cover image showing all 10 shells on black background -->
-<p align="center"><img src="docs/cover.png" alt="All 10 CC-Beeper color shells" width="700"></p>
-
-Choose from 10 color shells — black, blue, green, mint, orange, pink, purple, red, white, yellow. Dark mode supported.
+10 color shells — black, blue, green, mint, orange, pink, purple, red, white, yellow. Full dark mode support.
 
 ---
 
 ## How it works
 
-CC-Beeper uses Claude Code's [hooks system](https://docs.anthropic.com/en/docs/claude-code/hooks) to monitor sessions. A Python hook script receives events from Claude Code and writes them to a shared IPC directory. The macOS app watches those files and updates in real time.
+CC-Beeper uses Claude Code's [hooks system](https://docs.anthropic.com/en/docs/claude-code/hooks) to monitor sessions. A lightweight Python hook receives events from Claude Code and writes them to a shared IPC directory. The macOS app watches those files and updates instantly.
 
 ```
-Claude Code  ──►  Hook (Python)  ──►  /tmp/cc-beeper/*.jsonl  ──►  CC-Beeper.app
-                       │                                                │
-                  Permission? ───►  /tmp/cc-beeper/pending.json ───────►  Show NEEDS YOU
-                       ▲                                                │
-                       └────────  /tmp/cc-beeper/response.json  ◄──────┘
+Claude Code  ──►  Hook (Python)  ──►  ~/.claude/cc-beeper/events.jsonl  ──►  CC-Beeper.app
+                       │                                                        │
+                  Permission? ───►  ~/.claude/cc-beeper/pending.json  ─────────►  Show NEEDS YOU
+                       ▲                                                        │
+                       └────────  ~/.claude/cc-beeper/response.json  ◄─────────┘
 ```
 
 ---
@@ -125,7 +121,7 @@ Contributions are welcome.
 2. CC-Beeper is a Swift Package — open `Package.swift` in Xcode or build with `make build`
 3. Submit a pull request with a clear description
 
-CC-Beeper uses Claude Code's hooks system. See [Hooks docs](https://docs.anthropic.com/en/docs/claude-code/hooks) for how the IPC layer works.
+CC-Beeper uses Claude Code's hooks system. See the [Hooks docs](https://docs.anthropic.com/en/docs/claude-code/hooks) for how the IPC layer works.
 
 - **Bug reports:** open a GitHub issue
 - **Feature requests:** open a GitHub discussion
