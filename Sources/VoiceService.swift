@@ -32,15 +32,19 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
 
     // MARK: - Logging
 
+    private static let logPath = NSHomeDirectory() + "/.claude/cc-beeper/voice.log"
+
     private func log(_ msg: String) {
         let line = "[\(Date())] \(msg)\n"
-        let path = "/tmp/cc-beeper-voice.log"
-        if let fh = FileHandle(forWritingAtPath: path) {
+        if let fh = FileHandle(forWritingAtPath: Self.logPath) {
             fh.seekToEndOfFile()
             fh.write(line.data(using: .utf8)!)
             fh.closeFile()
         } else {
-            try? line.write(toFile: path, atomically: true, encoding: .utf8)
+            FileManager.default.createFile(
+                atPath: Self.logPath, contents: line.data(using: .utf8),
+                attributes: [.posixPermissions: 0o600]
+            )
         }
     }
 
