@@ -9,6 +9,14 @@ struct SettingsAudioSection: View {
         }
         .toggleStyle(.switch)
 
+        HStack {
+            Label("STT Engine", systemImage: "waveform.and.mic")
+            Spacer()
+            Text(monitor.voiceService.sttEngineLabel)
+                .foregroundStyle(.secondary)
+                .font(.caption)
+        }
+
         Picker("TTS Provider", selection: $monitor.ttsProvider) {
             Text("Apple").tag("apple")
             Text("Groq").tag("groq")
