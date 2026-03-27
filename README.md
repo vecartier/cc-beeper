@@ -71,9 +71,6 @@ CC-Beeper is a floating macOS widget that lives on your desktop like a retro pag
 <td>CC-Beeper reads Claude's responses aloud using on-device AI voices (Kokoro) or Apple TTS</td>
 <td>Approve or deny file writes, shell commands, and network calls without touching the terminal</td>
 </tr>
-</table>
-
-<table>
 <tr>
 <td align="center"><strong>YOLO Mode</strong></td>
 <td align="center"><strong>Themes</strong></td>
