@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Polish & Fixes
-status: Ready to execute
-stopped_at: Completed 24-01-PLAN.md
-last_updated: "2026-03-27T11:19:33.587Z"
+status: Phase complete — ready for verification
+stopped_at: Completed 24-02-PLAN.md
+last_updated: "2026-03-27T11:25:14.573Z"
 progress:
   total_phases: 23
-  completed_phases: 21
+  completed_phases: 22
   total_plans: 47
-  completed_plans: 45
+  completed_plans: 46
 ---
 
 # Project State
@@ -53,6 +53,7 @@ Plan: 2 of 2
 | Phase 21-github-branding P01 | 110 | 2 tasks | 4 files |
 | Phase 21-github-branding P02 | 2 | 2 tasks | 2 files |
 | Phase 24-offline-stt P01 | 204 | 2 tasks | 2 files |
+| Phase 24-offline-stt P02 | 7 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,8 @@ Plan: 2 of 2
 - [Phase 24-offline-stt]: configureCallbacks marked async — setPartialCallback/setEouCallback are actor-isolated and require await
 - [Phase 24-offline-stt]: D-02 live terminal injection implemented via delta tracking: lastInjectedText tracks injected prefix, only new characters sent to terminal
 - [Phase 24-offline-stt]: Groq path fully removed from VoiceService — GroqTranscriptionService.swift stays until Phase 26 per prior decision
+- [Phase 24-offline-stt]: downloadParakeetModel() uses ParakeetService.shared singleton so VoiceService shares the initialized manager without re-initialization
+- [Phase 24-offline-stt]: STT engine indicator in Settings is read-only — Parakeet always preferred when downloaded, no user selector per D-05
 
 ### Pending Todos
 
@@ -90,6 +93,6 @@ Plan: 2 of 2
 
 ## Session Continuity
 
-Last session: 2026-03-27T11:19:33.582Z
-Stopped at: Completed 24-01-PLAN.md
+Last session: 2026-03-27T11:25:14.566Z
+Stopped at: Completed 24-02-PLAN.md
 Resume file: None

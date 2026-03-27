@@ -168,7 +168,7 @@ v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and aut
 **Milestone Goal:** Replace all cloud voice APIs with on-device AI. FluidAudio delivers Parakeet TDT for transcription and Kokoro-82M for TTS — zero API keys, zero internet required, instant response. Apple native voices remain as fallback. All API key infrastructure (Keychain, Groq/OpenAI code paths, Settings key fields) is removed once local models are working.
 
 - [x] **Phase 23: Foundation** - Switch to GPL-3.0 and add FluidAudio SPM dependency (unblocks offline voice) (completed 2026-03-27)
-- [ ] **Phase 24: Offline STT** - Replace VoiceService transcription with Parakeet TDT; SFSpeech as fallback
+- [x] **Phase 24: Offline STT** - Replace VoiceService transcription with Parakeet TDT; SFSpeech as fallback (completed 2026-03-27)
 - [ ] **Phase 25: Offline TTS** - Replace TTSService with Kokoro-82M; Apple Ava as fallback
 - [ ] **Phase 26: Cleanup** - Remove all Groq/OpenAI API paths, Keychain storage, and Settings key fields
 
@@ -261,7 +261,7 @@ Plans:
 
 Plans:
 - [x] 24-01-PLAN.md — Create ParakeetService actor + wire into VoiceService (replace Groq path, SFSpeech fallback)
-- [ ] 24-02-PLAN.md — Onboarding model download step + Settings STT engine indicator
+- [x] 24-02-PLAN.md — Onboarding model download step + Settings STT engine indicator
 
 ### Phase 25: Offline TTS
 **Goal**: Auto-speak summaries and all spoken output use Kokoro-82M on-device — no API key, no internet, no Groq/OpenAI dependency
@@ -310,6 +310,6 @@ Note (v4.0): Phase 24 (Offline STT) and Phase 25 (Offline TTS) both depend only 
 | 21. GitHub & Branding | v3.1 Polish & Fixes | 2/2 | Complete | 2026-03-26 |
 | 22. Final Branding | v3.1 Polish & Fixes | 0/2 | Not started | - |
 | 23. Foundation | v4.0 Offline Voice | 0/1 | Complete    | 2026-03-27 |
-| 24. Offline STT | v4.0 Offline Voice | 1/2 | In Progress|  |
+| 24. Offline STT | v4.0 Offline Voice | 2/2 | Complete   | 2026-03-27 |
 | 25. Offline TTS | v4.0 Offline Voice | 0/? | Not started | - |
 | 26. Cleanup | v4.0 Offline Voice | 0/? | Not started | - |
