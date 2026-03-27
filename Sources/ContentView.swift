@@ -64,7 +64,13 @@ struct ContentView: View {
                     )
                     SoundMuteButton(
                         autoSpeak: monitor.ttsService.isSpeaking,
-                        action: { monitor.ttsService.stopSpeaking() }
+                        action: {
+                            if monitor.ttsService.isSpeaking {
+                                monitor.ttsService.stopSpeaking()
+                            } else {
+                                monitor.triggerSummary()
+                            }
+                        }
                     )
                 }
 
