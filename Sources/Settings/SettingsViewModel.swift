@@ -34,23 +34,22 @@ final class SettingsViewModel: ObservableObject {
 
     // MARK: - Deep Links
 
-    func openAccessibilitySettings() {
-        guard let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Accessibility") else { return }
-        NSWorkspace.shared.open(url)
+    private func openPrivacyPane(_ anchor: String) {
+        // Try multiple URL formats — macOS 26 ignores anchors in some formats
+        let urls = [
+            "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?\(anchor)",
+            "x-apple.systempreferences:com.apple.preference.security?\(anchor)",
+        ]
+        for urlString in urls {
+            if let url = URL(string: urlString) {
+                NSWorkspace.shared.open(url)
+                return
+            }
+        }
     }
 
-    func openMicrophoneSettings() {
-        guard let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Microphone") else { return }
-        NSWorkspace.shared.open(url)
-    }
-
-    func openSpeechSettings() {
-        guard let url = URL(string: "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_SpeechRecognition") else { return }
-        NSWorkspace.shared.open(url)
-    }
-
-    func openSpokenContent() {
-        guard let url = URL(string: "x-apple.systempreferences:com.apple.Accessibility-Settings.extension?SpokenContent") else { return }
-        NSWorkspace.shared.open(url)
-    }
+    func openAccessibilitySettings() { openPrivacyPane("Privacy_Accessibility") }
+    func openMicrophoneSettings() { openPrivacyPane("Privacy_Microphone") }
+    func openSpeechSettings() { openPrivacyPane("Privacy_SpeechRecognition") }
+    func openSpokenContent() { openPrivacyPane("Privacy_Accessibility") }
 }

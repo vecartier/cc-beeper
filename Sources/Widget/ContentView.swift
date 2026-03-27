@@ -63,12 +63,10 @@ struct ContentView: View {
                         action: { monitor.voiceService.toggle() }
                     )
                     SoundMuteButton(
-                        voiceOver: monitor.ttsService.isSpeaking,
+                        isSpeaking: monitor.ttsService.isSpeaking,
                         action: {
                             if monitor.ttsService.isSpeaking {
                                 monitor.ttsService.stopSpeaking()
-                            } else {
-                                monitor.triggerSummary()
                             }
                         }
                     )

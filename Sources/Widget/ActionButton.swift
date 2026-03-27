@@ -111,26 +111,34 @@ struct TerminalButton: View {
 // MARK: - Sound / Mute Button
 
 struct SoundMuteButton: View {
-    let voiceOver: Bool
+    let isSpeaking: Bool
     let action: () -> Void
 
     private var normalImage: String {
-        voiceOver ? "sound-normal.png" : "mute-normal.png"
+        isSpeaking ? "sound-active.png" : "mute-disabled.png"
     }
     private var pressedImage: String {
-        voiceOver ? "sound-pressed.png" : "mute-pressed.png"
+        isSpeaking ? "mute-disabled.png" : "mute-disabled.png"
     }
 
     var body: some View {
-        Button(action: action) {
-            Color.clear.frame(width: btnW, height: btnH)
+        if isSpeaking {
+            Button(action: action) {
+                Color.clear.frame(width: btnW, height: btnH)
+            }
+            .buttonStyle(ImageButtonStyle(
+                normalImage: "sound-active.png",
+                pressedImage: "mute-disabled.png",
+                width: btnW, height: btnH
+            ))
+            .accessibilityLabel("Stop speaking")
+        } else {
+            Image(nsImage: loadButtonImage("mute-disabled.png"))
+                .resizable()
+                .interpolation(.high)
+                .frame(width: btnW, height: btnH)
+                .accessibilityLabel("VoiceOver")
         }
-        .buttonStyle(ImageButtonStyle(
-            normalImage: normalImage,
-            pressedImage: pressedImage,
-            width: btnW, height: btnH
-        ))
-        .accessibilityLabel(voiceOver ? "Mute" : "Unmute")
     }
 }
 
@@ -147,5 +155,6 @@ struct ImageButtonStyle: ButtonStyle {
             .resizable()
             .interpolation(.high)
             .frame(width: width, height: height)
+            .animation(nil, value: configuration.isPressed)
     }
 }

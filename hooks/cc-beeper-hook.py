@@ -258,23 +258,6 @@ def ensure_app_running():
 
 def handle_permission(data, session_id=""):
     """Handle PermissionRequest — block and wait for user response from app."""
-    # Fast-path: non-default permission modes (acceptEdits, bypassPermissions, auto,
-    # dontAsk, plan) mean Claude Code already has approval context.
-    # Allow immediately — do NOT write pending.json or block the hook.
-    permission_mode = data.get("permission_mode", "default")
-    if permission_mode != "default":
-        output = {
-            "hookSpecificOutput": {
-                "hookEventName": "PermissionRequest",
-                "decision": {
-                    "behavior": "allow",
-                    "message": f"Auto-approved (mode: {permission_mode}) via CC-Beeper",
-                },
-            }
-        }
-        print(json.dumps(output))
-        return
-
     tool = data.get("tool_name", "")
     tool_input = data.get("tool_input", {})
     req_id = secrets.token_hex(16)

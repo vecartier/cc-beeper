@@ -73,10 +73,18 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         if isRecording { stopRecording() }
     }
 
+    // clearTerminalBeforeHotkey removed — Carbon HotKey library consumes the event
+
+    // MARK: - Modifier Key Helpers
+
+    // releaseModifiers removed — Carbon HotKey library consumes the event
+
     // MARK: - Recording Router
 
     private func startRecording() {
         log("=== START ===")
+
+        // Carbon HotKey consumes the event — no modifier cleanup needed
 
         // Check Accessibility — log but don't prompt every time
         let axTrusted = AXIsProcessTrusted()
@@ -151,24 +159,12 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
                         }
                     },
                     onEou: { [weak self] transcript in
-                        // EOU auto-submit after 1280ms silence
+                        // EOU fires on silence — just update preview, don't auto-submit.
+                        // User presses the button again to stop and submit.
                         Task { @MainActor in
                             guard let self, !self.hasSubmitted, !transcript.isEmpty else { return }
-                            self.hasSubmitted = true
                             self.lastTranscriptPreview = transcript
-                            self.log("EOU auto-submit: '\(transcript)'")
-                            self.audioEngine.inputNode.removeTap(onBus: 0)
-                            self.audioEngine.stop()
-                            self.isRecording = false
-                            self.audioEngine = AVAudioEngine()
-                            // Text is already in terminal from partial injection.
-                            // Inject any remaining characters not yet injected and press Enter.
-                            let remaining = String(transcript.dropFirst(self.lastInjectedText.count))
-                            if !remaining.isEmpty {
-                                self.injectTextOnly(remaining)
-                            }
-                            self.lastInjectedText = ""
-                            self.submitTerminal()
+                            self.log("EOU detected (no auto-submit): '\(transcript)'")
                         }
                     }
                 )
@@ -414,6 +410,9 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
                   let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false) else { return }
             keyDown.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
             keyUp.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
+            // Clear modifier flags so held Option key doesn't corrupt the injection
+            keyDown.flags = []
+            keyUp.flags = []
             keyDown.post(tap: .cghidEventTap)
             keyUp.post(tap: .cghidEventTap)
         } else {
@@ -457,6 +456,8 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
     private func submitTerminal() {
         guard let enterDown = CGEvent(keyboardEventSource: nil, virtualKey: 0x24, keyDown: true),
               let enterUp = CGEvent(keyboardEventSource: nil, virtualKey: 0x24, keyDown: false) else { return }
+        enterDown.flags = []
+        enterUp.flags = []
         enterDown.post(tap: .cghidEventTap)
         enterUp.post(tap: .cghidEventTap)
         log("submitted (Enter only)")
@@ -469,7 +470,7 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         guard !text.isEmpty else { return }
 
         focusTerminal()
-        usleep(100_000) // brief yield after focus — SFSpeech calls this once per utterance (not per-partial)
+        usleep(200_000) // wait for terminal focus
 
         let utf16 = Array(text.utf16)
         if utf16.count <= 200 {
@@ -477,6 +478,9 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
                   let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false) else { return }
             keyDown.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
             keyUp.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
+            // Clear modifier flags so held Option key doesn't corrupt the injection
+            keyDown.flags = []
+            keyUp.flags = []
             keyDown.post(tap: .cghidEventTap)
             keyUp.post(tap: .cghidEventTap)
         } else {

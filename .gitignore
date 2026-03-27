@@ -1,9 +1,18 @@
+# Build
 .build/
-CC-Beeper.app/
-CC-Beeper.dmg
-AppIcon.icns
-.DS_Store
 .swiftpm/
-.planning/
 *.app
 *.dmg
+AppIcon.icns
+
+# macOS
+.DS_Store
+
+# Claude Code
+.claude/
+.planning/
+
+# Backups
+*.bak
+*.old
+*~

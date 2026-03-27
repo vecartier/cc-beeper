@@ -26,10 +26,14 @@ actor ParakeetService {
     /// This is a cheap `checkResourceIsReachable()` call — does NOT load the model.
     /// Use this from VoiceService to decide which recording path to take.
     static var modelsDownloaded: Bool {
-        let path = FileManager.default
+        let base = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("FluidAudio/Models/parakeet-eou-streaming/160ms/streaming_encoder.mlmodelc")
-        return FileManager.default.fileExists(atPath: path.path)
+            .appendingPathComponent("FluidAudio/Models/parakeet-eou-streaming")
+        // Check both possible paths (FluidAudio sometimes double-nests the directory)
+        let path1 = base.appendingPathComponent("160ms/streaming_encoder.mlmodelc")
+        let path2 = base.appendingPathComponent("parakeet-eou-streaming/160ms/streaming_encoder.mlmodelc")
+        return FileManager.default.fileExists(atPath: path1.path)
+            || FileManager.default.fileExists(atPath: path2.path)
     }
 
     // MARK: - Model Download with Progress (called from onboarding or first voice press)

@@ -45,20 +45,20 @@ struct ScreenContentView: View {
 
                 // YOLO badge
                 if isYoloActive {
-                    HStack(spacing: 2) {
+                    HStack(spacing: 3) {
                         Image(systemName: "hare.fill")
-                            .font(.system(size: 6))
+                            .font(.system(size: 9))
                         Text("YOLO")
-                            .font(.system(size: 6, weight: .black, design: .monospaced))
+                            .font(.system(size: 9, weight: .black, design: .monospaced))
                     }
-                    .foregroundColor(themeManager.lcdOn.opacity(0.6))
-                    .padding(.horizontal, 3)
-                    .padding(.vertical, 1)
+                    .foregroundColor(themeManager.lcdOn)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 2)
-                            .stroke(themeManager.lcdOn.opacity(0.3), lineWidth: 0.5)
+                        RoundedRectangle(cornerRadius: 3)
+                            .stroke(themeManager.lcdOn.opacity(0.6), lineWidth: 1)
                     )
-                    .offset(x: -2, y: -10)
+                    .offset(x: -2, y: -8)
                 }
             }
             .padding(.leading, 10)

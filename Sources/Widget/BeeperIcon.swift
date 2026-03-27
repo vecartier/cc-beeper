@@ -12,12 +12,7 @@ enum BeeperIconState {
 enum BeeperIcon {
     static func image(state: BeeperIconState) -> NSImage {
         let size = NSSize(width: 18, height: 18)
-        let color: NSColor = switch state {
-        case .normal:    .black
-        case .attention: .systemOrange
-        case .yolo:      .systemPurple
-        case .hidden:    .gray
-        }
+        let color: NSColor = .black
 
         let img = NSImage(size: size, flipped: true) { _ in
             // Body: wider horizontal pager rectangle (no antenna)
@@ -51,7 +46,7 @@ enum BeeperIcon {
 
             return true
         }
-        img.isTemplate = (state == .normal)
+        img.isTemplate = true
         return img
     }
 }

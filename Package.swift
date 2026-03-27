@@ -6,12 +6,14 @@ let package = Package(
     platforms: [.macOS(.v26)],
     dependencies: [
         .package(url: "https://github.com/FluidInference/FluidAudio.git", from: "0.13.2"),
+        .package(url: "https://github.com/soffes/HotKey.git", from: "0.2.1"),
     ],
     targets: [
         .executableTarget(
             name: "CC-Beeper",
             dependencies: [
                 .product(name: "FluidAudio", package: "FluidAudio"),
+                .product(name: "HotKey", package: "HotKey"),
             ],
             path: "Sources",
             exclude: [
