@@ -100,9 +100,9 @@ final class ClaudeMonitor: ObservableObject {
     let voiceService = VoiceService()
     let ttsService = TTSService()
 
-    /// Whether auto-speak is enabled (Phase 11 uses this; Phase 9 shows toggle).
-    @Published var autoSpeak: Bool = false {
-        didSet { UserDefaults.standard.set(autoSpeak, forKey: "autoSpeak") }
+    /// Whether VoiceOver (spoken summaries) is enabled.
+    @Published var voiceOver: Bool = false {
+        didSet { UserDefaults.standard.set(voiceOver, forKey: "voiceOver") }
     }
 
     /// TTS provider selection: "kokoro" (local, default) or "apple" (fallback).
@@ -159,7 +159,13 @@ final class ClaudeMonitor: ObservableObject {
         setupSummaryWatcher()
         setupGlobalHotkeys()
         // Set after watcher is running so didSet fires only on external mutation
-        autoSpeak = UserDefaults.standard.bool(forKey: "autoSpeak")
+        let legacyAutoSpeak = UserDefaults.standard.object(forKey: "autoSpeak") as? Bool
+        let currentVoiceOver = UserDefaults.standard.object(forKey: "voiceOver") as? Bool
+        voiceOver = currentVoiceOver ?? legacyAutoSpeak ?? false
+        if legacyAutoSpeak != nil && currentVoiceOver == nil {
+            UserDefaults.standard.set(voiceOver, forKey: "voiceOver")
+            UserDefaults.standard.removeObject(forKey: "autoSpeak")
+        }
         ttsProvider = UserDefaults.standard.string(forKey: "ttsProvider") ?? "kokoro"
         kokoroVoice = UserDefaults.standard.string(forKey: "kokoroVoice") ?? "af_heart"
         isActive = UserDefaults.standard.object(forKey: "isActive") as? Bool ?? true
@@ -327,7 +333,7 @@ final class ClaudeMonitor: ObservableObject {
         lastSummaryHash = hash
 
         // NEVER interrupt recording — recording has absolute priority
-        guard autoSpeak, !isRecording else { return }
+        guard voiceOver, !isRecording else { return }
 
         Task {
             let summary = await ttsService.speakSummary(text, provider: self.ttsProvider)

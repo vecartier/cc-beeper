@@ -48,8 +48,8 @@ struct SettingsAudioSection: View {
     ]
 
     var body: some View {
-        Toggle(isOn: $monitor.autoSpeak) {
-            Label("Auto-Speak Summaries", systemImage: "speaker.wave.2.fill")
+        Toggle(isOn: $monitor.voiceOver) {
+            Label("VoiceOver", systemImage: "speaker.wave.2.fill")
         }
         .toggleStyle(.switch)
 
