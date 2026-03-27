@@ -8,7 +8,7 @@
 - ✅ **v3.0 Public Launch** - Phases 12-18 (shipped 2026-03-25)
 - 🚧 **v3.1 Polish & Fixes** - Phases 19-22 (in progress)
 - ✅ **v4.0 Offline Voice** - Phases 23-26 (shipped 2026-03-27)
-- 🆕 **v5.0 Polish & Distribution** - Phases 27-29 (planned)
+- 🚧 **v5.0 Polish & Distribution** - Phases 27-29 (in progress)
 
 ## Overview
 
@@ -376,6 +376,6 @@ Note (v5.0): Phase 27 (STT Reliability) and Phase 28 (TTS Reliability + Rename) 
 | 24. Offline STT | v4.0 Offline Voice | 2/2 | Complete | 2026-03-27 |
 | 25. Offline TTS | v4.0 Offline Voice | 2/2 | Complete | 2026-03-27 |
 | 26. Cleanup | v4.0 Offline Voice | 1/1 | Complete | 2026-03-27 |
-| 27. STT Reliability | v5.0 Polish & Distribution | 1/2 | In Progress|  |
+| 27. STT Reliability | v5.0 Polish & Distribution | 2/2 | In Progress | - |
 | 28. TTS Reliability + Rename | v5.0 Polish & Distribution | 0/TBD | Not started | - |
 | 29. Distribution | v5.0 Polish & Distribution | 0/TBD | Not started | - |
