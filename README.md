@@ -32,6 +32,8 @@
 brew install vecartier/tap/cc-beeper
 ```
 
+### Build from source
+
 ```bash
 git clone https://github.com/vecartier/cc-beeper.git
 cd cc-beeper
@@ -59,28 +61,54 @@ CC-Beeper is a floating macOS widget that lives on your desktop like a retro pag
 <table>
 <tr>
 <td align="center"><strong>Monitor</strong></td>
-<td align="center"><strong>Voice</strong></td>
+<td align="center"><strong>Voice Record</strong></td>
+<td align="center"><strong>Voice Reader</strong></td>
 <td align="center"><strong>Permissions</strong></td>
-<td align="center"><strong>Themes</strong></td>
 </tr>
 <tr>
 <td>Floating LCD pager shows Claude's live state across all sessions — no terminal watching required</td>
-<td>Press Speak, dictate your message, CC-Beeper injects it directly into Claude Code</td>
+<td>Press Speak, dictate your message, CC-Beeper transcribes and injects it directly into Claude Code</td>
+<td>CC-Beeper reads Claude's responses aloud using on-device AI voices (Kokoro) or Apple TTS</td>
 <td>Approve or deny file writes, shell commands, and network calls without touching the terminal</td>
-<td>10 color shells: black, blue, green, mint, orange, pink, purple, red, white, yellow</td>
 </tr>
 </table>
 
 - **YOLO mode** — auto-approve all tool requests (YOLO badge on LCD when active)
+- **Sound effects** — audio feedback for state changes and alerts
 - **Vibration alerts** — haptic-style window shake when Claude needs your attention
-- **Global hotkeys** — control CC-Beeper without switching focus
-- **VoiceOver** — CC-Beeper reads Claude's summaries aloud when it finishes working
+- **Global hotkeys** — control CC-Beeper from any app without switching focus
+- **10 shell themes** — black, blue, green, mint, orange, pink, purple, red, white, yellow — with dark mode support
 
 ---
 
-## Shell Themes
+## Settings
 
-10 color shells — black, blue, green, mint, orange, pink, purple, red, white, yellow. Full dark mode support.
+CC-Beeper's settings are organized into tabs:
+
+| Tab | What it controls |
+|-----|-----------------|
+| **Theme** | Shell color picker and dark mode |
+| **Voice Record** | TTS provider (Kokoro / Apple), voice selection, preview |
+| **Voice Reader** | Voice reader toggle, STT engine info |
+| **Feedback** | Sound effects and vibration toggles |
+| **Hotkeys** | Remap global hotkeys (⌥ + key) |
+| **Permissions** | Accessibility, microphone, speech recognition status |
+| **Setup** | Re-run setup wizard or uninstall CC-Beeper |
+| **About** | Version, links, and credits |
+
+---
+
+## Global Hotkeys
+
+All hotkeys use **⌥ Option** as the modifier. Remap them in Settings > Hotkeys.
+
+| Shortcut | Action |
+|----------|--------|
+| ⌥ A | Accept permission |
+| ⌥ D | Deny permission |
+| ⌥ R | Voice record (push to talk) |
+| ⌥ T | Go to terminal |
+| ⌥ M | Voice reader / stop |
 
 ---
 
@@ -102,8 +130,7 @@ Claude Code  ──►  Hook (Python)  ──►  ~/.claude/cc-beeper/events.jso
 
 - macOS 14 or later
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI installed
-- (Optional) Groq API key for higher-quality voice transcription
-- (Optional) OpenAI API key for AI-powered text-to-speech
+- (Optional) Run setup wizard to download on-device AI voice models (~930 MB)
 
 ---
 
