@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Polish & Fixes
-status: Phase complete — ready for verification
-stopped_at: Completed 25-offline-tts-02-PLAN.md
-last_updated: "2026-03-27T12:33:32.654Z"
+status: Milestone complete
+stopped_at: Completed 26-cleanup-01-PLAN.md
+last_updated: "2026-03-27T12:47:43.162Z"
 progress:
-  total_phases: 24
-  completed_phases: 23
-  total_plans: 49
-  completed_plans: 48
+  total_phases: 25
+  completed_phases: 24
+  total_plans: 50
+  completed_plans: 49
 ---
 
 # Project State
@@ -23,8 +23,8 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 
 ## Current Position
 
-Phase: 25 (Offline TTS) — EXECUTING
-Plan: 2 of 2
+Phase: 25
+Plan: Not started
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Plan: 2 of 2
 | Phase 24-offline-stt P02 | 7 | 2 tasks | 5 files |
 | Phase 25-offline-tts P01 | 4 | 2 tasks | 3 files |
 | Phase 25-offline-tts P02 | 12 | 2 tasks | 3 files |
+| Phase 26-cleanup P01 | 3 | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,9 @@ Plan: 2 of 2
 - [Phase 25-offline-tts]: KokoroService actor wraps KokoroTtsManager singleton — lazy init on first speakWithKokoro() call; default provider migrated from 'apple' to 'kokoro', legacy groq/openai migrated automatically
 - [Phase 25-offline-tts]: downloadModels() continues to Kokoro even if Parakeet fails — partial success better than full abort
 - [Phase 25-offline-tts]: Voice picker conditionally rendered only when ttsProvider == 'kokoro' to avoid UI clutter for Apple TTS users
+- [Phase 26-cleanup]: CLN2-03: TTSPlaybackDelegate is the permanent name for AVAudioPlayerDelegate wrapper; migration block removed since default: branch handles legacy values safely
+- [Phase 26-cleanup]: CLN2-01: Settings Voice tab fully removed — all voice controls live in SettingsAudioSection
+- [Phase 26-cleanup]: CLN2-02: KeychainService deleted — offline-first app has zero API keys
 
 ### Pending Todos
 
@@ -98,6 +102,6 @@ Plan: 2 of 2
 
 ## Session Continuity
 
-Last session: 2026-03-27T12:33:32.648Z
-Stopped at: Completed 25-offline-tts-02-PLAN.md
+Last session: 2026-03-27T12:47:43.156Z
+Stopped at: Completed 26-cleanup-01-PLAN.md
 Resume file: None

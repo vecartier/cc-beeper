@@ -170,7 +170,7 @@ v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and aut
 - [x] **Phase 23: Foundation** - Switch to GPL-3.0 and add FluidAudio SPM dependency (unblocks offline voice) (completed 2026-03-27)
 - [x] **Phase 24: Offline STT** - Replace VoiceService transcription with Parakeet TDT; SFSpeech as fallback (completed 2026-03-27)
 - [x] **Phase 25: Offline TTS** - Replace TTSService with Kokoro-82M; Apple Ava as fallback (completed 2026-03-27)
-- [ ] **Phase 26: Cleanup** - Remove all Groq/OpenAI API paths, Keychain storage, and Settings key fields
+- [x] **Phase 26: Cleanup** - Remove all Groq/OpenAI API paths, Keychain storage, and Settings key fields (completed 2026-03-27)
 
 ## Phase Details
 
@@ -287,17 +287,17 @@ Plans:
   2. Onboarding contains no step or prompt asking for Groq or OpenAI API keys
   3. KeychainService is removed from the codebase and the project builds with zero references to it
   4. GroqTranscriptionService and all Groq/OpenAI TTS routing code are deleted — a grep for "Groq" and "OpenAI" in Swift source returns zero matches
-**Plans**: 2 plans
+**Plans**: 1 plan
 
 Plans:
-- [x] 25-01-PLAN.md — KokoroService actor + TTSService Kokoro integration + ClaudeMonitor migration
-- [ ] 25-02-PLAN.md — Onboarding dual model download + Settings voice picker
+- [x] 26-01-PLAN.md — Delete dead Groq/OpenAI/Keychain files, purge all cloud API references from remaining code
+
 
 ## Progress
 
-**Execution Order (v3.1):** 19 → 20 (can parallel with 21) → 21 → 22
+**Execution Order (v3.1):** 19 -> 20 (can parallel with 21) -> 21 -> 22
 
-**Execution Order (v4.0):** 23 (LIC-01 + STT-01 together) → 24 + 25 (can run in parallel) → 26
+**Execution Order (v4.0):** 23 (LIC-01 + STT-01 together) -> 24 + 25 (can run in parallel) -> 26
 
 Note (v4.0): Phase 24 (Offline STT) and Phase 25 (Offline TTS) both depend only on Phase 23 and can execute in parallel. Phase 26 (Cleanup) waits for both Phase 24 and Phase 25 to be complete — API paths must not be removed until local replacements are verified working.
 
@@ -319,5 +319,5 @@ Note (v4.0): Phase 24 (Offline STT) and Phase 25 (Offline TTS) both depend only 
 | 22. Final Branding | v3.1 Polish & Fixes | 0/2 | Not started | - |
 | 23. Foundation | v4.0 Offline Voice | 0/1 | Complete    | 2026-03-27 |
 | 24. Offline STT | v4.0 Offline Voice | 2/2 | Complete    | 2026-03-27 |
-| 25. Offline TTS | v4.0 Offline Voice | 2/2 | Complete   | 2026-03-27 |
-| 26. Cleanup | v4.0 Offline Voice | 0/? | Not started | - |
+| 25. Offline TTS | v4.0 Offline Voice | 2/2 | Complete    | 2026-03-27 |
+| 26. Cleanup | v4.0 Offline Voice | 1/1 | Complete   | 2026-03-27 |

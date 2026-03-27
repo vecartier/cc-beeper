@@ -103,15 +103,15 @@ Requirements for Offline Voice milestone.
 
 ### Offline TTS
 
-- [ ] **TTS-01**: Kokoro-82M CoreML model integrated via FluidAudio for spoken output
-- [ ] **TTS-02**: TTSService uses Kokoro as default TTS (no API key needed)
-- [ ] **TTS-03**: Apple Ava Premium / system voice kept as fallback
+- [x] **TTS-01**: Kokoro-82M CoreML model integrated via FluidAudio for spoken output
+- [x] **TTS-02**: TTSService uses Kokoro as default TTS (no API key needed)
+- [x] **TTS-03**: Apple Ava Premium / system voice kept as fallback
 
 ### Cleanup
 
-- [ ] **CLN2-01**: Groq/OpenAI API key fields removed from Settings and Onboarding
-- [ ] **CLN2-02**: KeychainService API key storage removed (no longer needed)
-- [ ] **CLN2-03**: GroqTranscriptionService and OpenAI/Groq TTS paths removed from codebase
+- [x] **CLN2-01**: Groq/OpenAI API key fields removed from Settings and Onboarding
+- [x] **CLN2-02**: KeychainService API key storage removed (no longer needed)
+- [x] **CLN2-03**: GroqTranscriptionService and OpenAI/Groq TTS paths removed from codebase
 
 ## Future Requirements
 
@@ -185,12 +185,12 @@ Requirements for Offline Voice milestone.
 | STT-01 | Phase 23 | Pending |
 | STT-02 | Phase 24 | Complete |
 | STT-03 | Phase 24 | Complete |
-| TTS-01 | Phase 25 | Pending |
-| TTS-02 | Phase 25 | Pending |
-| TTS-03 | Phase 25 | Pending |
-| CLN2-01 | Phase 26 | Pending |
-| CLN2-02 | Phase 26 | Pending |
-| CLN2-03 | Phase 26 | Pending |
+| TTS-01 | Phase 25 | Complete |
+| TTS-02 | Phase 25 | Complete |
+| TTS-03 | Phase 25 | Complete |
+| CLN2-01 | Phase 26 | Complete |
+| CLN2-02 | Phase 26 | Complete |
+| CLN2-03 | Phase 26 | Complete |
 
 **Coverage:**
 - v3.0 requirements: 33 total
