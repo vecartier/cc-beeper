@@ -8,6 +8,7 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
 
     @Published var isRecording: Bool = false
     @Published var lastTranscriptPreview: String = ""
+    @Published var recordingError: String? = nil
 
     /// Set by ClaudeMonitor after both services are created. Used to cut TTS before recording.
     var ttsService: TTSService?
@@ -26,12 +27,14 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
     private var hasSubmitted: Bool = false        // Guard against double-submit (EOU + Stop)
     private var lastInjectedText: String = ""     // Tracks what's already in the terminal for delta injection
     private var isParakeetSession: Bool = false   // Which path is currently active
+    private var parakeetFailed: Bool = false      // True after init failure — skip Parakeet until next launch
+    private var parakeetInitializing: Bool = false // Guard against concurrent init attempts
 
     // MARK: - STT Engine Label
 
     /// Exposed to Settings > Voice to show which STT engine is active.
     var sttEngineLabel: String {
-        ParakeetService.modelsDownloaded ? "Parakeet TDT (local)" : "SFSpeech (fallback)"
+        "Parakeet TDT (local)"
     }
 
     // MARK: - Logging
@@ -88,6 +91,12 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
 
         if isRecording { stopRecording() }
 
+        // Set recording state SYNCHRONOUSLY before any async work (Bug 1 fix)
+        isRecording = true
+        hasSubmitted = false
+        lastInjectedText = ""
+        recordingError = nil
+
         // Capture previous app BEFORE focusing terminal
         previousAppPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
 
@@ -98,16 +107,26 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         log("format: \(nativeFormat.sampleRate)Hz, \(nativeFormat.channelCount)ch")
 
         guard nativeFormat.sampleRate > 0, nativeFormat.channelCount > 0 else {
-            log("bad format")
+            log("bad format — microphone may be unavailable")
+            isRecording = false
+            recordingError = "Microphone unavailable"
             return
         }
 
         log("STT engine: \(sttEngineLabel)")
 
-        if ParakeetService.modelsDownloaded {
-            startRecordingParakeet(inputNode: inputNode)
-        } else {
-            startRecordingSFSpeech(inputNode: inputNode)
+        // Only use Parakeet if it's already initialized (pre-warmed at launch).
+        // If not ready yet, use SFSpeech — don't block recording waiting for init.
+        Task {
+            let ready = await parakeetService.isReady
+            await MainActor.run {
+                if ready && !self.parakeetFailed {
+                    self.startRecordingParakeet(inputNode: inputNode)
+                } else {
+                    self.log("Using SFSpeech (parakeetReady=\(ready), parakeetFailed=\(self.parakeetFailed))")
+                    self.startRecordingSFSpeech(inputNode: inputNode)
+                }
+            }
         }
     }
 
@@ -116,14 +135,10 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
     private func startRecordingParakeet(inputNode: AVAudioInputNode) {
         log("Parakeet mode: streaming with live terminal injection (D-02)")
         isParakeetSession = true
-        hasSubmitted = false
-        lastInjectedText = ""
+        // Note: hasSubmitted, lastInjectedText, isRecording are set synchronously in startRecording()
 
         Task {
             do {
-                if await !parakeetService.isReady {
-                    try await parakeetService.initialize()
-                }
                 await parakeetService.reset()
                 await parakeetService.configureCallbacks(
                     onPartial: { [weak self] partial in
@@ -142,7 +157,10 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
                             self.hasSubmitted = true
                             self.lastTranscriptPreview = transcript
                             self.log("EOU auto-submit: '\(transcript)'")
-                            self.stopRecordingEngine()
+                            self.audioEngine.inputNode.removeTap(onBus: 0)
+                            self.audioEngine.stop()
+                            self.isRecording = false
+                            self.audioEngine = AVAudioEngine()
                             // Text is already in terminal from partial injection.
                             // Inject any remaining characters not yet injected and press Enter.
                             let remaining = String(transcript.dropFirst(self.lastInjectedText.count))
@@ -156,31 +174,37 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
                 )
             } catch {
                 log("Parakeet init failed, falling back to SFSpeech: \(error)")
-                isParakeetSession = false
                 await MainActor.run {
+                    self.isParakeetSession = false
+                    self.parakeetFailed = true
+                    self.parakeetInitializing = false
                     self.startRecordingSFSpeech(inputNode: inputNode)
                 }
                 return
             }
-        }
 
-        inputNode.installTap(onBus: 0, bufferSize: 4096, format: nil) { [weak self] buffer, _ in
-            guard let self else { return }
-            Task {
-                try? await self.parakeetService.process(buffer)
+            // Only install tap and start engine AFTER successful init
+            await MainActor.run {
+                self.focusTerminal()  // Focus terminal ONCE at session start (Bug 2 fix)
+                inputNode.installTap(onBus: 0, bufferSize: 4096, format: nil) { [weak self] buffer, _ in
+                    guard let self else { return }
+                    Task {
+                        try? await self.parakeetService.process(buffer)
+                    }
+                }
+
+                self.audioEngine.prepare()
+                do {
+                    try self.audioEngine.start()
+                    self.recordingStartTime = Date()
+                    self.log("Parakeet mode: recording with live injection...")
+                } catch {
+                    self.log("Parakeet mode: engine failed: \(error)")
+                    inputNode.removeTap(onBus: 0)
+                    self.isRecording = false
+                    self.recordingError = "Recording failed: \(error)"
+                }
             }
-        }
-
-        audioEngine.prepare()
-        do {
-            try audioEngine.start()
-            isRecording = true
-            recordingStartTime = Date()
-            log("Parakeet mode: recording with live injection...")
-        } catch {
-            log("Parakeet mode: engine failed: \(error)")
-            inputNode.removeTap(onBus: 0)
-            isRecording = false
         }
     }
 
@@ -188,25 +212,40 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
 
     private func startRecordingSFSpeech(inputNode: AVAudioInputNode) {
         isParakeetSession = false
-        guard let recognizer else { log("no recognizer"); return }
+        guard let recognizer else {
+            log("no recognizer")
+            isRecording = false
+            return
+        }
 
         let authStatus = SFSpeechRecognizer.authorizationStatus()
         if authStatus == .notDetermined {
+            isRecording = false
             SFSpeechRecognizer.requestAuthorization { [weak self] status in
                 Task { @MainActor in if status == .authorized { self?.startRecording() } }
             }
             return
         }
-        guard authStatus == .authorized else { log("speech not authorized"); return }
+        guard authStatus == .authorized else {
+            log("speech not authorized")
+            isRecording = false
+            return
+        }
 
         let micStatus = AVCaptureDevice.authorizationStatus(for: .audio)
         if micStatus == .notDetermined {
+            isRecording = false
             AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
                 Task { @MainActor in if granted { self?.startRecording() } }
             }
             return
         }
-        guard micStatus == .authorized else { log("mic not authorized"); return }
+        guard micStatus == .authorized else {
+            log("mic not authorized")
+            isRecording = false
+            recordingError = "Microphone unavailable"
+            return
+        }
 
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.requiresOnDeviceRecognition = true
@@ -249,7 +288,7 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         audioEngine.prepare()
         do {
             try audioEngine.start()
-            isRecording = true
+            // isRecording already set true synchronously in startRecording() (Bug 1 fix)
             recordingStartTime = Date()
             log("SFSpeech mode: recording...")
         } catch {
@@ -364,12 +403,11 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
 
     /// Injects text into the terminal WITHOUT pressing Enter.
     /// Used for live streaming partial results and final delta injection before submitTerminal().
+    /// Terminal focus is handled once at session start — do NOT call focusTerminal() here.
     private func injectTextOnly(_ text: String) {
         guard !text.isEmpty else { return }
 
-        focusTerminal()
-        usleep(500_000) // wait for terminal to come forward
-
+        // No focusTerminal() here — terminal was focused once at session start (Bug 2 fix)
         let utf16 = Array(text.utf16)
         if utf16.count <= 200 {
             guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true),
@@ -395,41 +433,28 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         }
 
         log("injected (no submit): '\(text)'")
-        refocusPreviousApp()
     }
 
-    /// Clears the current terminal input line by selecting all and pressing Delete.
+    /// Clears the current terminal input line using Ctrl+U (readline kill-line).
+    /// Works universally in bash, zsh, fish, and all readline-compatible shells.
     /// Used when Parakeet revises earlier words (partial doesn't extend previous injected text).
     private func clearTerminalInput() {
-        focusTerminal()
-        usleep(300_000) // wait for terminal to come forward
-
-        // Cmd+A to select all text in the current input
-        guard let selectDown = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true),
-              let selectUp = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false) else { return }
-        selectDown.flags = .maskCommand
-        selectUp.flags = .maskCommand
-        // keycode 0 = 'a', but we need Cmd+A = Select All
-        // Use virtualKey 0x00 ('a')
-        selectDown.post(tap: .cghidEventTap)
-        selectUp.post(tap: .cghidEventTap)
-
-        usleep(50_000)
-
-        // Delete/Backspace to clear selected text
-        guard let delDown = CGEvent(keyboardEventSource: nil, virtualKey: 0x33, keyDown: true),
-              let delUp = CGEvent(keyboardEventSource: nil, virtualKey: 0x33, keyDown: false) else { return }
-        delDown.post(tap: .cghidEventTap)
-        delUp.post(tap: .cghidEventTap)
-
-        log("cleared terminal input (model revision)")
+        // Ctrl+U = readline kill-line — clears input from cursor to start of line
+        // Works universally in bash, zsh, fish, and all readline-compatible shells.
+        // virtualKey 32 = kVK_ANSI_U
+        guard let ctrlUDown = CGEvent(keyboardEventSource: nil, virtualKey: 32, keyDown: true),
+              let ctrlUUp = CGEvent(keyboardEventSource: nil, virtualKey: 32, keyDown: false) else { return }
+        ctrlUDown.flags = .maskControl
+        ctrlUUp.flags = .maskControl
+        ctrlUDown.post(tap: .cghidEventTap)
+        ctrlUUp.post(tap: .cghidEventTap)
+        log("cleared terminal input (Ctrl+U)")
     }
 
     /// Presses Enter only — text is already in the terminal from partial injection.
     /// Use after all delta text has been injected via `injectTextOnly`.
+    /// Terminal is already focused from session start — no focusTerminal() needed here.
     private func submitTerminal() {
-        focusTerminal()
-        usleep(100_000)
         guard let enterDown = CGEvent(keyboardEventSource: nil, virtualKey: 0x24, keyDown: true),
               let enterUp = CGEvent(keyboardEventSource: nil, virtualKey: 0x24, keyDown: false) else { return }
         enterDown.post(tap: .cghidEventTap)
@@ -444,7 +469,7 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         guard !text.isEmpty else { return }
 
         focusTerminal()
-        usleep(500_000) // wait for terminal to come forward
+        usleep(100_000) // brief yield after focus — SFSpeech calls this once per utterance (not per-partial)
 
         let utf16 = Array(text.utf16)
         if utf16.count <= 200 {
@@ -485,24 +510,20 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
     // MARK: - Terminal Focus
 
     private func focusTerminal() {
-        let terminalApps: [(bundleID: String, name: String)] = [
-            ("com.apple.Terminal", "Terminal"),
-            ("com.googlecode.iterm2", "iTerm"),
-            ("dev.warp.Warp-Stable", "Warp"),
-            ("io.alacritty", "Alacritty"),
-            ("net.kovidgoyal.kitty", "kitty"),
-            ("com.github.wez.wezterm", "WezTerm"),
+        // Use NSRunningApplication.activate() — synchronous activation, no sleep needed (Bug 3 fix)
+        let terminalBundleIDs: Set<String> = [
+            "com.apple.Terminal",
+            "com.googlecode.iterm2",
+            "dev.warp.Warp-Stable",
+            "io.alacritty",
+            "net.kovidgoyal.kitty",
+            "com.github.wez.wezterm",
         ]
         for app in NSWorkspace.shared.runningApplications {
-            guard let bid = app.bundleIdentifier else { continue }
-            if let match = terminalApps.first(where: { $0.bundleID == bid }) {
-                let task = Process()
-                task.launchPath = "/usr/bin/open"
-                task.arguments = ["-a", match.name]
-                try? task.run()
-                log("focused terminal via open -a \(match.name)")
-                return
-            }
+            guard let bid = app.bundleIdentifier, terminalBundleIDs.contains(bid) else { continue }
+            app.activate(options: [.activateIgnoringOtherApps])
+            log("focused terminal via activate: \(bid)")
+            return
         }
         log("no terminal found to focus")
     }
