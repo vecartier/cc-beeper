@@ -74,7 +74,7 @@ CC-Beeper is a floating macOS widget that lives on your desktop like a retro pag
 - **YOLO mode** — auto-approve all tool requests (YOLO badge on LCD when active)
 - **Vibration alerts** — haptic-style window shake when Claude needs your attention
 - **Global hotkeys** — control CC-Beeper without switching focus
-- **Auto-speak** — CC-Beeper reads Claude's summaries aloud when it finishes working
+- **VoiceOver** — CC-Beeper reads Claude's summaries aloud when it finishes working
 
 ---
 

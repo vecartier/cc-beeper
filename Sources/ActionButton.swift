@@ -111,14 +111,14 @@ struct TerminalButton: View {
 // MARK: - Sound / Mute Button
 
 struct SoundMuteButton: View {
-    let autoSpeak: Bool
+    let voiceOver: Bool
     let action: () -> Void
 
     private var normalImage: String {
-        autoSpeak ? "sound-normal.png" : "mute-normal.png"
+        voiceOver ? "sound-normal.png" : "mute-normal.png"
     }
     private var pressedImage: String {
-        autoSpeak ? "sound-pressed.png" : "mute-pressed.png"
+        voiceOver ? "sound-pressed.png" : "mute-pressed.png"
     }
 
     var body: some View {
@@ -130,7 +130,7 @@ struct SoundMuteButton: View {
             pressedImage: pressedImage,
             width: btnW, height: btnH
         ))
-        .accessibilityLabel(autoSpeak ? "Mute" : "Unmute")
+        .accessibilityLabel(voiceOver ? "Mute" : "Unmute")
     }
 }
 
