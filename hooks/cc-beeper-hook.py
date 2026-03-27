@@ -13,6 +13,7 @@ EVENT_FILE = os.path.join(IPC_DIR, "events.jsonl")
 PENDING_FILE = os.path.join(IPC_DIR, "pending.json")
 RESPONSE_FILE = os.path.join(IPC_DIR, "response.json")
 SESSIONS_FILE = os.path.join(IPC_DIR, "sessions.json")
+SUMMARY_FILE = os.path.join(IPC_DIR, "last_summary.txt")
 APP_PATH_FILE = os.path.expanduser("~/.claude/hooks/cc-beeper-app-path")
 PID_FILE = os.path.join(IPC_DIR, "cc-beeper.pid")
 
@@ -79,6 +80,58 @@ def summarize_input(tool, tool_input):
         return tool_input.get("description", "sub-agent")
     else:
         return tool.lower()
+
+
+def get_session_jsonl(session_id):
+    """Find the JSONL file for a given session ID."""
+    claude_dir = os.path.expanduser("~/.claude/projects")
+    for root, dirs, files in os.walk(claude_dir):
+        for f in files:
+            if f == f"{session_id}.jsonl":
+                return os.path.join(root, f)
+    return None
+
+
+def get_most_recent_jsonl():
+    """Fallback: find the most recently modified JSONL."""
+    claude_dir = os.path.expanduser("~/.claude/projects")
+    newest = None
+    newest_time = 0
+    for root, dirs, files in os.walk(claude_dir):
+        for f in files:
+            if f.endswith(".jsonl"):
+                path = os.path.join(root, f)
+                mtime = os.path.getmtime(path)
+                if mtime > newest_time:
+                    newest_time = mtime
+                    newest = path
+    return newest
+
+
+def extract_last_assistant_text(jsonl_path):
+    """Read JSONL, find last assistant message with text content."""
+    if not jsonl_path or not os.path.exists(jsonl_path):
+        return ""
+    last_text = ""
+    with open(jsonl_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+                if obj.get("type") != "assistant":
+                    continue
+                message = obj.get("message", {})
+                content = message.get("content", [])
+                texts = [b.get("text", "").strip()
+                         for b in content if b.get("type") == "text"]
+                texts = [t for t in texts if t]
+                if texts:
+                    last_text = "\n\n".join(texts)
+            except (json.JSONDecodeError, KeyError, TypeError):
+                continue
+    return last_text
 
 
 def is_pid_alive(pid):
@@ -205,6 +258,23 @@ def ensure_app_running():
 
 def handle_permission(data, session_id=""):
     """Handle PermissionRequest — block and wait for user response from app."""
+    # Fast-path: non-default permission modes (acceptEdits, bypassPermissions, auto,
+    # dontAsk, plan) mean Claude Code already has approval context.
+    # Allow immediately — do NOT write pending.json or block the hook.
+    permission_mode = data.get("permission_mode", "default")
+    if permission_mode != "default":
+        output = {
+            "hookSpecificOutput": {
+                "hookEventName": "PermissionRequest",
+                "decision": {
+                    "behavior": "allow",
+                    "message": f"Auto-approved (mode: {permission_mode}) via CC-Beeper",
+                },
+            }
+        }
+        print(json.dumps(output))
+        return
+
     tool = data.get("tool_name", "")
     tool_input = data.get("tool_input", {})
     req_id = secrets.token_hex(16)
@@ -302,6 +372,17 @@ def main():
         out["type"] = data.get("notification_type", "")
 
     safe_append(EVENT_FILE, json.dumps(out) + "\n")
+
+    # Extract summary on Stop — triggers TTS via ClaudeMonitor file watcher
+    if event_name == "Stop":
+        jsonl_path = None
+        if session_id:
+            jsonl_path = get_session_jsonl(session_id)
+        if not jsonl_path:
+            jsonl_path = get_most_recent_jsonl()
+        text = extract_last_assistant_text(jsonl_path)
+        if text:
+            safe_write(SUMMARY_FILE, text)
 
 
 if __name__ == "__main__":
