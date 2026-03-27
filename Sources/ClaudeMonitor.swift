@@ -105,9 +105,17 @@ final class ClaudeMonitor: ObservableObject {
         didSet { UserDefaults.standard.set(autoSpeak, forKey: "autoSpeak") }
     }
 
-    /// TTS provider selection: "groq", "openai", or "apple" (default).
-    @Published var ttsProvider: String = "apple" {
+    /// TTS provider selection: "kokoro" (local, default) or "apple" (fallback).
+    @Published var ttsProvider: String = "kokoro" {
         didSet { UserDefaults.standard.set(ttsProvider, forKey: "ttsProvider") }
+    }
+
+    /// Selected Kokoro voice identifier (from TtsConstants.availableVoices).
+    @Published var kokoroVoice: String = "af_heart" {
+        didSet {
+            UserDefaults.standard.set(kokoroVoice, forKey: "kokoroVoice")
+            Task { try? await KokoroService.shared.setDefaultVoice(kokoroVoice) }
+        }
     }
 
     private static let summaryFile = ipcDir + "/last_summary.txt"
@@ -152,7 +160,12 @@ final class ClaudeMonitor: ObservableObject {
         setupGlobalHotkeys()
         // Set after watcher is running so didSet fires only on external mutation
         autoSpeak = UserDefaults.standard.bool(forKey: "autoSpeak")
-        ttsProvider = UserDefaults.standard.string(forKey: "ttsProvider") ?? "apple"
+        ttsProvider = UserDefaults.standard.string(forKey: "ttsProvider") ?? "kokoro"
+        // Migrate legacy cloud providers to Kokoro — Groq/OpenAI TTS paths no longer exist
+        if ttsProvider == "groq" || ttsProvider == "openai" {
+            ttsProvider = "kokoro"
+        }
+        kokoroVoice = UserDefaults.standard.string(forKey: "kokoroVoice") ?? "af_heart"
         isActive = UserDefaults.standard.object(forKey: "isActive") as? Bool ?? true
         // Wire ttsService into voiceService so recording cuts TTS
         voiceService.ttsService = ttsService
@@ -362,7 +375,7 @@ final class ClaudeMonitor: ObservableObject {
 
             // Ignore interactive-but-safe tools (not real permissions)
             let safeTool = (json["tool"] as? String ?? "").lowercased()
-            let ignoredTools = ["askuserquestion", "taskcreate", "taskupdate", "taskget", "tasklist"]
+            let ignoredTools = ["taskcreate", "taskupdate", "taskget", "tasklist"]
             if ignoredTools.contains(safeTool) { return }
 
             idleWork?.cancel()
@@ -380,6 +393,7 @@ final class ClaudeMonitor: ObservableObject {
                 if !sid.isEmpty { sessionStates[sid] = .needsYou }
                 sessionCount = sessionStates.count
                 awaitingUserAction = true
+                thinkingStartTime = Date() // Reset timer for each new permission/question
                 state = .needsYou
                 playAlert()
             }
