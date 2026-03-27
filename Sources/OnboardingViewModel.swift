@@ -10,9 +10,8 @@ final class OnboardingViewModel: ObservableObject {
         case welcome = 0
         case cliAndHooks = 1
         case permissions = 2
-        case voices = 3
-        case modelDownload = 4
-        case done = 5
+        case modelDownload = 3
+        case done = 4
     }
 
     @Published var currentStep: Step = .welcome

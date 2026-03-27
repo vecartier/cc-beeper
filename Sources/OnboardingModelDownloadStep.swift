@@ -5,80 +5,120 @@ struct OnboardingModelDownloadStep: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            VStack(spacing: 20) {
+            VStack(spacing: 24) {
                 Spacer()
 
-                Image(systemName: "arrow.down.circle.fill")
-                    .font(.system(size: 40))
-                    .foregroundStyle(Color.accentColor)
+                Image(systemName: "waveform.circle.fill")
+                    .font(.system(size: 56))
+                    .foregroundStyle(.orange)
 
-                VStack(spacing: 12) {
-                    Text("Download Voice Models")
-                        .font(.title2)
+                VStack(spacing: 14) {
+                    Text("Voice Setup")
+                        .font(.title)
                         .fontWeight(.bold)
 
-                    Text("CC-Beeper uses on-device AI models for speech recognition and voice synthesis. No internet needed after download.")
+                    Text("Choose how CC-Beeper handles voice input and spoken summaries.")
                         .font(.body)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(.horizontal, 32)
+                        .padding(.horizontal, 24)
                 }
 
                 if viewModel.isModelReady {
-                    Label("Model Ready", systemImage: "checkmark.circle.fill")
+                    Label("AI Models Ready", systemImage: "checkmark.circle.fill")
                         .foregroundStyle(.green)
-                        .font(.headline)
+                        .font(.title3.weight(.semibold))
+                        .padding(.top, 8)
+
                 } else if viewModel.isModelDownloading {
-                    VStack(spacing: 8) {
+                    VStack(spacing: 10) {
                         ProgressView(value: viewModel.modelDownloadProgress)
                             .progressViewStyle(.linear)
-                            .padding(.horizontal, 40)
+                            .tint(.orange)
+                            .padding(.horizontal, 32)
 
                         Text(viewModel.modelDownloadPhase)
-                            .font(.caption)
+                            .font(.callout)
                             .foregroundStyle(.secondary)
                     }
+                    .padding(.top, 8)
+
                 } else {
-                    Button("Download (~930 MB)") {
-                        viewModel.downloadModels()
+                    VStack(spacing: 14) {
+                        Button {
+                            viewModel.downloadModels()
+                        } label: {
+                            Label("Download AI Voices", systemImage: "arrow.down.circle.fill")
+                                .font(.title3.weight(.semibold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.orange)
+                        .controlSize(.large)
+
+                        Text("~930 MB · On-device AI for speech recognition & voice synthesis")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+
+                        Button {
+                            viewModel.goNext()
+                        } label: {
+                            Label("Use Apple Voices Instead", systemImage: "apple.logo")
+                                .font(.callout)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 6)
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.large)
+                        .padding(.top, 4)
+
+                        Text("No download needed · Uses built-in macOS speech")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
+                    .padding(.horizontal, 16)
 
                     if !viewModel.modelDownloadPhase.isEmpty {
                         Text(viewModel.modelDownloadPhase)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(.orange)
+                            .padding(.top, 4)
                     }
                 }
 
                 Spacer()
             }
 
-            HStack(spacing: 16) {
-                Button("Skip") {
-                    viewModel.goNext()
-                }
-                .buttonStyle(.bordered)
-                .controlSize(.large)
-
-                if viewModel.isModelReady {
-                    Button("Continue") {
-                        viewModel.goNext()
+            if viewModel.isModelReady || viewModel.isModelDownloading {
+                HStack(spacing: 16) {
+                    if viewModel.isModelDownloading {
+                        Button("Skip") {
+                            viewModel.goNext()
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.large)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
+
+                    if viewModel.isModelReady {
+                        Button {
+                            viewModel.goNext()
+                        } label: {
+                            Text("Continue")
+                                .font(.title3.weight(.semibold))
+                                .padding(.horizontal, 24)
+                                .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.orange)
+                        .controlSize(.large)
+                    }
                 }
-            }
-            .padding(.bottom, 32)
-        }
-        .padding(.horizontal, 40)
-        .onAppear {
-            // Auto-start download if not already downloaded
-            if !viewModel.isModelReady && !viewModel.isModelDownloading {
-                viewModel.downloadModels()
+                .padding(.bottom, 28)
             }
         }
+        .padding(.horizontal, 32)
     }
 }

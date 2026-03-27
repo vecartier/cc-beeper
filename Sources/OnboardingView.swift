@@ -10,7 +10,7 @@ struct OnboardingView: View {
             ProgressView(value: viewModel.progress)
                 .progressViewStyle(.linear)
                 .frame(height: 4)
-                .tint(.accentColor)
+                .tint(.orange)
 
             // Step content
             Group {
@@ -21,8 +21,6 @@ struct OnboardingView: View {
                     OnboardingCLIStep(viewModel: viewModel)
                 case .permissions:
                     OnboardingPermissionsStep(viewModel: viewModel)
-                case .voices:
-                    OnboardingVoicesStep(viewModel: viewModel)
                 case .modelDownload:
                     OnboardingModelDownloadStep(viewModel: viewModel)
                 case .done:

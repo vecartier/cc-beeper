@@ -8,7 +8,7 @@ struct MenuBarPopoverView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Quick actions — 2x2 grid like Control Center
+            // Quick actions — 2x2 grid
             HStack(spacing: 8) {
                 QuickActionButton(icon: "bolt.fill", label: "YOLO", isActive: monitor.autoAccept) {
                     monitor.autoAccept.toggle()
@@ -30,31 +30,32 @@ struct MenuBarPopoverView: View {
             }
             .padding(.bottom, 12)
 
-            Divider().padding(.bottom, 8)
+            Divider().padding(.bottom, 10)
 
             // Theme
             HStack(spacing: 6) {
                 ForEach(ThemeManager.themes) { theme in
                     Circle()
                         .fill(colorForTheme(theme.id))
-                        .frame(width: 18, height: 18)
+                        .frame(width: 20, height: 20)
                         .overlay(
                             themeManager.currentThemeId == theme.id ?
                             Image(systemName: "checkmark")
-                                .font(.system(size: 8, weight: .bold))
+                                .font(.system(size: 9, weight: .bold))
                                 .foregroundStyle(.white) : nil
                         )
                         .onTapGesture { themeManager.currentThemeId = theme.id }
                 }
             }
-            .padding(.bottom, 8)
+            .padding(.bottom, 10)
 
             Toggle("Dark Mode", isOn: $themeManager.darkMode)
                 .toggleStyle(.switch)
                 .controlSize(.small)
-                .padding(.bottom, 8)
+                .font(.callout)
+                .padding(.bottom, 10)
 
-            Divider().padding(.bottom, 8)
+            Divider().padding(.bottom, 10)
 
             // Actions
             Button {
@@ -62,30 +63,33 @@ struct MenuBarPopoverView: View {
                 openWindow(id: "settings")
             } label: {
                 Label("Settings...", systemImage: "gear")
+                    .font(.callout)
             }
             .buttonStyle(.plain)
-            .padding(.bottom, 4)
+            .padding(.bottom, 6)
 
             Button {
-                openSpokenContent()
+                NSApp.activate(ignoringOtherApps: true)
+                openWindow(id: "onboarding")
             } label: {
-                Label("Download Voices...", systemImage: "waveform")
+                Label("Setup...", systemImage: "wand.and.stars")
+                    .font(.callout)
             }
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
-            .padding(.bottom, 8)
+            .padding(.bottom, 10)
 
-            Divider().padding(.bottom, 8)
+            Divider().padding(.bottom, 10)
 
             Button("Quit CC-Beeper") {
                 NSApp.terminate(nil)
             }
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
-            .font(.footnote)
+            .font(.callout)
         }
-        .frame(width: 280)
-        .padding(14)
+        .frame(width: 300)
+        .padding(16)
     }
 
     private func colorForTheme(_ id: String) -> Color {
@@ -102,10 +106,5 @@ struct MenuBarPopoverView: View {
         case "yellow": return .yellow
         default: return .gray
         }
-    }
-
-    private func openSpokenContent() {
-        guard let url = URL(string: "x-apple.systempreferences:com.apple.Accessibility-Settings.extension?SpokenContent") else { return }
-        NSWorkspace.shared.open(url)
     }
 }
