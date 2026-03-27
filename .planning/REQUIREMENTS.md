@@ -113,17 +113,38 @@ Requirements for Offline Voice milestone.
 - [x] **CLN2-02**: KeychainService API key storage removed (no longer needed)
 - [x] **CLN2-03**: GroqTranscriptionService and OpenAI/Groq TTS paths removed from codebase
 
+## v5.0 Requirements
+
+Requirements for Polish & Distribution milestone.
+
+### Bug Fixes
+
+- [x] **FIX2-01**: Voice recording reliably captures audio and injects transcription into the terminal every time the voice button is pressed
+- [x] **FIX2-02**: Parakeet TDT transcription completes without long delays or silent failures
+- [ ] **FIX2-03**: Kokoro TTS speaks summaries without long delays or intermittent silence
+- [ ] **FIX2-04**: TTS fires reliably both on auto-VoiceOver (Claude finishes) and manual summarize
+- [ ] **FIX2-05**: "Needs you" state only shows when a real permission prompt is waiting — auto-approved tools do not trigger false positives
+
+### Rename
+
+- [ ] **REN-01**: All "Auto-speak" references renamed to "VoiceOver" in UI labels, Settings, menu bar popover, and code
+- [ ] **REN-02**: Hook event naming and IPC fields updated to reflect "VoiceOver" terminology
+
+### Distribution
+
+- [ ] **DIST2-01**: DMG window displays CC-Beeper volume name and branded background
+- [ ] **DIST2-02**: `make dmg` produces the branded DMG without manual steps
+- [ ] **DIST2-03**: Homebrew tap published at `vecartier/tap/cc-beeper` with working `brew install` flow
+
 ## Future Requirements
 
 ### Post-Launch
 
-- **POST-01**: Homebrew tap (`brew install cc-beeper`)
 - **POST-02**: Per-project settings
 - **POST-03**: Hotkey remapping
 - **POST-04**: Conversation history panel
 - **POST-05**: Custom TTS voice selection
 - **BRD-02**: Custom app icon (user provides Figma export) — deferred from v3.1
-- **BRD-03**: DMG branded background and window layout — deferred from v3.1
 
 ## Out of Scope
 
@@ -179,10 +200,8 @@ Requirements for Offline Voice milestone.
 | FIX-01 | Phase 20 | Complete |
 | FIX-02 | Phase 20 | Complete |
 | BRD-01 | Phase 21 | Complete |
-| BRD-02 | Phase 22 | Pending |
-| BRD-03 | Phase 22 | Pending |
-| LIC-01 | Phase 23 | Pending |
-| STT-01 | Phase 23 | Pending |
+| LIC-01 | Phase 23 | Complete |
+| STT-01 | Phase 23 | Complete |
 | STT-02 | Phase 24 | Complete |
 | STT-03 | Phase 24 | Complete |
 | TTS-01 | Phase 25 | Complete |
@@ -191,6 +210,16 @@ Requirements for Offline Voice milestone.
 | CLN2-01 | Phase 26 | Complete |
 | CLN2-02 | Phase 26 | Complete |
 | CLN2-03 | Phase 26 | Complete |
+| FIX2-01 | Phase 27 | Complete |
+| FIX2-02 | Phase 27 | Complete |
+| FIX2-05 | Phase 27 | Pending |
+| FIX2-03 | Phase 28 | Pending |
+| FIX2-04 | Phase 28 | Pending |
+| REN-01 | Phase 28 | Pending |
+| REN-02 | Phase 28 | Pending |
+| DIST2-01 | Phase 29 | Pending |
+| DIST2-02 | Phase 29 | Pending |
+| DIST2-03 | Phase 29 | Pending |
 
 **Coverage:**
 - v3.0 requirements: 33 total
@@ -207,6 +236,11 @@ Requirements for Offline Voice milestone.
 - Mapped to phases: 10
 - Unmapped: 0 ✓
 
+**v5.0 Coverage:**
+- v5.0 requirements: 10 total
+- Mapped to phases: 10
+- Unmapped: 0 ✓
+
 ---
 *Requirements defined: 2026-03-24*
-*Updated: 2026-03-27 after v4.0 Offline Voice roadmap created*
+*Updated: 2026-03-27 after v5.0 roadmap written (Phases 27-29)*

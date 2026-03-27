@@ -7,11 +7,12 @@
 - ✅ **v2.0 Voice Loop** - Phases 9-11 (shipped 2026-03-22)
 - ✅ **v3.0 Public Launch** - Phases 12-18 (shipped 2026-03-25)
 - 🚧 **v3.1 Polish & Fixes** - Phases 19-22 (in progress)
-- 🆕 **v4.0 Offline Voice** - Phases 23-26 (planned)
+- ✅ **v4.0 Offline Voice** - Phases 23-26 (shipped 2026-03-27)
+- 🆕 **v5.0 Polish & Distribution** - Phases 27-29 (planned)
 
 ## Overview
 
-v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and auto-speak summaries. v3.0 Public Launch made CC-Beeper ready for strangers: code cleanup, onboarding, rich menu popover, Groq voice, visual polish, DMG distribution, and a landing-style GitHub README. v3.1 Polish & Fixes erases all Claumagotchi traces (laptop-wide and in-repo), fixes the broken auto-speak TTS flow, refreshes the GitHub presence with new cover art and rewritten copy, and adds a beeper-shaped menu bar icon — closing with a full branding pass once the user provides the Figma-exported assets. v4.0 Offline Voice replaces all cloud voice APIs with on-device AI: FluidAudio brings Parakeet TDT for transcription and Kokoro-82M for TTS, eliminating every API key dependency. Cleanup removes all Groq/OpenAI voice paths and the Keychain infrastructure that supported them.
+v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and auto-speak summaries. v3.0 Public Launch made CC-Beeper ready for strangers: code cleanup, onboarding, rich menu popover, Groq voice, visual polish, DMG distribution, and a landing-style GitHub README. v3.1 Polish & Fixes erases all Claumagotchi traces (laptop-wide and in-repo), fixes the broken auto-speak TTS flow, refreshes the GitHub presence with new cover art and rewritten copy, and adds a beeper-shaped menu bar icon — closing with a full branding pass once the user provides the Figma-exported assets. v4.0 Offline Voice replaces all cloud voice APIs with on-device AI: FluidAudio brings Parakeet TDT for transcription and Kokoro-82M for TTS, eliminating every API key dependency. Cleanup removes all Groq/OpenAI voice paths and the Keychain infrastructure that supported them. v5.0 Polish & Distribution fixes the two voice reliability regressions introduced by the offline models (STT injection and TTS delays), renames "Auto-speak" to "VoiceOver" throughout the app, and ships a branded DMG + Homebrew tap so users can install with one command.
 
 ## Phases
 
@@ -163,7 +164,8 @@ v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and aut
 - [x] **Phase 21: GitHub & Branding** - Rewrite README with new cover image, update repo metadata, ship beeper menu bar icon (completed 2026-03-26)
 - [ ] ~~**Phase 22: Final Branding**~~ - DEFERRED (app icon + DMG branding — user assets not ready, moved to future milestone)
 
-### v4.0 Offline Voice (Planned)
+<details>
+<summary>✅ v4.0 Offline Voice (Phases 23-26) - SHIPPED 2026-03-27</summary>
 
 **Milestone Goal:** Replace all cloud voice APIs with on-device AI. FluidAudio delivers Parakeet TDT for transcription and Kokoro-82M for TTS — zero API keys, zero internet required, instant response. Apple native voices remain as fallback. All API key infrastructure (Keychain, Groq/OpenAI code paths, Settings key fields) is removed once local models are working.
 
@@ -171,6 +173,16 @@ v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and aut
 - [x] **Phase 24: Offline STT** - Replace VoiceService transcription with Parakeet TDT; SFSpeech as fallback (completed 2026-03-27)
 - [x] **Phase 25: Offline TTS** - Replace TTSService with Kokoro-82M; Apple Ava as fallback (completed 2026-03-27)
 - [x] **Phase 26: Cleanup** - Remove all Groq/OpenAI API paths, Keychain storage, and Settings key fields (completed 2026-03-27)
+
+</details>
+
+### v5.0 Polish & Distribution (Planned)
+
+**Milestone Goal:** Fix voice reliability regressions introduced by the offline models (STT injection and TTS delays), rename "Auto-speak" to "VoiceOver" throughout the app, and ship a branded DMG + Homebrew tap so users can install with one command.
+
+- [ ] **Phase 27: STT Reliability** - Diagnose and fix unreliable voice recording → Parakeet transcription → terminal injection
+- [ ] **Phase 28: TTS Reliability + Rename** - Fix Kokoro TTS delays and silence; rename "Auto-speak" to "VoiceOver" across all UI and code
+- [ ] **Phase 29: Distribution** - Branded DMG background + Homebrew tap at vecartier/tap/cc-beeper
 
 ## Phase Details
 
@@ -246,7 +258,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 23-01-PLAN.md — Switch license to GPL-3.0, add FluidAudio SPM dependency, verify build
+- [x] 23-01-PLAN.md — Switch license to GPL-3.0, add FluidAudio SPM dependency, verify build
 
 ### Phase 24: Offline STT
 **Goal**: Voice recording transcribes on-device using Parakeet TDT — no API key, no internet, no Groq dependency
@@ -292,6 +304,45 @@ Plans:
 Plans:
 - [x] 26-01-PLAN.md — Delete dead Groq/OpenAI/Keychain files, purge all cloud API references from remaining code
 
+### Phase 27: STT Reliability
+**Goal**: Pressing the voice button reliably records audio, transcribes with Parakeet TDT, and injects the result into the terminal every single time — no silent failures, no dropped injections
+**Depends on**: Phase 26
+**Requirements**: FIX2-01, FIX2-02, FIX2-05
+**Success Criteria** (what must be TRUE):
+  1. Pressing the voice button, speaking, and releasing injects the transcription into the active terminal session on every attempt — no silent drop across 10 consecutive tests
+  2. Parakeet TDT transcription completes within a reasonable time (under 5 seconds for a short utterance) — no indefinite hang or timeout with no output
+  3. If recording fails to start (e.g., microphone permission revoked), the user sees a visible error state on the beeper rather than silence
+  4. If Parakeet fails mid-transcription, VoiceService falls back to SFSpeechRecognizer and the injection still completes
+  5. Auto-approved tool calls (e.g., WebFetch on "accept edits" mode) do not trigger "Needs you!" — the beeper stays in THINKING state
+**Plans**: 2 plans
+
+Plans:
+- [x] 27-01-PLAN.md — Fix VoiceService recording race, terminal focus, injection reliability (6 bugs)
+- [ ] 27-02-PLAN.md — Add permission_mode fast-path to hook (false-positive Needs You fix)
+
+### Phase 28: TTS Reliability + Rename
+**Goal**: Summaries are spoken reliably via Kokoro TTS every time Claude finishes or the user presses Summarize, and the feature is called "VoiceOver" everywhere in the app
+**Depends on**: Phase 26
+**Requirements**: FIX2-03, FIX2-04, REN-01, REN-02
+**Success Criteria** (what must be TRUE):
+  1. When Claude Code finishes a session, Kokoro TTS speaks the summary without delay or silence — verified across 5 consecutive stop events
+  2. Pressing the manual Summarize button triggers Kokoro TTS and the user hears audio within 2 seconds — no intermittent silence
+  3. Every user-visible label that previously read "Auto-speak" now reads "VoiceOver" — checked in the menu bar popover, Settings, and all onboarding text
+  4. IPC field names and hook event terminology updated to "VoiceOver" — a grep for "auto.speak" (case-insensitive, with or without hyphen) in Swift and Python source returns zero matches
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 29: Distribution
+**Goal**: CC-Beeper ships with a polished branded DMG and is installable via a single Homebrew command — no manual drag, no terminal gymnastics
+**Depends on**: Phase 26
+**Requirements**: DIST2-01, DIST2-02, DIST2-03
+**Success Criteria** (what must be TRUE):
+  1. Opening the DMG shows a CC-Beeper branded background and the volume is named "CC-Beeper" (not "Untitled" or a generic name)
+  2. Running `make dmg` on a clean checkout produces the branded DMG without any manual intervention — no extra scripts or assets to locate
+  3. Running `brew install vecartier/tap/cc-beeper` on a Mac without the app downloads and installs the latest release
+  4. The Homebrew tap formula references the correct GitHub release asset and passes `brew audit` with no errors
+**Plans**: TBD
+
 
 ## Progress
 
@@ -300,6 +351,10 @@ Plans:
 **Execution Order (v4.0):** 23 (LIC-01 + STT-01 together) -> 24 + 25 (can run in parallel) -> 26
 
 Note (v4.0): Phase 24 (Offline STT) and Phase 25 (Offline TTS) both depend only on Phase 23 and can execute in parallel. Phase 26 (Cleanup) waits for both Phase 24 and Phase 25 to be complete — API paths must not be removed until local replacements are verified working.
+
+**Execution Order (v5.0):** 27 + 28 (can run in parallel, both depend only on Phase 26) -> 29
+
+Note (v5.0): Phase 27 (STT Reliability) and Phase 28 (TTS Reliability + Rename) both depend only on Phase 26 and touch independent subsystems (VoiceService/ParakeetService vs. TTSService/KokoroService). They can execute in parallel. Phase 29 (Distribution) is fully independent of voice work and can start any time after Phase 26.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -317,7 +372,10 @@ Note (v4.0): Phase 24 (Offline STT) and Phase 25 (Offline TTS) both depend only 
 | 20. Fix Auto-Speak TTS | v3.1 Polish & Fixes | 2/2 | Complete | 2026-03-25 |
 | 21. GitHub & Branding | v3.1 Polish & Fixes | 2/2 | Complete | 2026-03-26 |
 | 22. Final Branding | v3.1 Polish & Fixes | 0/2 | Not started | - |
-| 23. Foundation | v4.0 Offline Voice | 0/1 | Complete    | 2026-03-27 |
-| 24. Offline STT | v4.0 Offline Voice | 2/2 | Complete    | 2026-03-27 |
-| 25. Offline TTS | v4.0 Offline Voice | 2/2 | Complete    | 2026-03-27 |
-| 26. Cleanup | v4.0 Offline Voice | 1/1 | Complete   | 2026-03-27 |
+| 23. Foundation | v4.0 Offline Voice | 0/1 | Complete | 2026-03-27 |
+| 24. Offline STT | v4.0 Offline Voice | 2/2 | Complete | 2026-03-27 |
+| 25. Offline TTS | v4.0 Offline Voice | 2/2 | Complete | 2026-03-27 |
+| 26. Cleanup | v4.0 Offline Voice | 1/1 | Complete | 2026-03-27 |
+| 27. STT Reliability | v5.0 Polish & Distribution | 1/2 | In Progress|  |
+| 28. TTS Reliability + Rename | v5.0 Polish & Distribution | 0/TBD | Not started | - |
+| 29. Distribution | v5.0 Polish & Distribution | 0/TBD | Not started | - |

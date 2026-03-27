@@ -2,14 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Polish & Fixes
-status: Milestone complete
-stopped_at: Completed 26-cleanup-01-PLAN.md
-last_updated: "2026-03-27T12:47:43.162Z"
+status: executing
+stopped_at: Completed 27-stt-reliability-01-PLAN.md
+last_updated: "2026-03-27T15:54:12.355Z"
+last_activity: 2026-03-27
 progress:
-  total_phases: 25
+  total_phases: 26
   completed_phases: 24
-  total_plans: 50
-  completed_plans: 49
+  total_plans: 52
+  completed_plans: 50
 ---
 
 # Project State
@@ -19,12 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-27)
 
 **Core value:** Users can see what Claude is doing, respond to it, and give it instructions — without leaving their current workflow
-**Current focus:** Phase 25 — Offline TTS
+**Current focus:** Phase 27 — STT Reliability
 
 ## Current Position
 
-Phase: 25
-Plan: Not started
+Phase: 27 (STT Reliability) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
+Last activity: 2026-03-27
 
 ## Performance Metrics
 
@@ -57,6 +60,7 @@ Plan: Not started
 | Phase 25-offline-tts P01 | 4 | 2 tasks | 3 files |
 | Phase 25-offline-tts P02 | 12 | 2 tasks | 3 files |
 | Phase 26-cleanup P01 | 3 | 2 tasks | 8 files |
+| Phase 27-stt-reliability P01 | 4 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -90,6 +94,13 @@ Plan: Not started
 - [Phase 26-cleanup]: CLN2-03: TTSPlaybackDelegate is the permanent name for AVAudioPlayerDelegate wrapper; migration block removed since default: branch handles legacy values safely
 - [Phase 26-cleanup]: CLN2-01: Settings Voice tab fully removed — all voice controls live in SettingsAudioSection
 - [Phase 26-cleanup]: CLN2-02: KeychainService deleted — offline-first app has zero API keys
+- [v5.0 planning]: Phase 27 (STT) and Phase 28 (TTS + Rename) touch independent subsystems and can execute in parallel; both depend on Phase 26
+- [v5.0 planning]: Phase 29 (Distribution) is fully independent of voice work — can start any time after Phase 26
+- [v5.0 planning]: REN-01/REN-02 co-located with TTS fix in Phase 28 — "Auto-speak/VoiceOver" label lives in the same settings area as TTS controls
+- [Phase 27-stt-reliability]: isRecording set synchronously before async Task in startRecording() — prevents rapid double-press race at source
+- [Phase 27-stt-reliability]: NSRunningApplication.activate() replaces open -a Process in focusTerminal() — synchronous, no sleep needed
+- [Phase 27-stt-reliability]: clearTerminalInput() uses Ctrl+U (kVK_ANSI_U + maskControl) — readline kill-line, works in bash/zsh/fish
+- [Phase 27-stt-reliability]: finish() awaited before audioEngine = AVAudioEngine() in manual Parakeet stop — engine replaced only after finalization
 
 ### Pending Todos
 
@@ -97,11 +108,11 @@ Plan: Not started
 
 ### Blockers/Concerns
 
-- **Phase 22 gate**: BRD-02 (app icon) requires user to provide Figma export before Phase 22 can execute — Phase 22 can be skipped and picked up later; v4.0 phases do not depend on it
-- **FluidAudio model size**: Parakeet TDT and Kokoro-82M are CoreML models — bundle size impact unknown. Confirm download-on-first-use vs. bundled approach during Phase 23
+- **Phase 22 gate**: BRD-02 (app icon) requires user to provide Figma export before Phase 22 can execute — Phase 22 can be skipped and picked up later; v5.0 phases do not depend on it
+- **Phase 27/28 root causes unknown**: FIX2-01 through FIX2-04 are reliability regressions from the v4.0 offline model integration — root causes not yet diagnosed. Plan-phase will need investigation steps before fixes.
 
 ## Session Continuity
 
-Last session: 2026-03-27T12:47:43.156Z
-Stopped at: Completed 26-cleanup-01-PLAN.md
+Last session: 2026-03-27T15:54:12.352Z
+Stopped at: Completed 27-stt-reliability-01-PLAN.md
 Resume file: None
