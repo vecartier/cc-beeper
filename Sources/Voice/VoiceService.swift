@@ -10,6 +10,10 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
     @Published var lastTranscriptPreview: String = ""
     @Published var recordingError: String? = nil
 
+    /// Detected language from last transcription (ISO 639-1 code, e.g. "en", "fr").
+    /// Set by Whisper path after each transcription. Phase 32 will use this.
+    var detectedLanguage: String = "en"
+
     /// Set by ClaudeMonitor after both services are created. Used to cut TTS before recording.
     var ttsService: TTSService?
 
@@ -21,20 +25,20 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
     private var recordingStartTime: Date?
     private var previousAppPID: pid_t? = nil
 
-    // MARK: - Parakeet State
+    // MARK: - Whisper State
 
-    private let parakeetService = ParakeetService.shared
-    private var hasSubmitted: Bool = false        // Guard against double-submit (EOU + Stop)
-    private var lastInjectedText: String = ""     // Tracks what's already in the terminal for delta injection
-    private var isParakeetSession: Bool = false   // Which path is currently active
-    private var parakeetFailed: Bool = false      // True after init failure — skip Parakeet until next launch
-    private var parakeetInitializing: Bool = false // Guard against concurrent init attempts
+    private let whisperService = WhisperService.shared
+    private var hasSubmitted: Bool = false        // Guard against double-submit
+    private var isWhisperSession: Bool = false    // Which path is currently active
+    private var whisperFailed: Bool = false       // True after init failure — skip Whisper until next launch
+    private var whisperInitializing: Bool = false // Guard against concurrent init attempts
+    private var whisperAudioFrames: [Float] = []  // Accumulates 16kHz mono float32 frames during recording
 
     // MARK: - STT Engine Label
 
     /// Exposed to Settings > Voice to show which STT engine is active.
     var sttEngineLabel: String {
-        "Parakeet TDT (local)"
+        "Whisper (local)"
     }
 
     // MARK: - Logging
@@ -73,12 +77,6 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         if isRecording { stopRecording() }
     }
 
-    // clearTerminalBeforeHotkey removed — Carbon HotKey library consumes the event
-
-    // MARK: - Modifier Key Helpers
-
-    // releaseModifiers removed — Carbon HotKey library consumes the event
-
     // MARK: - Recording Router
 
     private func startRecording() {
@@ -102,7 +100,6 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         // Set recording state SYNCHRONOUSLY before any async work (Bug 1 fix)
         isRecording = true
         hasSubmitted = false
-        lastInjectedText = ""
         recordingError = nil
 
         // Capture previous app BEFORE focusing terminal
@@ -123,91 +120,102 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
 
         log("STT engine: \(sttEngineLabel)")
 
-        // Only use Parakeet if it's already initialized (pre-warmed at launch).
+        // Only use Whisper if it's already initialized (pre-warmed at launch).
         // If not ready yet, use SFSpeech — don't block recording waiting for init.
         Task {
-            let ready = await parakeetService.isReady
+            let ready = await whisperService.isReady
             await MainActor.run {
-                if ready && !self.parakeetFailed {
-                    self.startRecordingParakeet(inputNode: inputNode)
+                if ready && !self.whisperFailed {
+                    self.startRecordingWhisper(inputNode: inputNode)
                 } else {
-                    self.log("Using SFSpeech (parakeetReady=\(ready), parakeetFailed=\(self.parakeetFailed))")
+                    self.log("Using SFSpeech (whisperReady=\(ready), whisperFailed=\(self.whisperFailed))")
                     self.startRecordingSFSpeech(inputNode: inputNode)
                 }
             }
         }
     }
 
-    // MARK: - Parakeet Recording Path
+    // MARK: - Whisper Batch Recording Path
 
-    private func startRecordingParakeet(inputNode: AVAudioInputNode) {
-        log("Parakeet mode: streaming with live terminal injection (D-02)")
-        isParakeetSession = true
-        // Note: hasSubmitted, lastInjectedText, isRecording are set synchronously in startRecording()
+    private func startRecordingWhisper(inputNode: AVAudioInputNode) {
+        log("Whisper mode: batch recording (no live injection per D-04)")
+        isWhisperSession = true
 
-        Task {
-            do {
-                await parakeetService.reset()
-                await parakeetService.configureCallbacks(
-                    onPartial: { [weak self] partial in
-                        Task { @MainActor in
-                            guard let self, !self.hasSubmitted else { return }
-                            // PRIMARY: Live inject delta into terminal (per D-02)
-                            self.injectPartialDelta(partial)
-                            // SECONDARY: LCD preview as visual feedback
-                            self.lastTranscriptPreview = partial
-                        }
-                    },
-                    onEou: { [weak self] transcript in
-                        // EOU fires on silence — just update preview, don't auto-submit.
-                        // User presses the button again to stop and submit.
-                        Task { @MainActor in
-                            guard let self, !self.hasSubmitted, !transcript.isEmpty else { return }
-                            self.lastTranscriptPreview = transcript
-                            self.log("EOU detected (no auto-submit): '\(transcript)'")
-                        }
-                    }
-                )
-            } catch {
-                log("Parakeet init failed, falling back to SFSpeech: \(error)")
-                await MainActor.run {
-                    self.isParakeetSession = false
-                    self.parakeetFailed = true
-                    self.parakeetInitializing = false
-                    self.startRecordingSFSpeech(inputNode: inputNode)
+        let nativeFormat = inputNode.outputFormat(forBus: 0)
+        let targetFormat = AVAudioFormat(
+            commonFormat: .pcmFormatFloat32,
+            sampleRate: 16_000,
+            channels: 1,
+            interleaved: false
+        )!
+
+        // Build converter from native mic format to 16kHz mono float32 (Pitfall 5 guard)
+        guard let converter = AVAudioConverter(from: nativeFormat, to: targetFormat) else {
+            log("Whisper mode: AVAudioConverter init failed for format \(nativeFormat) — falling back to SFSpeech")
+            isWhisperSession = false
+            whisperFailed = true
+            startRecordingSFSpeech(inputNode: inputNode)
+            return
+        }
+
+        // Pre-allocate 60 seconds of 16kHz frames
+        whisperAudioFrames = []
+        whisperAudioFrames.reserveCapacity(16_000 * 60)
+
+        // Focus terminal ONCE at session start
+        focusTerminal()
+
+        // Show LCD feedback during recording
+        lastTranscriptPreview = "Recording..."
+
+        inputNode.installTap(onBus: 0, bufferSize: 4096, format: nil) { [weak self] buffer, _ in
+            guard let self else { return }
+
+            // Convert to 16kHz mono float32
+            let frameCount = AVAudioFrameCount(
+                ceil(Double(buffer.frameLength) * 16_000.0 / nativeFormat.sampleRate)
+            )
+            guard let outBuffer = AVAudioPCMBuffer(pcmFormat: targetFormat, frameCapacity: frameCount) else { return }
+
+            var inputConsumed = false
+            converter.convert(to: outBuffer, error: nil) { _, status in
+                if inputConsumed {
+                    status.pointee = .noDataNow
+                    return nil
                 }
-                return
+                inputConsumed = true
+                status.pointee = .haveData
+                return buffer
             }
 
-            // Only install tap and start engine AFTER successful init
-            await MainActor.run {
-                self.focusTerminal()  // Focus terminal ONCE at session start (Bug 2 fix)
-                inputNode.installTap(onBus: 0, bufferSize: 4096, format: nil) { [weak self] buffer, _ in
-                    guard let self else { return }
-                    Task {
-                        try? await self.parakeetService.process(buffer)
-                    }
-                }
-
-                self.audioEngine.prepare()
-                do {
-                    try self.audioEngine.start()
-                    self.recordingStartTime = Date()
-                    self.log("Parakeet mode: recording with live injection...")
-                } catch {
-                    self.log("Parakeet mode: engine failed: \(error)")
-                    inputNode.removeTap(onBus: 0)
-                    self.isRecording = false
-                    self.recordingError = "Recording failed: \(error)"
+            if let data = outBuffer.floatChannelData?[0] {
+                let frames = Array(UnsafeBufferPointer(start: data, count: Int(outBuffer.frameLength)))
+                // Thread safety: capture local chunk and dispatch to accumulate
+                // (Audio tap fires on real-time thread; whisperAudioFrames on main)
+                let chunk = frames
+                Task { @MainActor [weak self] in
+                    self?.whisperAudioFrames.append(contentsOf: chunk)
                 }
             }
+        }
+
+        audioEngine.prepare()
+        do {
+            try audioEngine.start()
+            recordingStartTime = Date()
+            log("Whisper mode: recording batch frames...")
+        } catch {
+            log("Whisper mode: engine failed: \(error)")
+            inputNode.removeTap(onBus: 0)
+            isRecording = false
+            recordingError = "Recording failed: \(error)"
         }
     }
 
     // MARK: - SFSpeech Recording Path
 
     private func startRecordingSFSpeech(inputNode: AVAudioInputNode) {
-        isParakeetSession = false
+        isWhisperSession = false
         guard let recognizer else {
             log("no recognizer")
             isRecording = false
@@ -298,45 +306,38 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         log("=== STOP ===")
         guard isRecording else { return }
 
-        if isParakeetSession {
-            // Parakeet path — stop audio tap first, then finalize transcript, then replace engine
-            // Stop the audio tap and engine but do NOT replace the engine yet (Bug 5 fix)
+        if isWhisperSession {
+            // Whisper batch path — stop tap, then transcribe accumulated frames
             audioEngine.inputNode.removeTap(onBus: 0)
             audioEngine.stop()
 
-            if hasSubmitted {
-                // EOU already fired and submitted — just clean up
-                log("Parakeet mode: EOU already submitted, stop is no-op")
-                isRecording = false
-                audioEngine = AVAudioEngine()
-            } else {
-                // Manual stop — finalize transcript BEFORE replacing engine (Bug 5 fix)
-                // isRecording stays true during finish() to prevent a new recording from starting
-                Task {
-                    do {
-                        let final = try await parakeetService.finish()
-                        await MainActor.run {
-                            if !final.isEmpty && !self.hasSubmitted {
-                                self.hasSubmitted = true
-                                self.lastTranscriptPreview = final
-                                // Inject any remaining characters not yet in terminal
-                                let remaining = String(final.dropFirst(self.lastInjectedText.count))
-                                if !remaining.isEmpty {
-                                    self.injectTextOnly(remaining)
-                                }
-                                self.lastInjectedText = ""
-                                self.submitTerminal()
-                            }
-                            // Engine replaced AFTER finish() completes (Bug 5 fix)
-                            self.isRecording = false
-                            self.audioEngine = AVAudioEngine()
+            // Show processing indicator (D-03) — isRecording stays true during transcription (Pitfall 6)
+            lastTranscriptPreview = "Processing..."
+
+            // Capture and clear accumulated frames
+            let frames = whisperAudioFrames
+            whisperAudioFrames = []
+
+            Task {
+                do {
+                    let (text, lang) = try await whisperService.transcribe(frames)
+                    await MainActor.run {
+                        self.detectedLanguage = lang  // Phase 32 will use this
+                        if !text.isEmpty && !self.hasSubmitted {
+                            self.hasSubmitted = true
+                            self.lastTranscriptPreview = text
+                            self.injectAndSubmit(text)
                         }
-                    } catch {
-                        self.log("Parakeet finish() failed: \(error)")
-                        await MainActor.run {
-                            self.isRecording = false
-                            self.audioEngine = AVAudioEngine()
-                        }
+                        // Engine replaced AFTER transcription completes (same pattern as Parakeet Bug 5 fix)
+                        self.isRecording = false
+                        self.audioEngine = AVAudioEngine()
+                        self.log("Whisper transcription complete: lang=\(lang), '\(text)'")
+                    }
+                } catch {
+                    self.log("Whisper transcription failed: \(error)")
+                    await MainActor.run {
+                        self.isRecording = false
+                        self.audioEngine = AVAudioEngine()
                     }
                 }
             }
@@ -373,98 +374,7 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         }
     }
 
-    // MARK: - Live Terminal Injection (D-02)
-
-    /// Injects only the delta (new characters) since the last injected partial.
-    /// PartialCallback fires with the FULL accumulated transcript — we track what's already in the terminal.
-    /// If the partial doesn't extend previous text (model revised earlier words), clears and re-injects.
-    private func injectPartialDelta(_ fullPartial: String) {
-        let alreadyInjected = lastInjectedText
-
-        guard fullPartial.hasPrefix(alreadyInjected) else {
-            // Partial does NOT extend previous — text was revised/corrected by model.
-            // Clear terminal input and re-inject the full partial.
-            clearTerminalInput()
-            injectTextOnly(fullPartial)
-            lastInjectedText = fullPartial
-            return
-        }
-
-        let delta = String(fullPartial.dropFirst(alreadyInjected.count))
-        guard !delta.isEmpty else { return }
-
-        injectTextOnly(delta)
-        lastInjectedText = fullPartial
-    }
-
-    /// Injects text into the terminal WITHOUT pressing Enter.
-    /// Used for live streaming partial results and final delta injection before submitTerminal().
-    /// Terminal focus is handled once at session start — do NOT call focusTerminal() here.
-    private func injectTextOnly(_ text: String) {
-        guard !text.isEmpty else { return }
-
-        // No focusTerminal() here — terminal was focused once at session start (Bug 2 fix)
-        let utf16 = Array(text.utf16)
-        if utf16.count <= 200 {
-            guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true),
-                  let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false) else { return }
-            keyDown.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
-            keyUp.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
-            // Clear modifier flags so held Option key doesn't corrupt the injection
-            keyDown.flags = []
-            keyUp.flags = []
-            keyDown.post(tap: .cghidEventTap)
-            keyUp.post(tap: .cghidEventTap)
-        } else {
-            // Clipboard paste fallback for long text
-            let pb = NSPasteboard.general
-            let old = pb.string(forType: .string)
-            pb.clearContents()
-            pb.setString(text, forType: .string)
-            guard let down = CGEvent(keyboardEventSource: nil, virtualKey: 9, keyDown: true),
-                  let up = CGEvent(keyboardEventSource: nil, virtualKey: 9, keyDown: false) else { return }
-            down.flags = .maskCommand
-            up.flags = .maskCommand
-            down.post(tap: .cghidEventTap)
-            up.post(tap: .cghidEventTap)
-            usleep(100_000)
-            if let old { pb.clearContents(); pb.setString(old, forType: .string) }
-        }
-
-        log("injected (no submit): '\(text)'")
-    }
-
-    /// Clears the current terminal input line using Ctrl+U (readline kill-line).
-    /// Works universally in bash, zsh, fish, and all readline-compatible shells.
-    /// Used when Parakeet revises earlier words (partial doesn't extend previous injected text).
-    private func clearTerminalInput() {
-        // Ctrl+U = readline kill-line — clears input from cursor to start of line
-        // Works universally in bash, zsh, fish, and all readline-compatible shells.
-        // virtualKey 32 = kVK_ANSI_U
-        guard let ctrlUDown = CGEvent(keyboardEventSource: nil, virtualKey: 32, keyDown: true),
-              let ctrlUUp = CGEvent(keyboardEventSource: nil, virtualKey: 32, keyDown: false) else { return }
-        ctrlUDown.flags = .maskControl
-        ctrlUUp.flags = .maskControl
-        ctrlUDown.post(tap: .cghidEventTap)
-        ctrlUUp.post(tap: .cghidEventTap)
-        log("cleared terminal input (Ctrl+U)")
-    }
-
-    /// Presses Enter only — text is already in the terminal from partial injection.
-    /// Use after all delta text has been injected via `injectTextOnly`.
-    /// Terminal is already focused from session start — no focusTerminal() needed here.
-    private func submitTerminal() {
-        guard let enterDown = CGEvent(keyboardEventSource: nil, virtualKey: 0x24, keyDown: true),
-              let enterUp = CGEvent(keyboardEventSource: nil, virtualKey: 0x24, keyDown: false) else { return }
-        enterDown.flags = []
-        enterUp.flags = []
-        enterDown.post(tap: .cghidEventTap)
-        enterUp.post(tap: .cghidEventTap)
-        log("submitted (Enter only)")
-        refocusPreviousApp()
-    }
-
-    // MARK: - Inject text + Enter (SFSpeech path, unchanged)
+    // MARK: - Inject text + Enter (Whisper and SFSpeech paths)
 
     private func injectAndSubmit(_ text: String) {
         guard !text.isEmpty else { return }
@@ -509,6 +419,39 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         log("injected + submitted: '\(text)'")
 
         refocusPreviousApp()
+    }
+
+    /// Injects text into the terminal WITHOUT pressing Enter.
+    /// Retained for potential future use (not used by Whisper batch path).
+    private func injectTextOnly(_ text: String) {
+        guard !text.isEmpty else { return }
+
+        let utf16 = Array(text.utf16)
+        if utf16.count <= 200 {
+            guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true),
+                  let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false) else { return }
+            keyDown.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
+            keyUp.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
+            keyDown.flags = []
+            keyUp.flags = []
+            keyDown.post(tap: .cghidEventTap)
+            keyUp.post(tap: .cghidEventTap)
+        } else {
+            let pb = NSPasteboard.general
+            let old = pb.string(forType: .string)
+            pb.clearContents()
+            pb.setString(text, forType: .string)
+            guard let down = CGEvent(keyboardEventSource: nil, virtualKey: 9, keyDown: true),
+                  let up = CGEvent(keyboardEventSource: nil, virtualKey: 9, keyDown: false) else { return }
+            down.flags = .maskCommand
+            up.flags = .maskCommand
+            down.post(tap: .cghidEventTap)
+            up.post(tap: .cghidEventTap)
+            usleep(100_000)
+            if let old { pb.clearContents(); pb.setString(old, forType: .string) }
+        }
+
+        log("injected (no submit): '\(text)'")
     }
 
     // MARK: - Terminal Focus
