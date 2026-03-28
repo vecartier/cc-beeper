@@ -216,13 +216,14 @@ final class ClaudeMonitor: ObservableObject {
         ttsService.$isSpeaking
             .receive(on: DispatchQueue.main)
             .assign(to: &$isSpeaking)
-        // Pre-warm Parakeet model at launch (downloads + compiles on first run, cached after)
+        // Pre-warm Whisper model at launch — loads from cache, falls back to SFSpeech if not downloaded
         Task {
+            guard WhisperService.modelsDownloaded else { return }
             do {
-                try await ParakeetService.shared.initialize()
+                try await WhisperService.shared.initialize(size: .selected)
             } catch {
                 // Log to voice.log so we can see why it failed
-                let line = "[\(Date())] Parakeet pre-warm failed: \(error)\n"
+                let line = "[\(Date())] Whisper pre-warm failed: \(error)\n"
                 let logPath = Self.ipcDir + "/voice.log"
                 if let fh = FileHandle(forWritingAtPath: logPath) {
                     fh.seekToEndOfFile()

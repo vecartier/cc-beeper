@@ -34,7 +34,7 @@ final class OnboardingViewModel: ObservableObject {
     private var pollTimer: Timer?
 
     init() {
-        isModelReady = ParakeetService.modelsDownloaded && PocketTTSService.modelsDownloaded
+        isModelReady = WhisperService.modelsDownloaded && PocketTTSService.modelsDownloaded
     }
 
     // MARK: - Navigation
@@ -58,9 +58,9 @@ final class OnboardingViewModel: ObservableObject {
         modelDownloadPhase = "Preparing..."
 
         Task {
-            // Phase 1: Parakeet (0–50%)
+            // Phase 1: Whisper (0–50%) — replaces Parakeet per D-05/D-11
             do {
-                try await ParakeetService.shared.downloadModels { [weak self] fraction, label in
+                try await WhisperService.shared.downloadModel(size: .selected) { [weak self] fraction, label in
                     Task { @MainActor in
                         self?.modelDownloadProgress = fraction * 0.5
                         self?.modelDownloadPhase = "Speech recognition: \(label)"
