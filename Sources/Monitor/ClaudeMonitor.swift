@@ -138,6 +138,11 @@ final class ClaudeMonitor: ObservableObject {
         didSet { UserDefaults.standard.set(Int(hotkeyMute), forKey: "hotkeyMute") }
     }
 
+    /// Selected Whisper model size: "small" (default) or "medium".
+    @Published var whisperModelSize: String = "small" {
+        didSet { UserDefaults.standard.set(whisperModelSize, forKey: "whisperModelSize") }
+    }
+
     /// Selected Kokoro voice identifier.
     @Published var kokoroVoice: String = "bm_daniel" {
         didSet {
@@ -199,6 +204,7 @@ final class ClaudeMonitor: ObservableObject {
         ttsProvider = UserDefaults.standard.string(forKey: "ttsProvider") ?? "kokoro"
         pocketttsVoice = UserDefaults.standard.string(forKey: "pocketttsVoice") ?? "alba"
         kokoroVoice = UserDefaults.standard.string(forKey: "kokoroVoice") ?? "bm_daniel"
+        whisperModelSize = UserDefaults.standard.string(forKey: "whisperModelSize") ?? "small"
         // Load saved hotkey bindings (defaults are the property initializers)
         if let v = UserDefaults.standard.object(forKey: "hotkeyAccept") as? Int { hotkeyAccept = UInt16(v) }
         if let v = UserDefaults.standard.object(forKey: "hotkeyDeny") as? Int { hotkeyDeny = UInt16(v) }
@@ -220,7 +226,8 @@ final class ClaudeMonitor: ObservableObject {
         Task {
             guard WhisperService.modelsDownloaded else { return }
             do {
-                try await WhisperService.shared.initialize(size: .selected)
+                let size = WhisperModelSize(rawValue: self.whisperModelSize) ?? .small
+                try await WhisperService.shared.initialize(size: size)
             } catch {
                 // Log to voice.log so we can see why it failed
                 let line = "[\(Date())] Whisper pre-warm failed: \(error)\n"
