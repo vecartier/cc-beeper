@@ -23,6 +23,23 @@ struct SettingsVoiceOverSection: View {
                     .foregroundStyle(.secondary)
                     .font(.callout)
             }
+
+            Picker("Whisper Model", selection: $monitor.whisperModelSize) {
+                Text("Small (~500 MB) — Recommended").tag("small")
+                Text("Medium (~1.5 GB) — Higher accuracy").tag("medium")
+            }
+            .pickerStyle(.menu)
+
+            if !WhisperService.isModelDownloaded(size: WhisperModelSize(rawValue: monitor.whisperModelSize) ?? .small) {
+                Button {
+                    let size = WhisperModelSize(rawValue: monitor.whisperModelSize) ?? .small
+                    Task {
+                        try? await WhisperService.shared.downloadModel(size: size) { _, _ in }
+                    }
+                } label: {
+                    Label("Download Model", systemImage: "arrow.down.circle")
+                }
+            }
         }
 
     }
