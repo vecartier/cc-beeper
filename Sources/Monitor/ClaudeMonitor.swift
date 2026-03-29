@@ -39,9 +39,6 @@ struct PendingPermission: Equatable {
 @MainActor
 final class ClaudeMonitor: ObservableObject {
     static let ipcDir = NSHomeDirectory() + "/.claude/cc-beeper"
-    static let eventsFile = ipcDir + "/events.jsonl"
-    static let pendingFile = ipcDir + "/pending.json"
-    static let responseFile = ipcDir + "/response.json"
 
     @Published var state: ClaudeState = .finished
     @Published var pendingPermission: PendingPermission?
@@ -61,20 +58,17 @@ final class ClaudeMonitor: ObservableObject {
         didSet {
             UserDefaults.standard.set(isActive, forKey: "isActive")
             if isActive {
-                // Guard against double-setup — restartFileWatcher handles cleanup
-                restartFileWatcher()
-                setupSummaryWatcher()
+                httpServer.start { [weak self] payload in
+                    guard let self else { return nil }
+                    return self.handleHookPayload(payload)
+                }
                 setupGlobalHotkeys()
             } else {
                 // Stop any active recording and TTS before tearing down
                 voiceService.stopIfRecording()
                 ttsService.stopSpeaking()
-                // Tear down all monitoring
-                source?.cancel(); source = nil
-                try? fileHandle?.close(); fileHandle = nil
-                summarySource?.cancel(); summarySource = nil
+                httpServer.stop()
                 idleWork?.cancel()
-                // Remove hotkey monitors so keypresses don't fire when powered off
                 carbonHotKeys.removeAll()
                 if let m = localKeyMonitor { NSEvent.removeMonitor(m); localKeyMonitor = nil }
                 state = .idle
@@ -169,10 +163,6 @@ final class ClaudeMonitor: ObservableObject {
     /// Observed by Settings and onboarding to show install prompt. NOT auto-installed — UI-triggered only.
     @Published var depsNeededForCurrentLang: Bool = false
 
-    private static let summaryFile = ipcDir + "/last_summary.txt"
-    private var summarySource: DispatchSourceFileSystemObject?
-    private var lastSummaryHash: Int = 0
-
     /// Computed: seconds elapsed since thinking started.
     var elapsedSeconds: Int {
         guard let start = thinkingStartTime else { return 0 }
@@ -198,8 +188,10 @@ final class ClaudeMonitor: ObservableObject {
     /// Per-session state tracking — key is session ID, value is last known state.
     private var sessionStates: [String: ClaudeState] = [:]
 
-    private var fileHandle: FileHandle?
-    private var source: DispatchSourceFileSystemObject?
+    /// Last-seen timestamps per session — used for age-based pruning (no sessions.json needed).
+    private var sessionLastSeen: [String: Date] = [:]
+
+    private let httpServer = HTTPHookServer()
     private var idleWork: DispatchWorkItem?
     private var lastPruneTime: Date = .distantPast
     private var globalKeyMonitor: Any?
@@ -212,9 +204,10 @@ final class ClaudeMonitor: ObservableObject {
         autoAccept = UserDefaults.standard.object(forKey: "autoAccept") as? Bool ?? false
         vibrationEnabled = UserDefaults.standard.object(forKey: "vibrationEnabled") as? Bool ?? true
         ensureIPCDir()
-        rehydrateSessions()
-        setupFileWatcher()
-        setupSummaryWatcher()
+        httpServer.start { [weak self] payload in
+            guard let self else { return nil }
+            return self.handleHookPayload(payload)
+        }
         setupGlobalHotkeys()
         // Set after watcher is running so didSet fires only on external mutation
         // Migrate legacy "autoSpeak" key to "voiceOver"
@@ -284,24 +277,6 @@ final class ClaudeMonitor: ObservableObject {
         ttsService.launchKokoro()
     }
 
-    /// Pre-populate sessionStates from sessions.json so the app picks up
-    /// sessions that were already active before this launch.
-    private func rehydrateSessions() {
-        guard let data = FileManager.default.contents(atPath: Self.ipcDir + "/sessions.json"),
-              let sessions = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
-        let now = Int(Date().timeIntervalSince1970)
-        for (sid, value) in sessions {
-            // Only rehydrate sessions less than 2 hours old (matches hook's 7200s pruning)
-            if let ts = value as? Int, now - ts < 7200 {
-                sessionStates[sid] = .thinking
-            }
-        }
-        if !sessionStates.isEmpty {
-            state = .thinking
-            sessionCount = sessionStates.count
-        }
-    }
-
     private func ensureIPCDir() {
         let fm = FileManager.default
         var isDir: ObjCBool = false
@@ -317,27 +292,128 @@ final class ClaudeMonitor: ObservableObject {
     }
 
     deinit {
-        source?.cancel()
-        try? fileHandle?.close()
-        summarySource?.cancel()
         ttsService.stopSpeaking()
         ttsService.shutdownKokoro()
-        // idleWork and keyMonitors cleaned up via isActive.didSet
+        // HTTPHookServer.stop() is @MainActor — called via applicationWillTerminate in AppDelegate
+        // The port file is also cleaned up by the OS on process exit
+    }
+
+    // MARK: - HTTP Hook Handler
+
+    /// Translates HTTP hook payloads into the existing JSONL event format
+    /// and routes to processEvent(). Returns nil for async hooks.
+    /// For permission_prompt Notifications, returns a sentinel (handled by HTTPHookServer).
+    private func handleHookPayload(_ payload: [String: Any]) -> [String: Any]? {
+        guard let hookEventName = payload["hook_event_name"] as? String else { return nil }
+        let sessionId = payload["session_id"] as? String ?? ""
+        let toolName = payload["tool_name"] as? String
+        let ts = Int(Date().timeIntervalSince1970)
+
+        // Translate hook_event_name to existing event types
+        let eventType: String
+        switch hookEventName {
+        case "PreToolUse":
+            eventType = "pre_tool"
+        case "PostToolUse":
+            eventType = "post_tool"
+        case "Notification":
+            // Check notification sub-type
+            let notificationType = payload["notification_type"] as? String ?? ""
+            if notificationType == "permission_prompt" {
+                // Build synthetic JSONL event with permission type marker
+                var syntheticEvent: [String: Any] = [
+                    "event": "notification",
+                    "type": "permission_prompt",
+                    "sid": sessionId,
+                    "ts": ts,
+                ]
+                if let message = payload["message"] as? String {
+                    syntheticEvent["summary"] = message
+                }
+                if let tool = toolName {
+                    syntheticEvent["tool"] = tool
+                }
+                let json = (try? JSONSerialization.data(withJSONObject: syntheticEvent))
+                    .flatMap { String(data: $0, encoding: .utf8) } ?? ""
+                processEvent(json)
+                // Return a sentinel dict so HTTPHookServer knows to hold the connection
+                return ["_hold_connection": true]
+            } else {
+                // Non-permission notifications (auth_success, idle_prompt, etc.)
+                // Process as generic notification — state machine ignores unknown types
+                eventType = "notification"
+            }
+        case "Stop":
+            eventType = "stop"
+            // Extract TTS summary from last_assistant_message (per D-05, HTTP-04)
+            if let summary = payload["last_assistant_message"] as? String, !summary.isEmpty {
+                // NEVER interrupt recording — recording has absolute priority
+                if voiceOver && !isRecording {
+                    Task { [weak self] in
+                        guard let self else { return }
+                        let spoken = await self.ttsService.speakSummary(summary, provider: self.ttsProvider)
+                        await MainActor.run {
+                            guard !self.isRecording else { return }
+                            self.lastSummary = spoken
+                        }
+                    }
+                } else {
+                    lastSummary = summary
+                }
+            } else {
+                // Log missing last_assistant_message per D-05
+                let logPath = Self.ipcDir + "/voice.log"
+                let logEntry = "[\(ISO8601DateFormatter().string(from: Date()))] Stop event missing last_assistant_message for session \(sessionId)\n"
+                if let logData = logEntry.data(using: .utf8) {
+                    if FileManager.default.fileExists(atPath: logPath) {
+                        if let fh = FileHandle(forWritingAtPath: logPath) {
+                            fh.seekToEndOfFile()
+                            fh.write(logData)
+                            try? fh.close()
+                        }
+                    } else {
+                        try? logData.write(to: URL(fileURLWithPath: logPath))
+                    }
+                }
+            }
+        case "StopFailure":
+            eventType = "stop" // StopFailure maps to stop (error context is Phase 36 LCD-04)
+        default:
+            return nil // Unknown event — ignore
+        }
+
+        // Build synthetic JSONL event matching existing processEvent format
+        var syntheticEvent: [String: Any] = [
+            "event": eventType,
+            "sid": sessionId,
+            "ts": ts,
+        ]
+        if let tool = toolName {
+            syntheticEvent["tool"] = tool
+        }
+
+        if let json = try? JSONSerialization.data(withJSONObject: syntheticEvent),
+           let jsonStr = String(data: json, encoding: .utf8) {
+            processEvent(jsonStr)
+        }
+
+        return nil // Async — respond immediately with 200
     }
 
     // MARK: Actions
 
     func respondToPermission(allow: Bool) {
-        guard let pending = pendingPermission else {
-            // Even without pending data, clear the awaiting flag
-            awaitingUserAction = false
-            state = allow ? .thinking : .finished
-            return
-        }
-        let response: [String: Any] = ["id": pending.id, "decision": allow ? "allow" : "deny"]
-        if let data = try? JSONSerialization.data(withJSONObject: response) {
-            try? data.write(to: URL(fileURLWithPath: Self.responseFile))
-        }
+        let response: [String: Any] = [
+            "hookSpecificOutput": [
+                "hookEventName": "Notification",
+                "decision": allow ? "allow" : "deny",
+                "updatedPermissions": allow
+                    ? ["allow": true, "reason": "Approved via CC-Beeper"]
+                    : ["deny": true, "reason": "Denied via CC-Beeper"]
+            ]
+        ]
+        httpServer.sendPermissionResponse(response)
+
         pendingPermission = nil
         awaitingUserAction = false
         state = allow ? .thinking : .finished
@@ -368,104 +444,6 @@ final class ClaudeMonitor: ObservableObject {
         }
     }
 
-    // MARK: File Watcher
-
-    private func setupFileWatcher() {
-        let fm = FileManager.default
-        if !fm.fileExists(atPath: Self.eventsFile) {
-            fm.createFile(atPath: Self.eventsFile, contents: nil)
-        }
-        guard let fh = FileHandle(forReadingAtPath: Self.eventsFile) else { return }
-        fh.seekToEndOfFile()
-        self.fileHandle = fh
-
-        let fd = open(Self.eventsFile, O_EVTONLY)
-        guard fd >= 0 else { return }
-        let source = DispatchSource.makeFileSystemObjectSource(
-            fileDescriptor: fd, eventMask: [.write, .extend, .delete, .rename], queue: .main
-        )
-        source.setEventHandler { [weak self] in
-            guard let self else { return }
-            let flags = source.data
-            if flags.contains(.delete) || flags.contains(.rename) {
-                self.restartFileWatcher()
-                return
-            }
-            self.readNewEvents()
-        }
-        source.setCancelHandler { close(fd) }
-        source.resume()
-        self.source = source
-    }
-
-    private func restartFileWatcher() {
-        source?.cancel()
-        source = nil
-        try? fileHandle?.close()
-        fileHandle = nil
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 500_000_000)
-            self?.setupFileWatcher()
-        }
-    }
-
-    // MARK: Summary File Watcher
-
-    private func setupSummaryWatcher() {
-        // Cancel existing watcher before creating a new one
-        summarySource?.cancel()
-        summarySource = nil
-
-        let fm = FileManager.default
-        if !fm.fileExists(atPath: Self.summaryFile) {
-            fm.createFile(atPath: Self.summaryFile, contents: nil)
-        }
-        if let data = fm.contents(atPath: Self.summaryFile) {
-            lastSummaryHash = data.hashValue
-        }
-
-        // Watch the DIRECTORY, not the file — shell redirects and atomic writes
-        // replace the inode, which kills a file-level kqueue watcher. Directory
-        // watches survive because the directory inode stays the same.
-        let fd = open(Self.ipcDir, O_EVTONLY)
-        guard fd >= 0 else { return }
-        let source = DispatchSource.makeFileSystemObjectSource(
-            fileDescriptor: fd, eventMask: [.write], queue: .main
-        )
-        source.setEventHandler { [weak self] in self?.onSummaryFileChanged() }
-        source.setCancelHandler { close(fd) }
-        source.resume()
-        self.summarySource = source
-    }
-
-    private func onSummaryFileChanged() {
-        guard let data = FileManager.default.contents(atPath: Self.summaryFile),
-              let text = String(data: data, encoding: .utf8),
-              !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        let hash = data.hashValue
-        guard hash != lastSummaryHash else { return }
-        lastSummaryHash = hash
-
-        // NEVER interrupt recording — recording has absolute priority
-        guard voiceOver, !isRecording else { return }
-
-        Task {
-            let summary = await ttsService.speakSummary(text, provider: self.ttsProvider)
-            await MainActor.run {
-                // Re-check after async summarization — user might have started recording
-                guard !self.isRecording else { return }
-                self.lastSummary = summary
-            }
-        }
-    }
-
-    private func readNewEvents() {
-        guard let fh = fileHandle else { return }
-        let data = fh.availableData
-        guard !data.isEmpty, let text = String(data: data, encoding: .utf8) else { return }
-        for line in text.split(separator: "\n") { processEvent(String(line)) }
-    }
-
     private func processEvent(_ json: String) {
         guard let data = json.data(using: .utf8),
               let event = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -475,29 +453,18 @@ final class ClaudeMonitor: ObservableObject {
 
         let sid = event["sid"] as? String ?? ""
 
-        // Permission — only trigger needsYou if pending.json has fresh data for a real tool
-        if type == "permission" || (type == "notification" && event["type"] as? String == "permission_prompt") {
-            // Check if pending.json exists and is fresh (less than 5 seconds old)
-            let fm = FileManager.default
-            guard let attrs = try? fm.attributesOfItem(atPath: Self.pendingFile),
-                  let modDate = attrs[.modificationDate] as? Date,
-                  Date().timeIntervalSince(modDate) < 5,
-                  let data = fm.contents(atPath: Self.pendingFile),
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  json["id"] is String else {
-                // No fresh pending permission — this was likely auto-approved by Claude Code
-                return
-            }
+        // Update last-seen time for this session (for age-based pruning)
+        if !sid.isEmpty {
+            sessionLastSeen[sid] = Date()
+        }
 
-            // Ignore interactive-but-safe tools (not real permissions)
-            let safeTool = (json["tool"] as? String ?? "").lowercased()
-            let ignoredTools = ["taskcreate", "taskupdate", "taskget", "tasklist"]
-            if ignoredTools.contains(safeTool) { return }
-
+        // Permission — trigger needsYou from synthetic event carrying permission details
+        if type == "notification" && event["type"] as? String == "permission_prompt" {
             idleWork?.cancel()
-            let tool = json["tool"] as? String ?? ""
-            let summary = json["summary"] as? String ?? tool.lowercased()
-            pendingPermission = PendingPermission(id: json["id"] as? String ?? "", tool: tool, summary: summary)
+            let tool = event["tool"] as? String ?? ""
+            let summary = event["summary"] as? String ?? tool.lowercased()
+            // Use sessionId as the permission ID (no more pending.json ID)
+            pendingPermission = PendingPermission(id: sid, tool: tool, summary: summary)
             setupGlobalHotkeys()
 
             if autoAccept {
@@ -521,19 +488,12 @@ final class ClaudeMonitor: ObservableObject {
 
         // If we're awaiting user action but Claude is working again,
         // the permission was resolved elsewhere (user accepted in terminal, or hook timed out).
-        if awaitingUserAction && (type == "pre_tool" || type == "post_tool" || type == "stop" || type == "session_end") {
-            let fm = FileManager.default
-            let pendingGone = !fm.fileExists(atPath: Self.pendingFile)
-            let responseExists = fm.fileExists(atPath: Self.responseFile)
-            // Clear if: pending.json gone, response.json exists, OR Claude moved on
-            // (pre_tool/post_tool means Claude got approval from somewhere — terminal or timeout)
-            if pendingGone || responseExists || type == "pre_tool" || type == "post_tool" {
-                awaitingUserAction = false
-                pendingPermission = nil
-                // Clean up stale files
-                try? fm.removeItem(atPath: Self.pendingFile)
-                try? fm.removeItem(atPath: Self.responseFile)
-            }
+        if awaitingUserAction && (type == "pre_tool" || type == "post_tool" || type == "stop") {
+            // Claude moved on — permission was resolved elsewhere (terminal or timeout)
+            awaitingUserAction = false
+            pendingPermission = nil
+            httpServer.permissionConnection?.cancel()
+            // No more pending.json/response.json cleanup needed
         }
 
         idleWork?.cancel()
@@ -575,14 +535,12 @@ final class ClaudeMonitor: ObservableObject {
     /// Derive the overall state from all active sessions.
     /// Priority: needsYou > thinking > finished.
     private func updateAggregateState() {
-        // Prune sessions no longer tracked by the hook (at most every 30 seconds)
+        // Prune sessions not seen for 2 hours (replaces sessions.json-based pruning)
         if Date().timeIntervalSince(lastPruneTime) > 30 {
-            if let sessionsData = FileManager.default.contents(atPath: Self.ipcDir + "/sessions.json"),
-               let sessions = try? JSONSerialization.jsonObject(with: sessionsData) as? [String: Any] {
-                let activeIds = Set(sessions.keys)
-                for key in sessionStates.keys where !activeIds.contains(key) {
-                    sessionStates.removeValue(forKey: key)
-                }
+            let cutoff = Date().addingTimeInterval(-7200) // 2 hours
+            for (sid, lastSeen) in sessionLastSeen where lastSeen < cutoff {
+                sessionStates.removeValue(forKey: sid)
+                sessionLastSeen.removeValue(forKey: sid)
             }
             lastPruneTime = Date()
         }
@@ -603,25 +561,6 @@ final class ClaudeMonitor: ObservableObject {
             state = .finished
         }
         sessionCount = sessionStates.count
-    }
-
-    // MARK: Pending Permission
-
-    private func loadPendingPermission(retries: Int = 5) {
-        guard let data = FileManager.default.contents(atPath: Self.pendingFile),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let id = json["id"] as? String else {
-            if retries > 0 {
-                Task { @MainActor [weak self] in
-                    try? await Task.sleep(nanoseconds: 150_000_000)
-                    self?.loadPendingPermission(retries: retries - 1)
-                }
-            }
-            return
-        }
-        let tool = json["tool"] as? String ?? ""
-        let summary = json["summary"] as? String ?? tool.lowercased()
-        pendingPermission = PendingPermission(id: id, tool: tool, summary: summary)
     }
 
     // MARK: Timers & Sound

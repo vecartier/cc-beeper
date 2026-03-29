@@ -160,8 +160,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        // Port file cleanup is handled by HTTPHookServer.stop()
-        // which is called from ClaudeMonitor.deinit (wired in Plan 02).
+        // Clean up port file so the next launch doesn't see a stale port.
+        try? FileManager.default.removeItem(atPath: HTTPHookServer.portFile)
         // Clean up old PID file just in case.
         let oldPidFile = NSHomeDirectory() + "/.claude/cc-beeper/cc-beeper.pid"
         try? FileManager.default.removeItem(atPath: oldPidFile)
