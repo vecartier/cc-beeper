@@ -102,7 +102,7 @@ final class ClaudeMonitor: ObservableObject {
     let voiceService = VoiceService()
     let ttsService = TTSService()
 
-    /// Whether VoiceOver is enabled (reads summaries aloud when Claude finishes).
+    /// Whether Read Over is enabled (reads summaries aloud when Claude finishes).
     @Published var voiceOver: Bool = false {
         didSet { UserDefaults.standard.set(voiceOver, forKey: "voiceOver") }
     }
@@ -156,12 +156,20 @@ final class ClaudeMonitor: ObservableObject {
         didSet {
             UserDefaults.standard.set(kokoroLangCode, forKey: "kokoroLangCode")
             ttsService.setKokoroLangCode(kokoroLangCode)
+            // Propagate language hint to VoiceService for Whisper STT (per LANG-01)
+            voiceService.languageCode = kokoroLangCode
             // Auto-select first valid voice for new language (per D-06)
             if !KokoroVoiceCatalog.isVoiceValid(kokoroVoice, for: kokoroLangCode) {
                 kokoroVoice = KokoroVoiceCatalog.defaultVoice(for: kokoroLangCode)
             }
+            // Update dep requirement flag (per LANG-03)
+            depsNeededForCurrentLang = KokoroVoiceCatalog.langCodesRequiringDeps.contains(kokoroLangCode)
         }
     }
+
+    /// True when the current language requires extra pip dependencies (Japanese, Chinese).
+    /// Observed by Settings and onboarding to show install prompt. NOT auto-installed — UI-triggered only.
+    @Published var depsNeededForCurrentLang: Bool = false
 
     private static let summaryFile = ipcDir + "/last_summary.txt"
     private var summarySource: DispatchSourceFileSystemObject?
@@ -222,6 +230,15 @@ final class ClaudeMonitor: ObservableObject {
         pocketttsVoice = UserDefaults.standard.string(forKey: "pocketttsVoice") ?? "alba"
         kokoroVoice = UserDefaults.standard.string(forKey: "kokoroVoice") ?? "bm_daniel"
         kokoroLangCode = UserDefaults.standard.string(forKey: "kokoroLangCode") ?? "a"
+        // First-launch: set language from macOS system language (per LANG-02)
+        // Use object(forKey:) not string(forKey:) — returns nil ONLY when key was never set
+        if UserDefaults.standard.object(forKey: "kokoroLangCode") == nil {
+            let systemLocale = Locale.preferredLanguages.first ?? "en"
+            let detectedCode = KokoroVoiceCatalog.kokoroLangCode(fromSystemLocale: systemLocale) ?? "a"
+            kokoroLangCode = detectedCode  // triggers didSet → sends to TTSService + VoiceService
+        }
+        // Initialize dep flag for current language
+        depsNeededForCurrentLang = KokoroVoiceCatalog.langCodesRequiringDeps.contains(kokoroLangCode)
         whisperModelSize = UserDefaults.standard.string(forKey: "whisperModelSize") ?? "small"
         // Load saved hotkey bindings (defaults are the property initializers)
         if let v = UserDefaults.standard.object(forKey: "hotkeyAccept") as? Int { hotkeyAccept = UInt16(v) }
@@ -232,6 +249,8 @@ final class ClaudeMonitor: ObservableObject {
         isActive = UserDefaults.standard.object(forKey: "isActive") as? Bool ?? true
         // Wire ttsService into voiceService so recording cuts TTS
         voiceService.ttsService = ttsService
+        // Propagate initial language preference to VoiceService for Whisper hints
+        voiceService.languageCode = kokoroLangCode
         // Mirror VoiceService.isRecording into ClaudeMonitor.isRecording for UI binding
         voiceService.$isRecording
             .receive(on: DispatchQueue.main)
@@ -407,10 +426,13 @@ final class ClaudeMonitor: ObservableObject {
             lastSummaryHash = data.hashValue
         }
 
-        let fd = open(Self.summaryFile, O_EVTONLY)
+        // Watch the DIRECTORY, not the file — shell redirects and atomic writes
+        // replace the inode, which kills a file-level kqueue watcher. Directory
+        // watches survive because the directory inode stays the same.
+        let fd = open(Self.ipcDir, O_EVTONLY)
         guard fd >= 0 else { return }
         let source = DispatchSource.makeFileSystemObjectSource(
-            fileDescriptor: fd, eventMask: [.write, .extend, .rename, .delete], queue: .main
+            fileDescriptor: fd, eventMask: [.write], queue: .main
         )
         source.setEventHandler { [weak self] in self?.onSummaryFileChanged() }
         source.setCancelHandler { close(fd) }

@@ -11,8 +11,12 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
     @Published var recordingError: String? = nil
 
     /// Detected language from last transcription (ISO 639-1 code, e.g. "en", "fr").
-    /// Set by Whisper path after each transcription. Phase 32 will use this.
+    /// Set by Whisper path after each transcription.
     var detectedLanguage: String = "en"
+
+    /// Current language preference code (Kokoro single-letter, e.g. "a", "f", "j").
+    /// Set by ClaudeMonitor.kokoroLangCode.didSet. Used to derive Whisper language hint.
+    var languageCode: String = "a"
 
     /// Set by ClaudeMonitor after both services are created. Used to cut TTS before recording.
     var ttsService: TTSService?
@@ -320,7 +324,8 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
 
             Task {
                 do {
-                    let (text, lang) = try await whisperService.transcribe(frames)
+                    let isoHint = KokoroVoiceCatalog.kokoroLangToISO[self.languageCode]
+                    let (text, lang) = try await whisperService.transcribe(frames, languageHint: isoHint)
                     await MainActor.run {
                         self.detectedLanguage = lang  // Phase 32 will use this
                         if !text.isEmpty && !self.hasSubmitted {
