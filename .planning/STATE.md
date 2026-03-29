@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Polish & Fixes
 status: executing
-stopped_at: Completed 32-01-PLAN.md
-last_updated: "2026-03-29T15:15:58.462Z"
+stopped_at: Completed 35-01-PLAN.md
+last_updated: "2026-03-29T21:04:07.362Z"
 last_activity: 2026-03-29
 progress:
-  total_phases: 30
+  total_phases: 31
   completed_phases: 29
-  total_plans: 60
-  completed_plans: 59
+  total_plans: 63
+  completed_plans: 60
   percent: 0
 ---
 
@@ -18,60 +18,46 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-28)
+See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Users can see what Claude is doing, respond to it, and give it instructions — without leaving their current workflow
-**Current focus:** Phase 32 — language-preference-system
+**Current focus:** Phase 35 — http-hooks-hook-improvements
 
 ## Current Position
 
-Phase: 32
-Plan: Not started
+Phase: 35 (http-hooks-hook-improvements) — EXECUTING
+Plan: 2 of 3
 Status: Ready to execute
 Last activity: 2026-03-29
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [░░░░░░░░░░] 0% (v7.0 phases, 7 phases total)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 0 (this milestone)
-- Average duration: —
-- Total execution time: —
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| - | - | - | - |
-
-*Updated after each plan completion*
-| Phase 30-whisper-stt P01 | 9 | 2 tasks | 7 files |
-| Phase 30-whisper-stt P02 | 15min | 2 tasks | 2 files |
-| Phase 31-kokoro-multilingual P01 | 127s | 2 tasks | 5 files |
-| Phase 31 P02 | 1min | 1 tasks | 1 files |
-| Phase 32-language-preference-system P01 | 12min | 2 tasks | 4 files |
+- Total plans completed (prior milestones): 39
+- Average duration: ~30 min
+- Trend: Stable
 
 ## Accumulated Context
 
 ### Decisions
 
-- [v6.0 planning]: Whisper (whisper.cpp) chosen over Parakeet for STT — multilingual (99 languages), auto-detect, batch mode acceptable for push-to-talk UX
-- [v6.0 planning]: Kokoro lang_code expansion — 'a' (American), 'b' (British), 'f' (French), 'j' (Japanese), 'z' (Chinese) supported by Kokoro-82M
-- [v6.0 planning]: Voice/language selection added to onboarding flow — new step between model download and done
-- [v6.0 planning]: Phase 30 (Whisper) and Phase 31 (Kokoro Multilingual) are independent — can execute in parallel
-- [Phase 30-whisper-stt]: FluidAudio pinned to 0.12.4 to resolve swift-transformers conflict with WhisperKit 0.17.0 (FluidAudio 0.13.x requires 1.2+, WhisperKit requires 1.1.x)
-- [Phase 30-whisper-stt]: WhisperKit 0.17.0 transcribe(audioArray:) returns [TranscriptionResult] not TranscriptionResult? — use .first to get result
-- [Phase 30-whisper-stt]: whisperModelSize stored as @Published String in ClaudeMonitor for SwiftUI binding compatibility; pre-warm reads self.whisperModelSize for consistency
-- [Phase 31-01]: KModel shared across language switches for sub-1s latency (0.77s measured vs 1.75s full reload)
-- [Phase 31-01]: LANG: command follows same stdin protocol as existing VOICE: command
-- [Phase 31-01]: kokoroLangCode defaults to 'a' (American English) until Phase 32 sets it from system language
-- [Phase 31-02]: Auto-voice-select on language change delegated to ClaudeMonitor.kokoroLangCode.didSet (no UI logic needed)
-- [Phase 31-02]: depsReady @State defaults to true to avoid flicker on app launch; checkDeps() called on language change
-- [Phase 32-language-preference-system]: object(forKey:) used for first-launch language detection — distinguishes never-set from explicit 'a' preference
-- [Phase 32-language-preference-system]: Single kokoroLangCode preference drives both Kokoro TTS and WhisperKit STT via languageHint; detectLanguage: false when hint provided
-- [Phase 32-language-preference-system]: depsNeededForCurrentLang is published flag only — does NOT auto-trigger pip install; UI-triggered only per LANG-03
+- [v7.0 start]: HTTP hooks use NWListener (localhost only); port written to ~/.claude/cc-beeper/port on startup, deleted on quit
+- [v7.0 start]: Hook commands use curl -d @- to pipe stdin JSON, -o /dev/null, || true for silent failure
+- [v7.0 start]: YOLO modes split: Guarded YOLO (bypass + deny preserved) vs Full YOLO (bypass + deny cleared); deny rules cached to cached-deny-rules.json
+- [v7.0 start]: LCD priority enforced: ERROR > APPROVE? > NEEDS INPUT > WORKING > THINKING > DONE > IDLE
+- [v7.0 start]: Input vs permission classification: unknown notification types default to NEEDS INPUT (false positives over false negatives)
+- [v7.0 start]: Phase 36 and 37 can run in parallel (both depend on Phase 35 but touch independent subsystems)
+- [v7.0 planning]: Phase 36 needs read-only permission_mode check from settings.json for YOLO suppression — lightweight utility, not the full spectrum UI from Phase 37
+- [v7.0 planning]: TTS transcript parsing (HTTP-04) may need its own plan if transcript JSON is complex — scope during Phase 35 planning
+- [v7.0 planning]: Port collision detection in Phase 35 — ping existing port file, show "already running" or clean stale file
+- [v7.0 planning]: Onboarding must handle partially-modified CC-Beeper hooks (flag, don't silently overwrite)
+- [v7.0 planning]: Input types (gsd, discuss, multiple_choice, wcv, question) are NEVER suppressed in YOLO — only permission/tool approval notifications are suppressible
+- [Phase 35-01]: NWListener port range 19222-19230 with OS fallback; failure detected via stateUpdateHandler not thrown exceptions
+- [Phase 35-01]: Permission connection deferred: store NWConnection on permission_prompt, respond via sendPermissionResponse()
+- [Phase 35-01]: PID-based instance detection replaced with port ping; stale port file cleaned up on launch
 
 ### Pending Todos
 
@@ -79,10 +65,10 @@ None.
 
 ### Blockers/Concerns
 
-- Phase 29 (Distribution, v5.0) still in progress — Phase 30/31 depend on it. Confirm Phase 29 is complete before starting v6.0.
+- Phase 33 (v6.0 Settings & Onboarding) is still not started — does not block v7.0 phases, which start at 34
 
 ## Session Continuity
 
-Last session: 2026-03-29T13:08:30.513Z
-Stopped at: Completed 32-01-PLAN.md
+Last session: 2026-03-29T21:04:07.356Z
+Stopped at: Completed 35-01-PLAN.md
 Resume file: None

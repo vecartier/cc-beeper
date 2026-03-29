@@ -9,11 +9,12 @@
 - ✅ **v3.1 Polish & Fixes** - Phases 19-21 (shipped 2026-03-26)
 - ✅ **v4.0 Offline Voice** - Phases 23-26 (shipped 2026-03-27)
 - ✅ **v5.0 Polish & Distribution** - Phases 27-28 (shipped 2026-03-27)
-- 📋 **v6.0 Multilingual Voice** - Phases 30-33 (planned)
+- ✅ **v6.0 Multilingual Voice** - Phases 30-33 (shipped 2026-03-29)
+- 📋 **v7.0 Pre-Launch** - Phases 34-40 (planned)
 
 ## Overview
 
-v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and auto-speak summaries. v3.0 Public Launch made CC-Beeper ready for strangers: code cleanup, onboarding, rich menu popover, Groq voice, visual polish, DMG distribution, and a landing-style GitHub README. v3.1 Polish & Fixes erases all Claumagotchi traces (laptop-wide and in-repo), fixes the broken auto-speak TTS flow, refreshes the GitHub presence with new cover art and rewritten copy, and adds a beeper-shaped menu bar icon — closing with a full branding pass once the user provides the Figma-exported assets. v4.0 Offline Voice replaces all cloud voice APIs with on-device AI: FluidAudio brings Parakeet TDT for transcription and Kokoro-82M for TTS, eliminating every API key dependency. Cleanup removes all Groq/OpenAI voice paths and the Keychain infrastructure that supported them. v5.0 Polish & Distribution fixes the two voice reliability regressions introduced by the offline models (STT injection and TTS delays), renames "Auto-speak" to "VoiceOver" throughout the app, and ships a branded DMG + Homebrew tap so users can install with one command. v6.0 Multilingual Voice replaces Parakeet with Whisper for 99-language speech recognition, extends Kokoro to all 9 supported language codes, introduces a unified language preference that drives both STT and TTS, and adds language selection to both Settings and onboarding.
+v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and auto-speak summaries. v3.0 Public Launch made CC-Beeper ready for strangers: code cleanup, onboarding, rich menu popover, Groq voice, visual polish, DMG distribution, and a landing-style GitHub README. v3.1 Polish & Fixes erases all Claumagotchi traces (laptop-wide and in-repo), fixes the broken auto-speak TTS flow, refreshes the GitHub presence with new cover art and rewritten copy, and adds a beeper-shaped menu bar icon. v4.0 Offline Voice replaces all cloud voice APIs with on-device AI: FluidAudio brings Parakeet TDT for transcription and Kokoro-82M for TTS, eliminating every API key dependency. v5.0 Polish & Distribution fixes the two voice reliability regressions introduced by the offline models, renames "Auto-speak" to "VoiceOver" throughout the app, and ships a branded DMG + Homebrew tap. v6.0 Multilingual Voice replaces Parakeet with Whisper for 99-language speech recognition, extends Kokoro to all 9 supported language codes, introduces a unified language preference, and adds language selection to both Settings and onboarding. v7.0 Pre-Launch replaces the fragile Python/JSONL IPC with HTTP hooks, expands the LCD from 4 to 7 states with proper input/permission differentiation, adds a permission mode spectrum with YOLO sunglasses, polishes onboarding for the HTTP migration path, and overhauls the README for public launch.
 
 ## Phases
 
@@ -162,7 +163,7 @@ v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and aut
 
 - [x] **Phase 19: Cleanup** - Purge all Claumagotchi references from the laptop and the codebase (completed 2026-03-25)
 - [x] **Phase 20: Fix Auto-Speak TTS** - Wire summary-hook into hook registration so TTS fires end-to-end (completed 2026-03-25)
-- [x] **Phase 21: GitHub & Branding** - Rewrite README with new cover image, update repo metadata, ship beeper menu bar icon (completed 2026-03-26)
+- [x] **Phase 21: GitHub & Branding** - Rewrite README with new cover image, refreshed copy, updated metadata (completed 2026-03-26)
 
 <details>
 <summary>✅ v4.0 Offline Voice (Phases 23-26) - SHIPPED 2026-03-27</summary>
@@ -183,14 +184,27 @@ v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and aut
 - [x] **Phase 27: STT Reliability** - Diagnose and fix unreliable voice recording → Parakeet transcription → terminal injection (completed 2026-03-27)
 - [x] **Phase 28: TTS Reliability + Rename** - Fix Kokoro TTS delays and silence; rename "Auto-speak" to "VoiceOver" across all UI and code (completed 2026-03-27)
 
-### v6.0 Multilingual Voice (Planned)
+<details>
+<summary>✅ v6.0 Multilingual Voice (Phases 30-33) - SHIPPED 2026-03-29</summary>
 
 **Milestone Goal:** Support multiple languages for both voice recording (STT) and voice reading (TTS). Whisper replaces Parakeet for 99-language speech recognition with auto-detection. Kokoro is extended to all 9 language codes. A unified language preference drives both subsystems. Language selection is surfaced in Settings and onboarding.
 
 - [x] **Phase 30: Whisper STT** - Replace Parakeet with Whisper; model size picker in Settings; auto-detect spoken language (completed 2026-03-28)
 - [x] **Phase 31: Kokoro Multilingual** - Kokoro server supports all 9 language codes; voice picker filters by language; TTS output matches chosen language (completed 2026-03-29)
 - [x] **Phase 32: Language Preference System** - Single language preference drives both STT and TTS; defaults to macOS system language; per-language deps downloaded on demand; fallback picker for unsupported languages (completed 2026-03-29)
-- [ ] **Phase 33: Settings & Onboarding** - Unified Voice tab in Settings; onboarding detects and confirms language; deps downloaded during onboarding; voice preview available
+- [x] **Phase 33: Settings & Onboarding** - Unified Voice tab in Settings; onboarding detects and confirms language; deps downloaded during onboarding; voice preview available (completed 2026-03-29)
+
+</details>
+
+### v7.0 Pre-Launch (Planned)
+
+**Milestone Goal:** Replace the fragile Python/JSONL IPC with HTTP hooks, expand the LCD from 4 to 7 states with proper input/permission differentiation, add a permission mode spectrum with YOLO sunglasses, polish onboarding for the HTTP migration path, and overhaul the README for public launch.
+
+- [ ] **Phase 35: HTTP Hooks + Hook Improvements** - Replace Python JSONL IPC with NWListener HTTP server; hook commands use curl; all hooks async with timeout (foundation for LCD and onboarding)
+- [ ] **Phase 36: LCD States + Input Classification + Animations** - 7-state LCD with tool/permission/input context; state priority enforcement; input vs permission differentiation; per-state animations (no color changes)
+- [ ] **Phase 37: Permission Spectrum + YOLO Sunglasses** - 4-mode segmented control in popover; atomic settings.json writes; YOLO sunglasses with slide animation
+- [ ] **Phase 39: Onboarding Polish** - HTTP migration detection and upgrade path; server startup confirmation; preserve voice/language steps
+- [ ] **Phase 40: README Overhaul** - Hero GIF, feature screenshots, install instructions, how-it-works paragraph
 
 ## Phase Details
 
@@ -386,6 +400,78 @@ Plans:
 **Plans**: TBD
 **UI hint**: yes
 
+---
+
+### Phase 35: HTTP Hooks + Hook Improvements
+**Goal**: CC-Beeper receives Claude Code events over HTTP instead of file-based JSONL — the Python hook script, JSONL watcher, and all file-IPC code are gone; hooks in settings.json use curl and are async with timeout
+**Depends on**: Phase 33
+**Requirements**: HTTP-01, HTTP-02, HTTP-03, HTTP-04, HTTP-05, HTTP-06, HOOK-01, HOOK-02, HOOK-03, HOOK-04
+**Success Criteria** (what must be TRUE):
+  1. Running a Claude Code session sends events to CC-Beeper via HTTP POST — the app receives PreToolUse, Stop, StopFailure, and Notification events without any JSONL file involved
+  2. CC-Beeper writes its port to ~/.claude/cc-beeper/port on startup and the file is deleted when the app quits
+  3. On launch, if a port file already exists, CC-Beeper pings the port — if another instance responds, it shows "Already running" and quits; if stale, it deletes the file and proceeds
+  4. When Claude Code finishes, CC-Beeper extracts last_assistant_message from the Stop payload and speaks the TTS summary — no transcript file parsing or Python extraction involved
+  5. A grep for cc-beeper-hook.py and events.jsonl in the Swift codebase returns zero matches — file-IPC code is fully removed
+  6. Inspecting ~/.claude/settings.json shows CC-Beeper hooks with async: true, timeout: 5 (seconds), zero stdout output, and curl piping stdin JSON to the HTTP endpoint
+**Plans**: 3 plans
+
+Plans:
+- [x] 35-01-PLAN.md — HTTP server (NWListener) + port file lifecycle + port-based instance detection
+- [ ] 35-02-PLAN.md — Wire HTTP to state machine + TTS from Stop + remove all file-based IPC + delete Python hook
+- [ ] 35-03-PLAN.md — Rewrite HookInstaller for curl hooks + async/timeout/statusMessage/zero-stdout
+
+### Phase 36: LCD States + Input Classification + Animations
+**Goal**: The beeper LCD displays 7 distinct states with tool/permission/input context and per-state animations, enforces state priority so urgent states aren't overwritten, and correctly distinguishes input prompts from permission requests
+**Depends on**: Phase 35
+**Requirements**: LCD-01, LCD-02, LCD-03, LCD-04, LCD-05, LCD-06, LCD-07, INP-01, INP-02, INP-03, ANIM-01, ANIM-02
+**Success Criteria** (what must be TRUE):
+  1. Starting a Claude Code session cycles through IDLE → THINKING → WORKING (with tool name shown) → DONE and back to IDLE — all 7 states are reachable and display correct title text
+  2. When Claude requests a permission, the LCD shows APPROVE? with the permission context truncated to 30 chars; when Claude asks a question, it shows NEEDS INPUT — never mixing the two
+  3. In Guarded YOLO or Full YOLO mode, permission notifications are silently suppressed on the LCD, but input questions (GSD discuss, multiple choice, WCV, free-form) always surface as NEEDS INPUT
+  4. A DONE state auto-transitions back to IDLE after 3 seconds without user interaction
+  5. Triggering a low-priority event (e.g., THINKING) while in APPROVE? state does not overwrite APPROVE? — state priority is enforced
+  6. Each state has a distinct animation: IDLE is static, THINKING pulses slowly, WORKING scrolls, APPROVE? blinks fast, NEEDS INPUT blinks slowly, ERROR flashes then holds, DONE flashes then fades — LCD color stays consistent with theme
+  7. APPROVE? and NEEDS INPUT are distinguishable at a glance by different blink speeds and text
+**Plans**: TBD
+**UI hint**: yes
+**Notes**: Phase 36 needs a lightweight `readPermissionMode()` utility to check current mode from settings.json for YOLO suppression logic. This is a read-only dependency — Phase 37 builds the write path + UI. Input classification must explicitly enumerate known input types (question, gsd, discuss, multiple_choice, wcv) and default unknown types to input (false positives over false negatives).
+
+### Phase 37: Permission Spectrum + YOLO Sunglasses
+**Goal**: Users can select from 4 permission modes in the popover; the beeper wears pixel sunglasses in YOLO modes; settings.json is written atomically without reformatting
+**Depends on**: Phase 35
+**Requirements**: PERM-01, PERM-02, PERM-03, PERM-04, PERM-05, PERM-06, YOLO-01, YOLO-02
+**Success Criteria** (what must be TRUE):
+  1. The menu bar popover contains a 4-position segmented control labeled Cautious, Guided, Guarded YOLO, and Full YOLO — selecting each mode updates the permission_mode in settings.json without touching any other fields
+  2. Switching to Guarded YOLO or Full YOLO causes the beeper pixel character to put on sunglasses; switching back causes them to slide off
+  3. Switching from Full YOLO to any other mode restores the previously cached deny rules from cached-deny-rules.json
+  4. If settings.json is malformed, the segmented control is visibly disabled and shows a warning rather than silently failing to write
+  5. On any mode change, the LCD shows "RESTART SESSION TO APPLY" as a toast overlay for 5 seconds
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 39: Onboarding Polish
+**Goal**: Returning users with old JSONL-based hooks see a clear migration path; new users start CC-Beeper with the HTTP server confirmed running; all existing voice and language steps are preserved
+**Depends on**: Phase 35, Phase 37
+**Requirements**: ONBD-01, ONBD-02, ONBD-03, ONBD-04
+**Success Criteria** (what must be TRUE):
+  1. A user with old cc-beeper-hook.py entries in settings.json sees a migration step in onboarding that shows what will change and upgrades to HTTP hooks on confirmation
+  2. If old hooks have been manually modified (partial match — contains cc-beeper but differs from expected), onboarding flags them: "These look like CC-Beeper hooks but have been modified — migrate anyway or keep yours?"
+  3. Onboarding completes only after confirming the HTTP server is listening — a user who sees the Done screen can be confident the HTTP endpoint is active
+  4. Voice provider selection, language preference, and model download steps appear in onboarding exactly as they did before — no regression in voice onboarding
+  5. If settings.json is malformed when onboarding tries to write HTTP hooks, onboarding surfaces a clear error and does not corrupt the file
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 40: README Overhaul
+**Goal**: The GitHub README opens with a hero GIF showing the full LCD state cycle, features inline screenshots of key UI moments, and gives any Claude Code user everything they need to install and understand CC-Beeper in one read
+**Depends on**: Phase 39
+**Requirements**: GH-01, GH-02, GH-03
+**Success Criteria** (what must be TRUE):
+  1. The README opens with a hero GIF cycling IDLE → THINKING → WORKING → APPROVE? → DONE — a first-time visitor sees the beeper in action before reading a single word
+  2. Inline screenshots show the LCD state display, the permission mode segmented control, the YOLO sunglasses, and the menu bar presence
+  3. A first-time Claude Code user can install CC-Beeper (Homebrew or DMG), configure it, and understand how it works using only the README — no external docs needed
+**Plans**: TBD
+
 ## Progress
 
 **Execution Order (v3.1):** 19 -> 20 (can parallel with 21) -> 21 -> 22
@@ -401,6 +487,10 @@ Note (v5.0): Phase 27 (STT Reliability) and Phase 28 (TTS Reliability + Rename) 
 **Execution Order (v6.0):** 30 + 31 (can run in parallel, both depend only on Phase 29) -> 32 -> 33
 
 Note (v6.0): Phase 30 (Whisper STT) and Phase 31 (Kokoro Multilingual) both depend only on Phase 29 and touch independent subsystems. They can execute in parallel. Phase 32 (Language Preference System) depends on both 30 and 31 being complete — the unified language preference requires both engines to be multilingual. Phase 33 (Settings & Onboarding) depends on Phase 32, as it surfaces the language system in UI.
+
+**Execution Order (v7.0):** 35 -> 36 + 37 (can run in parallel) -> 39 -> 40
+
+Note (v7.0): Phase 35 (HTTP Hooks) is the foundation — LCD states and onboarding both depend on its HTTP payload routing. Phase 36 (LCD States + Input Classification + Animations) and Phase 37 (Permission Spectrum + YOLO Sunglasses) both depend only on Phase 35 and touch independent subsystems — they can execute in parallel. Phase 39 (Onboarding Polish) depends on both Phase 35 and Phase 37 — it needs HTTP migration and permission spectrum complete. Phase 40 (README Overhaul) is last — it needs screenshots of the finished product.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -423,7 +513,12 @@ Note (v6.0): Phase 30 (Whisper STT) and Phase 31 (Kokoro Multilingual) both depe
 | 26. Cleanup | v4.0 Offline Voice | 1/1 | Complete | 2026-03-27 |
 | 27. STT Reliability | v5.0 Polish & Distribution | 2/2 | Complete | 2026-03-27 |
 | 28. TTS Reliability + Rename | v5.0 Polish & Distribution | 2/2 | Complete | 2026-03-27 |
-| 30. Whisper STT | v6.0 Multilingual Voice | 2/2 | Complete   | 2026-03-28 |
-| 31. Kokoro Multilingual | v6.0 Multilingual Voice | 2/2 | Complete   | 2026-03-29 |
-| 32. Language Preference System | v6.0 Multilingual Voice | 2/2 | Complete    | 2026-03-29 |
+| 30. Whisper STT | v6.0 Multilingual Voice | 2/2 | Complete | 2026-03-28 |
+| 31. Kokoro Multilingual | v6.0 Multilingual Voice | 2/2 | Complete | 2026-03-29 |
+| 32. Language Preference System | v6.0 Multilingual Voice | 2/2 | Complete | 2026-03-29 |
 | 33. Settings & Onboarding | v6.0 Multilingual Voice | 0/TBD | Not started | - |
+| 35. HTTP Hooks + Hook Improvements | v7.0 Pre-Launch | 1/3 | In Progress|  |
+| 36. LCD States + Input Classification + Animations | v7.0 Pre-Launch | 0/TBD | Not started | - |
+| 37. Permission Spectrum + YOLO Sunglasses | v7.0 Pre-Launch | 0/TBD | Not started | - |
+| 39. Onboarding Polish | v7.0 Pre-Launch | 0/TBD | Not started | - |
+| 40. README Overhaul | v7.0 Pre-Launch | 0/TBD | Not started | - |
