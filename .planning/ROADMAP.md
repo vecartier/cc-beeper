@@ -385,8 +385,12 @@ Plans:
   2. The voice picker in Settings > Voice > Reader filters to only show voices for the currently selected language — no English voices appear when French is selected
   3. All 9 language codes (EN-US, EN-UK, FR, ES, IT, PT, HI, JA, ZH) produce intelligible speech when set as the active language
   4. If the selected language has no available Kokoro voice, TTS falls back gracefully to the system voice with no crash or silence
-**Plans**: TBD
+**Plans**: 2 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 31-01-PLAN.md — Kokoro server LANG: command + KModel sharing + voice catalog + deps installer + TTSService/ClaudeMonitor wiring
+- [ ] 31-02-PLAN.md — Settings language picker + filtered voice list + dep install UI + human verification
 
 ### Phase 32: Language Preference System
 **Goal**: A single language preference setting drives both Whisper transcription and Kokoro TTS, defaults to the macOS system language, and triggers language-specific dependency downloads only when needed
@@ -451,6 +455,6 @@ Note (v6.0): Phase 30 (Whisper STT) and Phase 31 (Kokoro Multilingual) both depe
 | 28. TTS Reliability + Rename | v5.0 Polish & Distribution | 2/2 | Complete | 2026-03-27 |
 | 29. Distribution | v5.0 Polish & Distribution | 1/2 | In Progress | - |
 | 30. Whisper STT | v6.0 Multilingual Voice | 2/2 | Complete   | 2026-03-28 |
-| 31. Kokoro Multilingual | v6.0 Multilingual Voice | 0/TBD | Not started | - |
+| 31. Kokoro Multilingual | v6.0 Multilingual Voice | 0/2 | Not started | - |
 | 32. Language Preference System | v6.0 Multilingual Voice | 0/TBD | Not started | - |
 | 33. Settings & Onboarding | v6.0 Multilingual Voice | 0/TBD | Not started | - |
