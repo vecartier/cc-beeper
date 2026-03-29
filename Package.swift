@@ -23,9 +23,6 @@ let package = Package(
                 "buttons",
                 "shell.svg",
             ],
-            resources: [
-                .copy("cc-beeper-hook.py"),
-            ],
             swiftSettings: [
                 .swiftLanguageMode(.v5),
             ],
