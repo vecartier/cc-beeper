@@ -11,9 +11,9 @@
 - [x] **STT-03**: Whisper auto-detects spoken language for transcription
 
 ### TTS — Text-to-Speech (Reading)
-- [ ] **TTS-01**: Kokoro server supports all 9 language codes (EN-US, EN-UK, FR, ES, IT, PT, HI, JA, ZH)
+- [x] **TTS-01**: Kokoro server supports all 9 language codes (EN-US, EN-UK, FR, ES, IT, PT, HI, JA, ZH)
 - [ ] **TTS-02**: Voice picker in Settings filters voices by selected language
-- [ ] **TTS-03**: TTS reads Claude's responses in the user's chosen language
+- [x] **TTS-03**: TTS reads Claude's responses in the user's chosen language
 
 ### LANG — Language Management
 - [ ] **LANG-01**: User has a single language preference that drives both TTS voice and Kokoro lang_code

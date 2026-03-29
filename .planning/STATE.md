@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Polish & Fixes
-status: verifying
-stopped_at: "Completed 30-02: Whisper Settings wiring + model picker"
-last_updated: "2026-03-28T09:30:19.857Z"
-last_activity: 2026-03-28
+status: executing
+stopped_at: Completed 31-01-PLAN.md
+last_updated: "2026-03-29T11:00:44.595Z"
+last_activity: 2026-03-29
 progress:
-  total_phases: 29
+  total_phases: 30
   completed_phases: 27
-  total_plans: 58
-  completed_plans: 56
+  total_plans: 60
+  completed_plans: 57
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** Users can see what Claude is doing, respond to it, and give it instructions — without leaving their current workflow
-**Current focus:** Phase 30 — whisper-stt
+**Current focus:** Phase 31 — kokoro-multilingual
 
 ## Current Position
 
-Phase: 30 (whisper-stt) — EXECUTING
+Phase: 31 (kokoro-multilingual) — EXECUTING
 Plan: 2 of 2
-Status: Phase complete — ready for verification
-Last activity: 2026-03-28
+Status: Ready to execute
+Last activity: 2026-03-29
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -49,6 +49,7 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 | Phase 30-whisper-stt P01 | 9 | 2 tasks | 7 files |
 | Phase 30-whisper-stt P02 | 15min | 2 tasks | 2 files |
+| Phase 31-kokoro-multilingual P01 | 127s | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -61,6 +62,9 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 30-whisper-stt]: FluidAudio pinned to 0.12.4 to resolve swift-transformers conflict with WhisperKit 0.17.0 (FluidAudio 0.13.x requires 1.2+, WhisperKit requires 1.1.x)
 - [Phase 30-whisper-stt]: WhisperKit 0.17.0 transcribe(audioArray:) returns [TranscriptionResult] not TranscriptionResult? — use .first to get result
 - [Phase 30-whisper-stt]: whisperModelSize stored as @Published String in ClaudeMonitor for SwiftUI binding compatibility; pre-warm reads self.whisperModelSize for consistency
+- [Phase 31-01]: KModel shared across language switches for sub-1s latency (0.77s measured vs 1.75s full reload)
+- [Phase 31-01]: LANG: command follows same stdin protocol as existing VOICE: command
+- [Phase 31-01]: kokoroLangCode defaults to 'a' (American English) until Phase 32 sets it from system language
 
 ### Pending Todos
 
@@ -72,6 +76,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-28T09:30:19.851Z
-Stopped at: Completed 30-02: Whisper Settings wiring + model picker
+Last session: 2026-03-29T11:00:44.592Z
+Stopped at: Completed 31-01-PLAN.md
 Resume file: None
