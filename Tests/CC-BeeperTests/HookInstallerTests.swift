@@ -19,22 +19,19 @@ final class HookInstallerTests: XCTestCase {
         try? FileManager.default.removeItem(at: tempDir)
     }
 
-    /// isInstalled detection: returns false when settings.json has no cc-beeper-hook.py entry.
-    func testIsInstalledReturnsFalseWhenNoHookEntry() throws {
+    /// isInstalled detection: returns false when settings.json has no cc-beeper/port entry.
+    func testIsInstalledReturnsFalseWhenNoHTTPHookEntry() throws {
         let settingsURL = tempDir.appendingPathComponent("settings.json")
-        let hookScriptURL = tempDir.appendingPathComponent("cc-beeper-hook.py")
 
         // Write a settings.json with no cc-beeper hooks
         let settings: [String: Any] = ["hooks": ["PreToolUse": []]]
         let data = try JSONSerialization.data(withJSONObject: settings)
         try data.write(to: settingsURL)
-        // Write a dummy hook script file so the file-existence check passes
-        try "#!/usr/bin/env python3\n".write(to: hookScriptURL, atomically: true, encoding: .utf8)
 
-        // Replicate isInstalled detection logic
+        // Replicate isInstalled detection logic (HTTP hook marker)
+        let hookMarker = "cc-beeper/port"
         let fm = FileManager.default
-        guard fm.fileExists(atPath: hookScriptURL.path),
-              fm.fileExists(atPath: settingsURL.path),
+        guard fm.fileExists(atPath: settingsURL.path),
               let readData = fm.contents(atPath: settingsURL.path),
               let parsed = try? JSONSerialization.jsonObject(with: readData) as? [String: Any],
               let hooks = parsed["hooks"] as? [String: Any] else {
@@ -47,30 +44,32 @@ final class HookInstallerTests: XCTestCase {
             guard let rules = value as? [[String: Any]] else { continue }
             for rule in rules {
                 guard let hs = rule["hooks"] as? [[String: Any]] else { continue }
-                for h in hs where (h["command"] as? String)?.contains("cc-beeper-hook.py") == true {
+                for h in hs where (h["command"] as? String)?.contains(hookMarker) == true {
                     found = true
                 }
             }
         }
-        XCTAssertFalse(found, "Expected no cc-beeper hook entries in settings.json")
+        XCTAssertFalse(found, "Expected no cc-beeper HTTP hook entries in settings.json")
     }
 
-    /// isInstalled detection: returns true when settings.json contains a cc-beeper-hook.py entry.
-    func testIsInstalledReturnsTrueWhenHookEntryPresent() throws {
+    /// isInstalled detection: returns true when settings.json contains a cc-beeper/port entry.
+    func testIsInstalledReturnsTrueWhenHTTPHookEntryPresent() throws {
         let settingsURL = tempDir.appendingPathComponent("settings.json")
-        let hookScriptURL = tempDir.appendingPathComponent("cc-beeper-hook.py")
+        let hookMarker = "cc-beeper/port"
 
         // Write a settings.json that mirrors what HookInstaller.install() would produce
+        let asyncCmd = "PORT=$(cat ~/.claude/cc-beeper/port 2>/dev/null || echo 19222) && curl -s -o /dev/null -X POST http://localhost:${PORT}/hook -H 'Content-Type: application/json' -d @- --max-time 3 || true"
         let hookEntry: [String: Any] = [
             "type": "command",
-            "command": "python3 \(hookScriptURL.path)",
+            "command": asyncCmd,
+            "async": true,
             "timeout": 5,
+            "statusMessage": "CC-Beeper monitoring\u{2026}",
         ]
         let rule: [String: Any] = ["matcher": "", "hooks": [hookEntry]]
         let settings: [String: Any] = ["hooks": ["PreToolUse": [rule]]]
         let data = try JSONSerialization.data(withJSONObject: settings)
         try data.write(to: settingsURL)
-        try "#!/usr/bin/env python3\n".write(to: hookScriptURL, atomically: true, encoding: .utf8)
 
         // Replicate isInstalled detection logic
         let fm = FileManager.default
@@ -86,36 +85,48 @@ final class HookInstallerTests: XCTestCase {
             guard let rules = value as? [[String: Any]] else { continue }
             for rule in rules {
                 guard let hs = rule["hooks"] as? [[String: Any]] else { continue }
-                for h in hs where (h["command"] as? String)?.contains("cc-beeper-hook.py") == true {
+                for h in hs where (h["command"] as? String)?.contains(hookMarker) == true {
                     found = true
                 }
             }
         }
-        XCTAssertTrue(found, "Expected to find cc-beeper hook entry in settings.json")
+        XCTAssertTrue(found, "Expected to find cc-beeper HTTP hook entry in settings.json")
     }
 
-    /// Verifies all 8 event names required by setup.py are accounted for.
-    func testAllEightHookEventsAreDeclared() throws {
-        let requiredEvents = [
-            "PreToolUse", "PostToolUse", "PostToolUseFailure",
-            "PermissionRequest", "Notification", "Stop",
-            "SessionStart", "SessionEnd",
+    /// Verifies all 6 hook events (4 async + 2 blocking) are accounted for.
+    func testAllSixHookEventsAreDeclared() throws {
+        let asyncEvents = ["PreToolUse", "PostToolUse", "Stop", "StopFailure"]
+        let blockingEvents = ["Notification", "PermissionRequest"]
+        let allEvents = asyncEvents + blockingEvents
+
+        // We verify this by replicating the event configs from HookInstaller
+        let asyncConfigs: [(String, Int, String?)] = [
+            ("PreToolUse",  5, "CC-Beeper monitoring\u{2026}"),
+            ("PostToolUse", 5, nil),
+            ("Stop",        5, nil),
+            ("StopFailure", 5, nil),
         ]
-        // We verify this by checking the eventConfigs array produces 8 entries.
-        let eventConfigs: [(String, Int)] = [
-            ("PreToolUse",        5),
-            ("PostToolUse",       5),
-            ("PostToolUseFailure", 5),
-            ("PermissionRequest", 60),
-            ("Notification",      5),
-            ("Stop",              5),
-            ("SessionStart",      10),
-            ("SessionEnd",        5),
+        let blockingConfigs: [(String, Int, String?)] = [
+            ("Notification",       60, nil),
+            ("PermissionRequest",  60, nil),
         ]
-        let names = eventConfigs.map(\.0)
-        for required in requiredEvents {
-            XCTAssertTrue(names.contains(required), "Missing event: \(required)")
+
+        let asyncNames = asyncConfigs.map(\.0)
+        let blockingNames = blockingConfigs.map(\.0)
+        let allNames = asyncNames + blockingNames
+
+        XCTAssertEqual(asyncConfigs.count, 4, "Expected exactly 4 async hook events")
+        XCTAssertEqual(blockingConfigs.count, 2, "Expected exactly 2 blocking hook events")
+        XCTAssertEqual(allNames.count, 6, "Expected exactly 6 total hook events")
+
+        for event in asyncEvents {
+            XCTAssertTrue(asyncNames.contains(event), "Missing async event: \(event)")
         }
-        XCTAssertEqual(eventConfigs.count, 8, "Expected exactly 8 hook events")
+        for event in blockingEvents {
+            XCTAssertTrue(blockingNames.contains(event), "Missing blocking event: \(event)")
+        }
+        for event in allEvents {
+            XCTAssertTrue(allNames.contains(event), "Missing event: \(event)")
+        }
     }
 }
