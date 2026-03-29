@@ -17,6 +17,7 @@ final class TTSService: ObservableObject, @unchecked Sendable {
     private var kokoroStdin: FileHandle?
     private var kokoroReady: Bool = false
     private var pendingKokoroText: String?
+    var onKokoroReady: (() -> Void)?
 
     // File-based IPC
     private static let ipcDir = NSHomeDirectory() + "/.claude/cc-beeper"
@@ -127,6 +128,7 @@ final class TTSService: ObservableObject, @unchecked Sendable {
                     DispatchQueue.main.async {
                         self?.kokoroReady = true
                         self?.log("Kokoro: ready")
+                        self?.onKokoroReady?()
                         if let pending = self?.pendingKokoroText {
                             self?.pendingKokoroText = nil
                             self?.speakWithKokoro(pending)

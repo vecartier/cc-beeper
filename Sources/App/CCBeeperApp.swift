@@ -144,11 +144,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         AppMover.moveToApplicationsIfNeeded()
 
-        let hasOnboarded = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
-        if hasOnboarded && !AXIsProcessTrusted() {
-            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-            AXIsProcessTrustedWithOptions(options)
-        }
+        // Accessibility is requested during onboarding — don't re-prompt on every launch
     }
 
     func applicationWillTerminate(_ notification: Notification) {

@@ -105,3 +105,12 @@ None after cherry-picking 30-01 prerequisite commits.
 ---
 *Phase: 30-whisper-stt*
 *Completed: 2026-03-28*
+
+## Self-Check: PASSED
+
+- FOUND: .planning/phases/30-whisper-stt/30-02-SUMMARY.md
+- FOUND: Sources/Monitor/ClaudeMonitor.swift (whisperModelSize property added)
+- FOUND: Sources/Settings/SettingsVoiceOverSection.swift (Whisper model picker added)
+- FOUND commit: 6e363d6 (Task 1)
+- FOUND commit: a3182e7 (Task 2)
+- Build: PASSED (Build complete! 0 errors)

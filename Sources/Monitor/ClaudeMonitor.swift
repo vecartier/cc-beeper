@@ -179,6 +179,11 @@ final class ClaudeMonitor: ObservableObject {
 
     var menuBarIconState: BeeperIconState {
         if !isActive { return .hidden }
+        // Show recording/speaking icons only when widget is hidden
+        if !CCBeeperApp.isMainWindowVisible() {
+            if isRecording { return .recording }
+            if ttsService.isSpeaking { return .speaking }
+        }
         if autoAccept { return .yolo }
         if state.needsAttention { return .attention }
         return .normal
@@ -253,6 +258,12 @@ final class ClaudeMonitor: ObservableObject {
             }
         }
         // Launch Kokoro TTS subprocess
+        ttsService.onKokoroReady = { [weak self] in
+            guard let self else { return }
+            // Send saved lang code + voice after subprocess is ready
+            self.ttsService.setKokoroLangCode(self.kokoroLangCode)
+            self.ttsService.setKokoroVoice(self.kokoroVoice)
+        }
         ttsService.launchKokoro()
     }
 
