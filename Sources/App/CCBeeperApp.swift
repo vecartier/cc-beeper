@@ -131,24 +131,40 @@ struct CCBeeperApp: App {
 // MARK: - App Delegate
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private static let pidFile = NSHomeDirectory() + "/.claude/cc-beeper/cc-beeper.pid"
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
-        if let existing = Self.readPID(), Self.isProcessAlive(existing) {
-            NSApp.terminate(nil)
-            return
+        // Port-based instance detection (replaces PID check per D-11)
+        if let port = HTTPHookServer.readPort() {
+            if HTTPHookServer.isPortResponding(port) {
+                // Another instance is running — show alert and quit
+                let alert = NSAlert()
+                alert.messageText = "CC-Beeper Already Running"
+                alert.informativeText = "Another CC-Beeper instance is already listening on port \(port)."
+                alert.alertStyle = .warning
+                alert.addButton(withTitle: "Quit")
+                alert.runModal()
+                NSApp.terminate(nil)
+                return
+            } else {
+                // Stale port file from a crash — clean up
+                try? FileManager.default.removeItem(atPath: HTTPHookServer.portFile)
+            }
         }
-        Self.writePID()
+        // Also clean up old PID file if it exists from previous versions
+        let oldPidFile = NSHomeDirectory() + "/.claude/cc-beeper/cc-beeper.pid"
+        try? FileManager.default.removeItem(atPath: oldPidFile)
 
         AppMover.moveToApplicationsIfNeeded()
-
-        // Accessibility is requested during onboarding — don't re-prompt on every launch
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        Self.removePID()
+        // Port file cleanup is handled by HTTPHookServer.stop()
+        // which is called from ClaudeMonitor.deinit (wired in Plan 02).
+        // Clean up old PID file just in case.
+        let oldPidFile = NSHomeDirectory() + "/.claude/cc-beeper/cc-beeper.pid"
+        try? FileManager.default.removeItem(atPath: oldPidFile)
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -156,31 +172,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             CCBeeperApp.showMainWindow()
         }
         return false
-    }
-
-    // MARK: - PID Management
-
-    private static func readPID() -> pid_t? {
-        guard let data = FileManager.default.contents(atPath: pidFile),
-              let str = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
-              let pid = Int32(str) else { return nil }
-        return pid
-    }
-
-    private static func writePID() {
-        let dir = (pidFile as NSString).deletingLastPathComponent
-        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
-        let pid = ProcessInfo.processInfo.processIdentifier
-        try? "\(pid)\n".write(toFile: pidFile, atomically: true, encoding: .utf8)
-    }
-
-    private static func removePID() {
-        if let stored = readPID(), stored == ProcessInfo.processInfo.processIdentifier {
-            try? FileManager.default.removeItem(atPath: pidFile)
-        }
-    }
-
-    private static func isProcessAlive(_ pid: pid_t) -> Bool {
-        kill(pid, 0) == 0
     }
 }
