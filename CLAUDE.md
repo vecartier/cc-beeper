@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-CC-Beeper is a macOS floating widget companion for Claude Code. It displays Claude's state on a retro LCD pager, handles permission approvals via global hotkeys or on-screen buttons, and provides voice input/output (STT/TTS). Communication with Claude Code happens via file-based IPC through Python hook scripts.
+CC-Beeper is a macOS floating widget companion for Claude Code. It displays Claude's state on a retro LCD pager, handles permission approvals via global hotkeys or on-screen buttons, and provides voice input/output (STT/TTS). Communication with Claude Code happens via a local HTTP server that receives curl-based hook events.
 
 ## Build & Run
 
@@ -33,11 +33,11 @@ The app requires macOS 26+ (Swift 6.2, FoundationModels framework).
 
 ### IPC — How CC-Beeper Talks to Claude Code
 
-All communication goes through `~/.claude/cc-beeper/`:
+Communication uses a local HTTP server (`HTTPHookServer.swift`) running on `127.0.0.1`:
 
-- **Claude Code → CC-Beeper**: Python hook (`cc-beeper-hook.py`) monitors 8 Claude Code events, appends to `events.jsonl`. CC-Beeper watches this file via `DispatchSource` (kqueue).
-- **Permission flow**: Hook writes `pending.json` → CC-Beeper shows NEEDS YOU state → user presses button/hotkey → CC-Beeper writes `response.json` → hook polls for it (0.3s intervals, 55s timeout) → returns decision to Claude Code.
-- **TTS trigger**: On Stop event, hook extracts last assistant message from session transcript → writes `last_summary.txt` → CC-Beeper detects and reads aloud.
+- **Claude Code → CC-Beeper**: Claude Code hooks fire curl commands that POST JSON to `http://localhost:{port}/hook`. The active port is written to `~/.claude/cc-beeper/port` on startup.
+- **Permission flow**: Notification hook with `notification_type: "permission_prompt"` arrives via HTTP POST. CC-Beeper holds the TCP connection open until user clicks approve/deny. Response body (`hookSpecificOutput`) flows back through curl's stdout to Claude Code. Both Notification and PermissionRequest hooks are registered as blocking (no async, --max-time 55) to support the permission flow.
+- **TTS trigger**: On Stop event, the HTTP payload includes `last_assistant_message` directly. CC-Beeper reads it aloud via TTS — no file parsing needed.
 
 ### State Machine (`ClaudeMonitor.swift`)
 
@@ -60,20 +60,18 @@ Both STT and TTS use a primary engine with automatic fallback:
 
 ### Hook Installation
 
-`setup.py` (Python) and `HookInstaller.swift` (Swift equivalent) both:
-1. Copy `cc-beeper-hook.py` to `~/.claude/hooks/`
-2. Read existing `~/.claude/settings.json`
-3. Merge CC-Beeper's 8 hook entries (removing old ones first)
-4. Write back without clobbering user's other hooks
+`HookInstaller.swift` registers 6 hook entries in `~/.claude/settings.json`:
+1. 4 async monitoring hooks (PreToolUse, PostToolUse, Stop, StopFailure) using `curl -d @-` to pipe stdin JSON to the HTTP endpoint
+2. 2 blocking hooks (Notification, PermissionRequest) using `curl --max-time 55` for the permission approval flow
+Hook identification uses `cc-beeper/port` in the command string for safe update/removal without touching user hooks.
 
 ## Key Conventions
 
 - App activation policy is `.accessory` — no dock icon, menu bar only
 - Global hotkeys use Carbon-level key events (consumed, not leaked to focused app): ⌥A accept, ⌥D deny, ⌥R record, ⌥T terminal, ⌥M mute
 - IPC files use strict permissions: 0o700 directories, 0o600 files, symlink rejection
-- Duplicate instance prevention via PID file at `~/.claude/cc-beeper/cc-beeper.pid`
+- Duplicate instance prevention via port file at `~/.claude/cc-beeper/port` — on launch, pings the port to check if another instance is responding
 - Settings persist to UserDefaults
-- The hook script is pure Python (no dependencies) for portability
 - `kokoro-tts-server.py` is bundled in Resources, runs as a subprocess with its own venv
 
 ## Dependencies
