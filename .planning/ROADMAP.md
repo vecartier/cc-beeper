@@ -457,7 +457,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 37-01-PLAN.md — PermissionPreset enum, PermissionPresetWriter, HookInstaller prettyPrinted fix, AskUserQuestion bug fix, rabbit sprite, tests
+- [x] 37-01-PLAN.md — PermissionPreset enum, PermissionPresetWriter, HookInstaller prettyPrinted fix, AskUserQuestion bug fix, rabbit sprite, tests
 - [ ] 37-02-PLAN.md — MenuBarExtra inline picker, toast overlay, rabbit rendering, autoAccept removal, human verify
 
 ### Phase 39: Onboarding Polish
@@ -530,6 +530,6 @@ Note (v7.0): Phase 35 (HTTP Hooks) is the foundation — LCD states and onboardi
 | 33. Settings & Onboarding | v6.0 Multilingual Voice | 0/TBD | Not started | - |
 | 35. HTTP Hooks + Hook Improvements | v7.0 Pre-Launch | 2/3 | Complete    | 2026-03-29 |
 | 36. LCD States + Input Classification + Animations | v7.0 Pre-Launch | 0/TBD | Not started | - |
-| 37. Permission Spectrum + YOLO Sunglasses | v7.0 Pre-Launch | 0/TBD | Not started | - |
+| 37. Permission Spectrum + YOLO Sunglasses | v7.0 Pre-Launch | 1/2 | In Progress|  |
 | 39. Onboarding Polish | v7.0 Pre-Launch | 0/TBD | Not started | - |
 | 40. README Overhaul | v7.0 Pre-Launch | 0/TBD | Not started | - |

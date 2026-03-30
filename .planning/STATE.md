@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.1
 milestone_name: Polish & Fixes
 status: executing
-stopped_at: Completed 35-03-PLAN.md
-last_updated: "2026-03-30T07:38:15.074Z"
-last_activity: 2026-03-30 -- Phase 36 execution started
+stopped_at: Completed 37-01-PLAN.md
+last_updated: "2026-03-30T20:41:10.551Z"
+last_activity: 2026-03-30
 progress:
-  total_phases: 32
+  total_phases: 34
   completed_phases: 30
-  total_plans: 65
-  completed_plans: 62
+  total_plans: 67
+  completed_plans: 64
   percent: 0
 ---
 
@@ -21,14 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Users can see what Claude is doing, respond to it, and give it instructions — without leaving their current workflow
-**Current focus:** Phase 36 — lcd-states-input-classification-animations
+**Current focus:** Phase 37 — permission-spectrum
 
 ## Current Position
 
-Phase: 36 (lcd-states-input-classification-animations) — EXECUTING
-Plan: 1 of 2
-Status: Executing Phase 36
-Last activity: 2026-03-30 -- Phase 36 execution started
+Phase: 37 (permission-spectrum) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
+Next: /gsd:plan-phase 37 (or /gsd:discuss-phase 37 if you want to refine context first)
+Last activity: 2026-03-30
 
 Progress: [░░░░░░░░░░] 0% (v7.0 phases, 7 phases total)
 
@@ -60,6 +61,9 @@ Progress: [░░░░░░░░░░] 0% (v7.0 phases, 7 phases total)
 - [Phase 35-01]: PID-based instance detection replaced with port ping; stale port file cleaned up on launch
 - [Phase 35-http-hooks-hook-improvements]: Notification hook is blocking (not async) — modern Claude Code routes permission_prompt via Notification (RESEARCH.md Pitfall 5)
 - [Phase 35-http-hooks-hook-improvements]: hookMarker = cc-beeper/port identifies HTTP hooks for safe update/removal without touching user hooks
+- [Phase 37-01]: PermissionPreset enum drives all permission mode I/O — replaces raw string matching
+- [Phase 37-01]: AskUserQuestion in PermissionRequest routes to NEEDS INPUT not APPROVE? (D-04)
+- [Phase 37-01]: .sortedKeys removed from HookInstaller to prevent key reordering (D-03 bug fix)
 
 ### Pending Todos
 
@@ -71,6 +75,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-29T21:13:51.383Z
-Stopped at: Completed 35-03-PLAN.md
+Last session: 2026-03-30T20:41:10.545Z
+Stopped at: Completed 37-01-PLAN.md
 Resume file: None

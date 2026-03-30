@@ -32,17 +32,17 @@
 
 ### Permission Spectrum
 
-- [ ] **PERM-01**: The menu bar popover contains a segmented control with 4 permission modes: Cautious (default), Guided (plan), Guarded YOLO (bypass + deny preserved), Full YOLO (bypass + deny cleared)
-- [ ] **PERM-02**: Selecting a mode reads settings.json, modifies only the permission_mode field (and deny rules for Full YOLO), and writes back atomically without reformatting
+- [ ] **PERM-01**: The native MenuBarExtra menu contains 4 permission presets (Cautious, Relaxed, Trusted, YOLO) shown inline with descriptions and a checkmark on the current mode
+- [x] **PERM-02**: Selecting a preset reads settings.json, writes `permission_mode` and `allowedTools` atomically (tmp + rename) without reformatting other fields
 - [ ] **PERM-03**: On mode change, the LCD shows a toast overlay "RESTART SESSION TO APPLY" for 5 seconds
-- [ ] **PERM-04**: Before writing a mode change, a brief preview is shown describing what will change
-- [ ] **PERM-05**: Switching from Full YOLO to another mode restores previously cached deny rules from `~/.claude/cc-beeper/cached-deny-rules.json`
-- [ ] **PERM-06**: If settings.json is malformed, the segmented control is disabled with a warning message
+- [ ] **PERM-04**: Each preset shows an inline description explaining what it auto-approves
+- [ ] **PERM-05**: The old YOLO toggle in MenuBarExtra and YOLO QuickActionButton in the popover are removed, replaced by the preset picker
+- [x] **PERM-06**: If settings.json is malformed, the preset picker items are disabled with a warning
 
-### YOLO Sunglasses
+### YOLO Indicator
 
-- [ ] **YOLO-01**: When permission mode is Guarded YOLO or Full YOLO, the beeper character renders with pixel sunglasses, persisting across all LCD states
-- [ ] **YOLO-02**: Sunglasses appear/disappear with a slide-down/slide-up animation on mode change
+- [x] **YOLO-01**: When permission preset is YOLO, the beeper character renders with a rabbit pixel icon, persisting across all LCD states
+- [ ] **YOLO-02**: Rabbit appears/disappears with a simple swap on mode change (no animation)
 
 ### LCD Animations
 
@@ -116,12 +116,12 @@ Deferred to future release.
 | INP-02 | Phase 36 | Pending |
 | INP-03 | Phase 36 | Pending |
 | PERM-01 | Phase 37 | Pending |
-| PERM-02 | Phase 37 | Pending |
+| PERM-02 | Phase 37 | Complete |
 | PERM-03 | Phase 37 | Pending |
 | PERM-04 | Phase 37 | Pending |
 | PERM-05 | Phase 37 | Pending |
-| PERM-06 | Phase 37 | Pending |
-| YOLO-01 | Phase 37 | Pending |
+| PERM-06 | Phase 37 | Complete |
+| YOLO-01 | Phase 37 | Complete |
 | YOLO-02 | Phase 37 | Pending |
 | ANIM-01 | Phase 36 | Pending |
 | ANIM-02 | Phase 36 | Pending |
