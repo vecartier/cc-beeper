@@ -94,9 +94,24 @@ final class ClaudeMonitor: ObservableObject {
     @Published var soundEnabled: Bool {
         didSet { UserDefaults.standard.set(soundEnabled, forKey: "soundEnabled") }
     }
-    @Published var autoAccept: Bool {
-        didSet { UserDefaults.standard.set(autoAccept, forKey: "autoAccept") }
+    @Published var currentPreset: PermissionPreset = .cautious {
+        didSet {
+            guard oldValue != currentPreset else { return }
+            do {
+                try PermissionPresetWriter.applyPreset(currentPreset)
+            } catch {
+                currentPreset = oldValue
+                return
+            }
+            presetToastMessage = "RESTART SESSION TO APPLY"
+            DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { [weak self] in
+                self?.presetToastMessage = nil
+            }
+        }
     }
+
+    @Published var presetToastMessage: String? = nil
+    @Published var isSettingsMalformed: Bool = false
     @Published var vibrationEnabled: Bool {
         didSet { UserDefaults.standard.set(vibrationEnabled, forKey: "vibrationEnabled") }
     }
@@ -242,7 +257,7 @@ final class ClaudeMonitor: ObservableObject {
             if isRecording { return .recording }
             if ttsService.isSpeaking { return .speaking }
         }
-        if autoAccept { return .yolo }
+        if currentPreset == .yolo { return .yolo }
         if state.needsAttention { return .attention }
         return .normal
     }
@@ -263,8 +278,9 @@ final class ClaudeMonitor: ObservableObject {
 
     init() {
         soundEnabled = UserDefaults.standard.object(forKey: "soundEnabled") as? Bool ?? true
-        autoAccept = UserDefaults.standard.object(forKey: "autoAccept") as? Bool ?? false
         vibrationEnabled = UserDefaults.standard.object(forKey: "vibrationEnabled") as? Bool ?? true
+        currentPreset = PermissionPresetWriter.readCurrentPreset()
+        isSettingsMalformed = PermissionPresetWriter.isSettingsMalformed()
         ensureIPCDir()
         httpServer.start { [weak self] payload in
             guard let self else { return nil }
@@ -657,7 +673,7 @@ final class ClaudeMonitor: ObservableObject {
             pendingPermission = PendingPermission(id: sid, tool: tool, summary: summary)
             setupGlobalHotkeys()
 
-            if autoAccept {
+            if currentPreset == .yolo {
                 Task { @MainActor [weak self] in
                     try? await Task.sleep(nanoseconds: 300_000_000)
                     self?.respondToPermission(allow: true)
@@ -718,7 +734,7 @@ final class ClaudeMonitor: ObservableObject {
             currentTool = nil
             updateAggregateState()
             if state == .done {
-                if !autoAccept { playDoneChime() }
+                if currentPreset != .yolo { playDoneChime() }
                 startIdleTimer(interval: 180)
             }
         case "stop_failure":
