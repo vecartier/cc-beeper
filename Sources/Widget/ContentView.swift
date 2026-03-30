@@ -94,7 +94,7 @@ struct ContentView: View {
             handleStateChange(newState)
         }
         .onReceive(ledTimer) { _ in
-            if monitor.state == .thinking || monitor.state == .needsYou {
+            if monitor.state.needsAttention || monitor.state == .working {
                 ledPulse.toggle()
             }
         }
@@ -104,7 +104,7 @@ struct ContentView: View {
 
     private func handleStateChange(_ newState: ClaudeState) {
         // LED pulse
-        if !(newState == .thinking || newState == .needsYou) {
+        if !(newState.needsAttention || newState == .working) {
             ledPulse = false
         }
 
@@ -115,25 +115,25 @@ struct ContentView: View {
     // MARK: - LEDs
 
     private var ledGreenColor: Color {
-        switch monitor.state {
-        case .thinking, .needsYou: return Color(white: 0.35)
-        default: return Color(hex: "4ADE80")
+        if monitor.state == .working || monitor.state.needsAttention {
+            return Color(white: 0.35)
         }
+        return Color(hex: "4ADE80")
     }
 
     private var ledGreenGlow: Bool {
-        monitor.state == .finished || monitor.state == .idle
+        monitor.state == .done || monitor.state == .idle
     }
 
     private var ledAlertColor: Color {
-        switch monitor.state {
-        case .thinking, .needsYou: return Color(hex: "FACC15")
-        default: return Color(white: 0.35)
+        if monitor.state == .working || monitor.state.needsAttention {
+            return Color(hex: "FACC15")
         }
+        return Color(white: 0.35)
     }
 
     private var ledAlertActive: Bool {
-        monitor.state == .thinking || monitor.state == .needsYou
+        monitor.state == .working || monitor.state.needsAttention
     }
 
     private func loadShellImage(_ name: String) -> NSImage {

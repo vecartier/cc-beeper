@@ -135,32 +135,40 @@ struct ScreenContentView: View {
 
     private var titleText: String {
         switch monitor.state {
-        case .thinking: return "Working..."
-        case .finished: return "Done!"
-        case .needsYou: return "Needs you!"
-        case .idle: return "ZZZ..."
+        case .working: return monitor.state.label
+        case .done: return monitor.state.label
+        case .approveQuestion: return monitor.state.label
+        case .needsInput: return monitor.state.label
+        case .error: return monitor.state.label
+        case .idle: return monitor.state.label
+        // TODO: Phase 36 Plan 02 — full text wiring pending
         }
     }
 
     private var detailText: String? {
         switch monitor.state {
-        case .thinking:
+        case .working:
             let tool = humanToolName(monitor.currentTool ?? "")
             let elapsed = monitor.elapsedSeconds
             return "\(tool) · \(elapsed)s"
-        case .needsYou:
+        case .approveQuestion:
             if let p = monitor.pendingPermission {
                 let tool = humanToolName(p.tool)
                 return "\(tool) · \(p.summary)"
             }
             return nil
-        case .finished:
+        case .done:
             if let summary = monitor.lastSummary, summary != "Done!" {
                 return summary
             }
             return nil
+        case .needsInput:
+            return monitor.inputMessage
+        case .error:
+            return monitor.errorDetail
         case .idle:
             return nil
+        // TODO: Phase 36 Plan 02 — full animation wiring pending
         }
     }
 

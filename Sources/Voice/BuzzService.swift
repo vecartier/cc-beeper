@@ -15,14 +15,14 @@ final class BuzzService {
     /// Called from ContentView.onReceive(monitor.$state) to handle vibration triggers.
     func handleStateChange(_ newState: ClaudeState, vibrationEnabled: Bool, soundEnabled: Bool) {
         // Vibration on done
-        if vibrationEnabled && newState == .finished && lastVibrateState != newState {
+        if vibrationEnabled && newState == .done && lastVibrateState != newState {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
                 self.vibrate(soundEnabled: soundEnabled)
             }
         }
 
-        // Needs permission: vibrate now + repeat every 15s
-        if newState == .needsYou {
+        // Needs attention (permission or input): vibrate now + repeat every 15s
+        if newState.needsAttention {
             if lastVibrateState != newState {
                 if vibrationEnabled {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {

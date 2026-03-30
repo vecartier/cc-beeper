@@ -62,10 +62,13 @@ struct PixelCharacterView: View {
 
     private func spritesForState(_ state: ClaudeState) -> [[String]] {
         switch state {
-        case .thinking: [Sprites.thinking1, Sprites.thinking2, Sprites.working1, Sprites.working2]
-        case .needsYou: [Sprites.alert1, Sprites.alert2]
-        case .finished: [Sprites.happy1, Sprites.happy2]
+        case .working: [Sprites.thinking1, Sprites.thinking2, Sprites.working1, Sprites.working2]
+        case .approveQuestion: [Sprites.alert1, Sprites.alert2]
+        case .done: [Sprites.happy1, Sprites.happy2]
         case .idle: [Sprites.sleep1, Sprites.sleep2]
+        // TODO: Phase 36 Plan 02 — distinct sprites for error and needsInput pending
+        case .error: [Sprites.alert1, Sprites.alert2]
+        case .needsInput: [Sprites.thinking1, Sprites.thinking2]
         }
     }
 }

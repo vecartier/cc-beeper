@@ -8,22 +8,63 @@ import Carbon.HIToolbox
 // MARK: - State
 
 enum ClaudeState: Equatable {
-    case thinking
-    case finished
-    case needsYou
     case idle
+    case working
+    case done
+    case error
+    case approveQuestion   // APPROVE?
+    case needsInput        // NEEDS INPUT
 
     var label: String {
         switch self {
-        case .thinking: "THINKING..."
-        case .finished: "DONE!"
-        case .needsYou: "NEEDS YOU!"
         case .idle: "ZZZ..."
+        case .working: "WORKING"
+        case .done: "DONE!"
+        case .error: "ERROR"
+        case .approveQuestion: "APPROVE?"
+        case .needsInput: "NEEDS INPUT"
         }
     }
 
-    var needsAttention: Bool { self == .needsYou }
-    var canGoToConvo: Bool { self == .finished }
+    /// State priority — higher number wins when resolving multiple concurrent sessions.
+    /// error(5) > approveQuestion(4) > needsInput(3) > working(2) > done(1) > idle(0)
+    var priority: Int {
+        switch self {
+        case .error: return 5
+        case .approveQuestion: return 4
+        case .needsInput: return 3
+        case .working: return 2
+        case .done: return 1
+        case .idle: return 0
+        }
+    }
+
+    var needsAttention: Bool { self == .approveQuestion || self == .needsInput }
+    var canGoToConvo: Bool { self == .done }
+}
+
+// MARK: - Permission Mode
+
+/// Reflects the `permission_mode` field in ~/.claude/settings.json.
+/// Phase 37 builds the write path and UI — this is read-only.
+enum PermissionMode: Equatable {
+    case cautious   // "default" or field missing
+    case guided     // "plan"
+    case bypass     // "bypass" (covers both Guarded YOLO and Full YOLO)
+}
+
+private func readPermissionMode() -> PermissionMode {
+    let path = NSHomeDirectory() + "/.claude/settings.json"
+    guard let data = FileManager.default.contents(atPath: path),
+          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+          let mode = json["permission_mode"] as? String else {
+        return .cautious
+    }
+    switch mode {
+    case "plan": return .guided
+    case "bypass": return .bypass
+    default: return .cautious
+    }
 }
 
 // MARK: - Pending Permission
@@ -40,7 +81,7 @@ struct PendingPermission: Equatable {
 final class ClaudeMonitor: ObservableObject {
     static let ipcDir = NSHomeDirectory() + "/.claude/cc-beeper"
 
-    @Published var state: ClaudeState = .finished
+    @Published var state: ClaudeState = .done
     @Published var pendingPermission: PendingPermission?
     @Published var soundEnabled: Bool {
         didSet { UserDefaults.standard.set(soundEnabled, forKey: "soundEnabled") }
@@ -52,6 +93,18 @@ final class ClaudeMonitor: ObservableObject {
         didSet { UserDefaults.standard.set(vibrationEnabled, forKey: "vibrationEnabled") }
     }
     @Published var sessionCount: Int = 0
+
+    /// Error message from StopFailure payload — shown as LCD subtitle in .error state.
+    @Published var errorDetail: String? = nil
+
+    /// Notification message for NEEDS INPUT — shown as LCD subtitle in .needsInput state.
+    @Published var inputMessage: String? = nil
+
+    /// Transient auth flash text (2-3s overlay, does not change state machine). LCD-07.
+    @Published var authFlashMessage: String? = nil
+
+    /// When IDLE was entered — drives elapsed idle time display.
+    @Published var idleStartTime: Date? = nil
 
     /// Controls whether the widget is active. False = hidden + monitoring stopped.
     @Published var isActive: Bool = true {
@@ -72,6 +125,7 @@ final class ClaudeMonitor: ObservableObject {
                 carbonHotKeys.removeAll()
                 if let m = localKeyMonitor { NSEvent.removeMonitor(m); localKeyMonitor = nil }
                 state = .idle
+                idleStartTime = Date()
                 pendingPermission = nil
                 awaitingUserAction = false
             }
@@ -317,9 +371,16 @@ final class ClaudeMonitor: ObservableObject {
         case "PostToolUse":
             eventType = "post_tool"
         case "Notification":
-            // Check notification sub-type
             let notificationType = payload["notification_type"] as? String ?? ""
-            if notificationType == "permission_prompt" {
+            let message = payload["message"] as? String ?? ""
+
+            switch notificationType {
+            case "permission_prompt":
+                // Check YOLO suppression (per D-13, INP-02)
+                let mode = readPermissionMode()
+                if mode == .bypass {
+                    return nil  // Suppress in YOLO — LCD stays on current state
+                }
                 // Build synthetic JSONL event with permission type marker
                 var syntheticEvent: [String: Any] = [
                     "event": "notification",
@@ -327,8 +388,8 @@ final class ClaudeMonitor: ObservableObject {
                     "sid": sessionId,
                     "ts": ts,
                 ]
-                if let message = payload["message"] as? String {
-                    syntheticEvent["summary"] = message
+                if let msg = payload["message"] as? String {
+                    syntheticEvent["summary"] = msg
                 }
                 if let tool = toolName {
                     syntheticEvent["tool"] = tool
@@ -338,11 +399,49 @@ final class ClaudeMonitor: ObservableObject {
                 processEvent(json)
                 // Return a sentinel dict so HTTPHookServer knows to hold the connection
                 return ["_hold_connection": true]
-            } else {
-                // Non-permission notifications (auth_success, idle_prompt, etc.)
-                // Process as generic notification — state machine ignores unknown types
-                eventType = "notification"
+
+            case "question", "gsd", "discuss", "multiple_choice", "wcv", "elicitation_dialog":
+                // NEEDS INPUT — always surfaces regardless of YOLO (per D-13, INP-02)
+                inputMessage = String(message.prefix(30))
+                let syntheticEvent: [String: Any] = [
+                    "event": "notification",
+                    "type": "needs_input",
+                    "sid": sessionId,
+                    "ts": ts,
+                    "message": message,
+                ]
+                if let json = try? JSONSerialization.data(withJSONObject: syntheticEvent),
+                   let jsonStr = String(data: json, encoding: .utf8) {
+                    processEvent(jsonStr)
+                }
+                return nil  // Async — no response needed
+
+            case "auth_success", "auth_error":
+                // Transient flash — LCD-07 (2-3s overlay, does not change state machine)
+                let flashText = notificationType == "auth_success" ? "AUTH OK" : "AUTH FAIL"
+                authFlashMessage = flashText
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { [weak self] in
+                    self?.authFlashMessage = nil
+                }
+                return nil
+
+            default:
+                // Unknown type — default to NEEDS INPUT (per D-12, INP-03)
+                inputMessage = String(message.prefix(30))
+                let syntheticEvent: [String: Any] = [
+                    "event": "notification",
+                    "type": "needs_input",
+                    "sid": sessionId,
+                    "ts": ts,
+                    "message": message,
+                ]
+                if let json = try? JSONSerialization.data(withJSONObject: syntheticEvent),
+                   let jsonStr = String(data: json, encoding: .utf8) {
+                    processEvent(jsonStr)
+                }
+                return nil
             }
+
         case "Stop":
             eventType = "stop"
             // Extract TTS summary from last_assistant_message (per D-05, HTTP-04)
@@ -376,8 +475,16 @@ final class ClaudeMonitor: ObservableObject {
                     }
                 }
             }
+
         case "StopFailure":
-            eventType = "stop" // StopFailure maps to stop (error context is Phase 36 LCD-04)
+            eventType = "stop_failure"
+            // Extract error detail for LCD-04 subtitle (per D-11)
+            if let msg = payload["message"] as? String, !msg.isEmpty {
+                errorDetail = String(msg.prefix(30))
+            } else {
+                errorDetail = "Unknown error"
+            }
+
         default:
             return nil // Unknown event — ignore
         }
@@ -416,7 +523,7 @@ final class ClaudeMonitor: ObservableObject {
 
         pendingPermission = nil
         awaitingUserAction = false
-        state = allow ? .thinking : .finished
+        state = allow ? .working : .done
     }
 
     func goToConversation() {
@@ -458,7 +565,7 @@ final class ClaudeMonitor: ObservableObject {
             sessionLastSeen[sid] = Date()
         }
 
-        // Permission — trigger needsYou from synthetic event carrying permission details
+        // Permission — trigger approveQuestion from synthetic event carrying permission details
         if type == "notification" && event["type"] as? String == "permission_prompt" {
             idleWork?.cancel()
             let tool = event["tool"] as? String ?? ""
@@ -473,11 +580,11 @@ final class ClaudeMonitor: ObservableObject {
                     self?.respondToPermission(allow: true)
                 }
             } else {
-                if !sid.isEmpty { sessionStates[sid] = .needsYou }
+                if !sid.isEmpty { sessionStates[sid] = .approveQuestion }
                 sessionCount = sessionStates.count
                 awaitingUserAction = true
                 thinkingStartTime = Date() // Reset timer for each new permission/question
-                state = .needsYou
+                state = .approveQuestion
                 playAlert()
             }
             return
@@ -486,9 +593,19 @@ final class ClaudeMonitor: ObservableObject {
             return
         }
 
+        // Needs input — trigger needsInput from synthetic event
+        if type == "notification" && event["type"] as? String == "needs_input" {
+            idleWork?.cancel()
+            if !sid.isEmpty { sessionStates[sid] = .needsInput }
+            awaitingUserAction = true
+            updateAggregateState()
+            playAlert()
+            return
+        }
+
         // If we're awaiting user action but Claude is working again,
         // the permission was resolved elsewhere (user accepted in terminal, or hook timed out).
-        if awaitingUserAction && (type == "pre_tool" || type == "post_tool" || type == "stop") {
+        if awaitingUserAction && (type == "pre_tool" || type == "post_tool" || type == "stop" || type == "stop_failure") {
             // Claude moved on — permission was resolved elsewhere (terminal or timeout)
             awaitingUserAction = false
             pendingPermission = nil
@@ -502,26 +619,31 @@ final class ClaudeMonitor: ObservableObject {
         case "pre_tool", "post_tool":
             let tool = event["tool"] as? String
             if let tool { currentTool = tool }
-            // Only reset thinkingStartTime when transitioning INTO thinking
-            if sessionStates[sid] != .thinking {
+            // Only reset thinkingStartTime when transitioning INTO working
+            if sessionStates[sid] != .working {
                 thinkingStartTime = Date()
             }
-            if !sid.isEmpty { sessionStates[sid] = .thinking }
+            if !sid.isEmpty { sessionStates[sid] = .working }
             updateAggregateState()
         case "post_tool_error":
-            if !sid.isEmpty { sessionStates[sid] = .thinking }
+            if !sid.isEmpty { sessionStates[sid] = .working }
             updateAggregateState()
         case "stop":
-            if !sid.isEmpty { sessionStates[sid] = .finished }
+            if !sid.isEmpty { sessionStates[sid] = .done }
             thinkingStartTime = nil
             currentTool = nil
             updateAggregateState()
-            if state == .finished {
+            if state == .done {
                 if !autoAccept { playDoneChime() }
-                startIdleTimer(interval: 60)
+                startIdleTimer(interval: 180)
             }
+        case "stop_failure":
+            if !sid.isEmpty { sessionStates[sid] = .error }
+            thinkingStartTime = nil
+            currentTool = nil
+            updateAggregateState()
         case "session_start":
-            if !sid.isEmpty { sessionStates[sid] = .thinking }
+            if !sid.isEmpty { sessionStates[sid] = .working }
             updateAggregateState()
         case "session_end":
             if !sid.isEmpty { sessionStates.removeValue(forKey: sid) }
@@ -532,8 +654,8 @@ final class ClaudeMonitor: ObservableObject {
         }
     }
 
-    /// Derive the overall state from all active sessions.
-    /// Priority: needsYou > thinking > finished.
+    /// Derive the overall state from all active sessions using priority-based resolution.
+    /// Priority: error(5) > approveQuestion(4) > needsInput(3) > working(2) > done(1) > idle(0)
     private func updateAggregateState() {
         // Prune sessions not seen for 2 hours (replaces sessions.json-based pruning)
         if Date().timeIntervalSince(lastPruneTime) > 30 {
@@ -545,20 +667,36 @@ final class ClaudeMonitor: ObservableObject {
             lastPruneTime = Date()
         }
 
-        // If we're still awaiting user action on a permission, keep needsYou
-        // regardless of what individual session states say — the permission is real.
+        // If awaiting user action on a permission, force APPROVE? (Pitfall 4)
         if awaitingUserAction && pendingPermission != nil {
-            state = .needsYou
+            state = .approveQuestion
             return
         }
 
-        let values = sessionStates.values
-        if values.contains(.needsYou) {
-            state = .needsYou
-        } else if values.contains(.thinking) {
-            state = .thinking
-        } else {
-            state = .finished
+        let values = Array(sessionStates.values)
+        if values.isEmpty {
+            if state != .done {
+                // Only go idle if not in DONE (DONE->IDLE handled by timer)
+                state = .idle
+                idleStartTime = Date()
+            }
+            sessionCount = 0
+            return
+        }
+
+        let highest = values.max(by: { $0.priority < $1.priority }) ?? .idle
+        // Priority enforcement: only update if new state is higher priority,
+        // OR current state is done/idle (always overridable)
+        if highest.priority >= state.priority || state == .done || state == .idle {
+            let oldState = state
+            state = highest
+            // Track when we enter idle
+            if state == .idle && oldState != .idle {
+                idleStartTime = Date()
+            }
+            if state != .idle {
+                idleStartTime = nil
+            }
         }
         sessionCount = sessionStates.count
     }
@@ -569,7 +707,11 @@ final class ClaudeMonitor: ObservableObject {
         idleWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
             guard let self, self.pendingPermission == nil else { return }
-            Task { @MainActor [weak self] in self?.state = .idle }
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.state = .idle
+                self.idleStartTime = Date()
+            }
         }
         idleWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + interval, execute: work)
