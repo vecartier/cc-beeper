@@ -202,7 +202,7 @@ v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and aut
 
 - [x] **Phase 35: HTTP Hooks + Hook Improvements** - Replace Python JSONL IPC with NWListener HTTP server; hook commands use curl; all hooks async with timeout (foundation for LCD and onboarding) (completed 2026-03-29)
 - [ ] **Phase 36: LCD States + Input Classification + Animations** - 7-state LCD with tool/permission/input context; state priority enforcement; input vs permission differentiation; per-state animations (no color changes)
-- [ ] **Phase 37: Permission Spectrum + YOLO Sunglasses** - 4-mode segmented control in popover; atomic settings.json writes; YOLO sunglasses with slide animation
+- [ ] **Phase 37: Permission Spectrum + YOLO Rabbit** - 4-mode segmented control in popover; atomic settings.json writes; rabbit icon in YOLO modes
 - [ ] **Phase 38: Visibility Spectrum** - 3-mode visibility (Full beeper with buttons / Compact screen-only with small shells / Menu bar only); 10 small shell PNGs; hotkey-only control in compact+menu modes; rabbit icon replaces YOLO sunglasses
 - [ ] **Phase 39: Onboarding Polish** - HTTP migration detection and upgrade path; server startup confirmation; preserve voice/language steps
 - [ ] **Phase 40: README Overhaul** - Hero GIF, feature screenshots, install instructions, how-it-works paragraph
@@ -442,18 +442,22 @@ Plans:
 **UI hint**: yes
 **Notes**: Phase 36 needs a lightweight `readPermissionMode()` utility to check current mode from settings.json for YOLO suppression logic. This is a read-only dependency — Phase 37 builds the write path + UI. Input classification must explicitly enumerate known input types (question, gsd, discuss, multiple_choice, wcv) and default unknown types to input (false positives over false negatives).
 
-### Phase 37: Permission Spectrum + YOLO Sunglasses
-**Goal**: Users can select from 4 permission modes in the popover; the beeper wears pixel sunglasses in YOLO modes; settings.json is written atomically without reformatting
+### Phase 37: Permission Spectrum + YOLO Rabbit
+**Goal**: Users can select from 4 permission modes in the popover; the beeper shows a rabbit pixel character in YOLO modes; settings.json is written atomically without reformatting
 **Depends on**: Phase 35
 **Requirements**: PERM-01, PERM-02, PERM-03, PERM-04, PERM-05, PERM-06, YOLO-01, YOLO-02
 **Success Criteria** (what must be TRUE):
   1. The menu bar popover contains a 4-position segmented control labeled Cautious, Guided, Guarded YOLO, and Full YOLO — selecting each mode updates the permission_mode in settings.json without touching any other fields
-  2. Switching to Guarded YOLO or Full YOLO causes the beeper pixel character to put on sunglasses; switching back causes them to slide off
+  2. Switching to Guarded YOLO or Full YOLO causes the beeper pixel character to become a rabbit; switching back swaps to the normal character (no slide animation)
   3. Switching from Full YOLO to any other mode restores the previously cached deny rules from cached-deny-rules.json
   4. If settings.json is malformed, the segmented control is visibly disabled and shows a warning rather than silently failing to write
   5. On any mode change, the LCD shows "RESTART SESSION TO APPLY" as a toast overlay for 5 seconds
-**Plans**: TBD
+**Plans**: 2 plans
 **UI hint**: yes
+
+Plans:
+- [ ] 37-01-PLAN.md — PermissionMode enum expansion, PermissionModeWriter, HookInstaller fix, AskUserQuestion bug fix, tests
+- [ ] 37-02-PLAN.md — Popover segmented picker, rabbit sprites, toast overlay, autoAccept removal, human verify
 
 ### Phase 39: Onboarding Polish
 **Goal**: Returning users with old JSONL-based hooks see a clear migration path; new users start CC-Beeper with the HTTP server confirmed running; all existing voice and language steps are preserved
