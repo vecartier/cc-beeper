@@ -14,8 +14,6 @@ struct ScreenContentView: View {
     private let animTimer = Timer.publish(every: 0.45, on: .main, in: .common).autoconnect()
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
-    private var isYoloActive: Bool { monitor.currentPreset == .yolo }
-
     var body: some View {
         ZStack {
             Rectangle().fill(themeManager.darkMode ? themeManager.lcdBg : Color.clear)
@@ -26,7 +24,6 @@ struct ScreenContentView: View {
                     state: monitor.state,
                     frame: animFrame,
                     onColor: themeManager.lcdOn,
-                    isYolo: isYoloActive,
                     isGlitching: glitchActive
                 )
                 .frame(width: 35, height: 30)
@@ -48,23 +45,21 @@ struct ScreenContentView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // YOLO badge
-                if isYoloActive {
-                    HStack(spacing: 3) {
-                        Image(systemName: "hare.fill")
-                            .font(.system(size: 9))
-                        Text("YOLO")
-                            .font(.system(size: 9, weight: .black, design: .monospaced))
-                    }
-                    .foregroundColor(themeManager.lcdOn)
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 2)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 3)
-                            .stroke(themeManager.lcdOn.opacity(0.6), lineWidth: 1)
-                    )
-                    .offset(x: -2, y: -8)
+                // Permission mode badge
+                HStack(spacing: 3) {
+                    Image(systemName: monitor.currentPreset.badgeIcon)
+                        .font(.system(size: 9))
+                    Text(monitor.currentPreset.badgeLabel)
+                        .font(.system(size: 9, weight: .black, design: .monospaced))
                 }
+                .foregroundColor(themeManager.lcdOn)
+                .padding(.horizontal, 5)
+                .padding(.vertical, 2)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 3)
+                        .stroke(themeManager.lcdOn.opacity(0.6), lineWidth: 1)
+                )
+                .offset(x: -2, y: -8)
             }
             .padding(.leading, 10)
             .padding(.trailing, 6)

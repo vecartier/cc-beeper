@@ -55,41 +55,62 @@ struct CCBeeperApp: App {
 
             Divider()
 
-            Section("Permission Mode") {
-                Picker("Permission Mode", selection: $monitor.currentPreset) {
-                    ForEach(PermissionPreset.allCases, id: \.self) { preset in
-                        Text("\(preset.label) \u{2014} \(preset.menuDescription)")
-                            .tag(preset)
-                    }
-                }
-                .pickerStyle(.inline)
-                .labelsHidden()
-                .disabled(monitor.isSettingsMalformed)
-
-                if monitor.isSettingsMalformed {
-                    Text("settings.json is malformed")
-                        .foregroundColor(.secondary)
-                        .font(.caption)
-                }
-            }
-
-            Divider()
-
-            Button(Self.isMainWindowVisible() ? "Hide Widget" : "Show Widget") {
-                Self.toggleMainWindow()
-            }
-
-            Button(monitor.isActive ? "Sleep" : "Awake") {
+            // Sleep / Wake
+            Button(monitor.isActive ? "Sleep" : "Wake") {
                 monitor.isActive.toggle()
                 if !monitor.isActive {
                     Self.hideMainWindow()
-                } else {
+                } else if monitor.widgetSize != .menuOnly {
                     Self.showMainWindow()
                 }
             }
 
+            // Permission mode
+            Menu("Permission \u{2014} \(monitor.currentPreset.label)") {
+                ForEach(PermissionPreset.allCases, id: \.self) { preset in
+                    Button {
+                        monitor.currentPreset = preset
+                    } label: {
+                        HStack {
+                            if monitor.currentPreset == preset {
+                                Image(systemName: "checkmark")
+                            }
+                            Text("\(preset.label) \u{2014} \(preset.menuDescription)")
+                        }
+                    }
+                    .disabled(monitor.isSettingsMalformed)
+                }
+                if monitor.isSettingsMalformed {
+                    Divider()
+                    Text("settings.json is malformed")
+                }
+            }
+
+            // Widget size / visibility
+            Menu("Size \u{2014} \(monitor.widgetSize.label)") {
+                ForEach(WidgetSize.allCases, id: \.self) { size in
+                    Button {
+                        monitor.widgetSize = size
+                        switch size {
+                        case .large, .compact:
+                            Self.showMainWindow()
+                        case .menuOnly:
+                            Self.hideMainWindow()
+                        }
+                    } label: {
+                        HStack {
+                            if monitor.widgetSize == size {
+                                Image(systemName: "checkmark")
+                            }
+                            Text("\(size.label) \u{2014} \(size.menuDescription)")
+                        }
+                    }
+                }
+            }
+
             Divider()
 
+            // Keyboard shortcuts
             Menu("Keyboard Shortcuts") {
                 Button("⌥ \(monitor.hotkeyAccept)  Accept Permission") {}
                 Button("⌥ \(monitor.hotkeyDeny)  Deny Permission") {}
@@ -98,6 +119,7 @@ struct CCBeeperApp: App {
                 Button("⌥ \(monitor.hotkeyMute)  Read Over / Stop") {}
             }
 
+            // Settings
             Button("Settings...") {
                 NSApp.activate(ignoringOtherApps: true)
                 openWindow(id: "settings")

@@ -1,5 +1,30 @@
 import Foundation
 
+// MARK: - WidgetSize
+
+/// Controls widget visibility: full beeper, screen only, or menu bar only.
+enum WidgetSize: String, CaseIterable, Equatable {
+    case large       // Full beeper with buttons
+    case compact     // Screen only, no buttons
+    case menuOnly    // No widget, menu bar only
+
+    var label: String {
+        switch self {
+        case .large: return "Large"
+        case .compact: return "Compact"
+        case .menuOnly: return "Menu only"
+        }
+    }
+
+    var menuDescription: String {
+        switch self {
+        case .large: return "full beeper with buttons"
+        case .compact: return "screen only, hotkeys to interact"
+        case .menuOnly: return "menu bar icon only"
+        }
+    }
+}
+
 // MARK: - PermissionPreset
 
 /// The 4 permission presets available in CC-Beeper.
@@ -7,8 +32,8 @@ import Foundation
 /// in ~/.claude/settings.json (per D-01).
 enum PermissionPreset: String, CaseIterable, Equatable {
     case cautious   // permission_mode: "default", no allowedTools
-    case relaxed    // permission_mode: "default", allowedTools: ["Read", "Glob", "Grep"]
     case trusted    // permission_mode: "default", allowedTools: ["Read", "Glob", "Grep", "Write", "Edit", "NotebookEdit"]
+    case relaxed    // permission_mode: "default", allowedTools: ["Read", "Glob", "Grep"]
     case yolo       // permission_mode: "bypass"
 
     /// The value to write to the `permission_mode` field in settings.json.
@@ -32,9 +57,9 @@ enum PermissionPreset: String, CaseIterable, Equatable {
     /// Human-readable label for the menu and UI.
     var label: String {
         switch self {
-        case .cautious: return "Cautious"
+        case .cautious: return "Strict"
+        case .trusted: return "Cautious"
         case .relaxed: return "Relaxed"
-        case .trusted: return "Trusted"
         case .yolo: return "YOLO"
         }
     }
@@ -47,6 +72,21 @@ enum PermissionPreset: String, CaseIterable, Equatable {
         case .trusted: return "auto file ops, ask for bash"
         case .yolo: return "auto-approve everything"
         }
+    }
+
+    /// SF Symbol for the LCD badge.
+    var badgeIcon: String {
+        switch self {
+        case .cautious: return "shield.fill"
+        case .trusted: return "eye.fill"
+        case .relaxed: return "hand.thumbsup.fill"
+        case .yolo: return "flame.fill"
+        }
+    }
+
+    /// Short text for the LCD badge.
+    var badgeLabel: String {
+        label.uppercased()
     }
 }
 

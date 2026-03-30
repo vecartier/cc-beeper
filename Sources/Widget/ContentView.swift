@@ -49,35 +49,37 @@ struct ContentView: View {
                 .offset(x: 40, y: 33)
                 .allowsHitTesting(false)
 
-            // Buttons — compact group
-            HStack(alignment: .center, spacing: -16) {
-                AcceptDenyPill(
-                    active: monitor.state.needsAttention,
-                    onAccept: { monitor.respondToPermission(allow: true) },
-                    onDeny: { monitor.respondToPermission(allow: false) }
-                )
-
-                HStack(spacing: -24) {
-                    RecordButton(
-                        isRecording: monitor.isRecording,
-                        action: { monitor.voiceService.toggle() }
+            // Buttons — hidden in compact mode
+            if monitor.widgetSize == .large {
+                HStack(alignment: .center, spacing: -16) {
+                    AcceptDenyPill(
+                        active: monitor.state.needsAttention,
+                        onAccept: { monitor.respondToPermission(allow: true) },
+                        onDeny: { monitor.respondToPermission(allow: false) }
                     )
-                    SoundMuteButton(
-                        isSpeaking: monitor.ttsService.isSpeaking,
-                        action: {
-                            if monitor.ttsService.isSpeaking {
-                                monitor.ttsService.stopSpeaking()
+
+                    HStack(spacing: -24) {
+                        RecordButton(
+                            isRecording: monitor.isRecording,
+                            action: { monitor.voiceService.toggle() }
+                        )
+                        SoundMuteButton(
+                            isSpeaking: monitor.ttsService.isSpeaking,
+                            action: {
+                                if monitor.ttsService.isSpeaking {
+                                    monitor.ttsService.stopSpeaking()
+                                }
                             }
-                        }
+                        )
+                    }
+
+                    TerminalButton(
+                        enabled: true,
+                        action: { monitor.goToConversation() }
                     )
                 }
-
-                TerminalButton(
-                    enabled: true,
-                    action: { monitor.goToConversation() }
-                )
+                .offset(x: 16, y: shellH - 72)
             }
-            .offset(x: 16, y: shellH - 72)
         }
         .frame(width: shellW, height: shellH)
         .padding(40)

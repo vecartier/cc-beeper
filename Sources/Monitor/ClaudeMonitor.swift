@@ -105,7 +105,10 @@ final class ClaudeMonitor: ObservableObject {
         }
     }
 
-@Published var isSettingsMalformed: Bool = false
+    @Published var isSettingsMalformed: Bool = false
+    @Published var widgetSize: WidgetSize {
+        didSet { UserDefaults.standard.set(widgetSize.rawValue, forKey: "widgetSize") }
+    }
     @Published var vibrationEnabled: Bool {
         didSet { UserDefaults.standard.set(vibrationEnabled, forKey: "vibrationEnabled") }
     }
@@ -273,6 +276,7 @@ final class ClaudeMonitor: ObservableObject {
     init() {
         soundEnabled = UserDefaults.standard.object(forKey: "soundEnabled") as? Bool ?? true
         vibrationEnabled = UserDefaults.standard.object(forKey: "vibrationEnabled") as? Bool ?? true
+        widgetSize = WidgetSize(rawValue: UserDefaults.standard.string(forKey: "widgetSize") ?? "") ?? .large
         currentPreset = PermissionPresetWriter.readCurrentPreset()
         isSettingsMalformed = PermissionPresetWriter.isSettingsMalformed()
         ensureIPCDir()
@@ -433,6 +437,11 @@ final class ClaudeMonitor: ObservableObject {
                 if mode == .bypass {
                     return nil  // Suppress in YOLO — LCD stays on current state
                 }
+                // Suppress for tools the current preset auto-approves
+                let promptTool = toolName ?? payload["title"] as? String ?? ""
+                if let allowed = currentPreset.allowedTools, allowed.contains(promptTool) {
+                    return nil  // Auto-approved — stay on working state
+                }
                 // Build synthetic JSONL event with permission type marker
                 var syntheticEvent: [String: Any] = [
                     "event": "notification",
@@ -564,6 +573,10 @@ final class ClaudeMonitor: ObservableObject {
             let mode = readPermissionMode()
             if mode == .bypass {
                 return nil  // Suppress in YOLO
+            }
+            // Suppress for tools the current preset auto-approves
+            if let allowed = currentPreset.allowedTools, allowed.contains(tool) {
+                return nil  // Auto-approved — stay on working state
             }
             var permSyntheticEvent: [String: Any] = [
                 "event": "notification",
