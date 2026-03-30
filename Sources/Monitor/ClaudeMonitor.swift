@@ -89,7 +89,6 @@ final class ClaudeMonitor: ObservableObject {
 
     @Published var state: ClaudeState = .done
     @Published var pendingPermission: PendingPermission?
-    private var previousStateBeforeVoice: ClaudeState?
     private var cancellables = Set<AnyCancellable>()
     @Published var soundEnabled: Bool {
         didSet { UserDefaults.standard.set(soundEnabled, forKey: "soundEnabled") }
@@ -103,15 +102,10 @@ final class ClaudeMonitor: ObservableObject {
                 currentPreset = oldValue
                 return
             }
-            presetToastMessage = "RESTART SESSION TO APPLY"
-            DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { [weak self] in
-                self?.presetToastMessage = nil
-            }
         }
     }
 
-    @Published var presetToastMessage: String? = nil
-    @Published var isSettingsMalformed: Bool = false
+@Published var isSettingsMalformed: Bool = false
     @Published var vibrationEnabled: Bool {
         didSet { UserDefaults.standard.set(vibrationEnabled, forKey: "vibrationEnabled") }
     }
@@ -328,11 +322,15 @@ final class ClaudeMonitor: ObservableObject {
                 guard let self else { return }
                 self.isRecording = recording
                 if recording {
-                    self.previousStateBeforeVoice = self.state
                     self.state = .listening
                 } else if self.state == .listening {
-                    self.state = self.previousStateBeforeVoice ?? .idle
-                    self.previousStateBeforeVoice = nil
+                    self.updateAggregateState()
+                    if self.state == .listening {
+                        self.state = .done
+                    }
+                    if self.state == .done {
+                        self.startIdleTimer(interval: 180)
+                    }
                 }
             }
             .store(in: &cancellables)
@@ -344,15 +342,15 @@ final class ClaudeMonitor: ObservableObject {
                 guard let self else { return }
                 self.isSpeaking = speaking
                 if speaking {
-                    self.previousStateBeforeVoice = self.state
                     self.state = .speaking
                 } else if self.state == .speaking {
-                    // Go back to done (TTS reads after stop), or previous state
-                    let restore = self.previousStateBeforeVoice ?? .done
-                    self.previousStateBeforeVoice = nil
-                    self.state = restore
-                    // Re-start idle timer since we're back to done
-                    if restore == .done {
+                    // TTS finished or was dismissed — resolve state from session data
+                    self.updateAggregateState()
+                    // If no active sessions, fall back to done and start idle timer
+                    if self.state == .speaking {
+                        self.state = .done
+                    }
+                    if self.state == .done {
                         self.startIdleTimer(interval: 180)
                     }
                 }

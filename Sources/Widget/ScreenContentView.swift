@@ -80,17 +80,7 @@ struct ScreenContentView: View {
                     .transition(.opacity)
             }
 
-            // Preset change toast (PERM-03, D-08) — shows for 5s on mode change
-            if let toastText = monitor.presetToastMessage {
-                Text(toastText)
-                    .font(.system(size: 9, weight: .heavy, design: .monospaced))
-                    .foregroundColor(themeManager.lcdOn)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(themeManager.darkMode ? themeManager.lcdBg.opacity(0.9) : Color.clear.opacity(0.9))
-                    .transition(.opacity)
-            }
-
-            // Vignette
+// Vignette
             RadialGradient(
                 colors: [.clear, Color(hex: "1A3008").opacity(0.25)],
                 center: .center,
