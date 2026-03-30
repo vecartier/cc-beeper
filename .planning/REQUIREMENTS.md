@@ -8,19 +8,19 @@
 ### HTTP Hooks
 
 - [x] **HTTP-01**: CC-Beeper runs a local HTTP server (NWListener, localhost only) that receives Claude Code hook events via POST /hook
-- [ ] **HTTP-02**: Hook events are routed by `hook_type` field to the LCD state machine (PreToolUse → WORKING, Stop → DONE, StopFailure → ERROR, Notification → classify per INPUT rules)
+- [x] **HTTP-02**: Hook events are routed by `hook_event_name` field to the state machine (PreToolUse → thinking, Stop → finished, StopFailure → finished, Notification → needsYou). LCD state names expand in Phase 36
 - [x] **HTTP-03**: The active server port is written to `~/.claude/cc-beeper/port` on startup and deleted on quit
-- [ ] **HTTP-04**: On Stop events, CC-Beeper extracts the last assistant message from the transcript (via transcript_path) for TTS summary, replacing the old Python summary extraction
-- [ ] **HTTP-05**: The old Python hook script (cc-beeper-hook.py), JSONL file watcher, and file-based IPC code are removed from the codebase
+- [x] **HTTP-04**: On Stop events, CC-Beeper extracts `last_assistant_message` directly from the Stop payload for TTS summary, replacing the old Python summary extraction
+- [x] **HTTP-05**: The old Python hook script (cc-beeper-hook.py), JSONL file watcher, and file-based IPC code are removed from the codebase
 - [x] **HTTP-06**: Hook commands in settings.json use `curl -d @-` to pipe stdin JSON to CC-Beeper's HTTP endpoint, with `-o /dev/null` and `|| true` for silent failure
 
 ### LCD States
 
-- [ ] **LCD-01**: The beeper displays 7 distinct states: IDLE, THINKING, WORKING, APPROVE?, NEEDS INPUT, ERROR, DONE — each with state-specific title text
+- [ ] **LCD-01**: The beeper displays 6 distinct states: IDLE, WORKING, APPROVE?, NEEDS INPUT, ERROR, DONE — each with state-specific title text (THINKING dropped per CONTEXT.md D-01)
 - [ ] **LCD-02**: WORKING state shows tool context as scrolling text (e.g., "WORKING: npm test", "WORKING: Reading auth.ts"), truncated to 30 chars
 - [ ] **LCD-03**: APPROVE? state shows permission context (e.g., "APPROVE? rm -rf dist"), truncated to 30 chars
 - [ ] **LCD-04**: ERROR state shows error context from StopFailure payload (e.g., "ERROR: Rate limited")
-- [ ] **LCD-05**: DONE state auto-transitions to IDLE after 3 seconds
+- [ ] **LCD-05**: DONE state auto-transitions to IDLE after 180 seconds (3 minutes, per CONTEXT.md D-20)
 - [ ] **LCD-06**: State priority is enforced: ERROR > APPROVE? > NEEDS INPUT > WORKING > THINKING > DONE > IDLE — lower-priority events don't overwrite higher-priority states
 - [ ] **LCD-07**: Auth success/error notifications display as transient flashes (2-3s) over the current state without changing the state machine
 
@@ -51,7 +51,7 @@
 
 ### Hook Improvements
 
-- [x] **HOOK-01**: All CC-Beeper hook entries in settings.json have `async: true` and `timeout: 5000`
+- [x] **HOOK-01**: All CC-Beeper async hook entries in settings.json have `async: true` and `timeout: 5` (seconds, not milliseconds per research correction)
 - [x] **HOOK-02**: Only the PreToolUse hook has `statusMessage: "CC-Beeper monitoring…"`
 - [x] **HOOK-03**: All hook commands produce zero stdout output under all conditions (CC-Beeper running, not running, port file missing)
 - [x] **HOOK-04**: CC-Beeper hooks are identified in settings.json by matching `cc-beeper` in the command string, enabling safe update/removal without touching user hooks
@@ -96,10 +96,10 @@ Deferred to future release.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | HTTP-01 | Phase 35 | Complete |
-| HTTP-02 | Phase 35 | Pending |
+| HTTP-02 | Phase 35 | Complete |
 | HTTP-03 | Phase 35 | Complete |
-| HTTP-04 | Phase 35 | Pending |
-| HTTP-05 | Phase 35 | Pending |
+| HTTP-04 | Phase 35 | Complete |
+| HTTP-05 | Phase 35 | Complete |
 | HTTP-06 | Phase 35 | Complete |
 | HOOK-01 | Phase 35 | Complete |
 | HOOK-02 | Phase 35 | Complete |

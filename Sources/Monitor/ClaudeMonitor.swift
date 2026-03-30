@@ -14,6 +14,8 @@ enum ClaudeState: Equatable {
     case error
     case approveQuestion   // APPROVE?
     case needsInput        // NEEDS INPUT
+    case listening         // Recording voice
+    case speaking          // TTS reading aloud
 
     var label: String {
         switch self {
@@ -23,23 +25,27 @@ enum ClaudeState: Equatable {
         case .error: "ERROR"
         case .approveQuestion: "APPROVE?"
         case .needsInput: "NEEDS INPUT"
+        case .listening: "LISTENING"
+        case .speaking: "SPEAKING"
         }
     }
 
     /// State priority — higher number wins when resolving multiple concurrent sessions.
-    /// error(5) > approveQuestion(4) > needsInput(3) > working(2) > done(1) > idle(0)
+    /// error(7) > approveQuestion(6) > needsInput(5) > listening(4) > speaking(3) > working(2) > done(1) > idle(0)
     var priority: Int {
         switch self {
-        case .error: return 5
-        case .approveQuestion: return 4
-        case .needsInput: return 3
+        case .error: return 7
+        case .approveQuestion: return 6
+        case .needsInput: return 5
+        case .listening: return 4
+        case .speaking: return 3
         case .working: return 2
         case .done: return 1
         case .idle: return 0
         }
     }
 
-    var needsAttention: Bool { self == .approveQuestion || self == .needsInput }
+    var needsAttention: Bool { self == .approveQuestion }
     var canGoToConvo: Bool { self == .done }
 }
 
@@ -83,6 +89,8 @@ final class ClaudeMonitor: ObservableObject {
 
     @Published var state: ClaudeState = .done
     @Published var pendingPermission: PendingPermission?
+    private var previousStateBeforeVoice: ClaudeState?
+    private var cancellables = Set<AnyCancellable>()
     @Published var soundEnabled: Bool {
         didSet { UserDefaults.standard.set(soundEnabled, forKey: "soundEnabled") }
     }
@@ -297,13 +305,43 @@ final class ClaudeMonitor: ObservableObject {
         // Wire ttsService into voiceService so recording cuts TTS
         voiceService.ttsService = ttsService
         // Mirror VoiceService.isRecording into ClaudeMonitor.isRecording for UI binding
+        // and set LCD state to .listening while recording
         voiceService.$isRecording
             .receive(on: DispatchQueue.main)
-            .assign(to: &$isRecording)
+            .sink { [weak self] recording in
+                guard let self else { return }
+                self.isRecording = recording
+                if recording {
+                    self.previousStateBeforeVoice = self.state
+                    self.state = .listening
+                } else if self.state == .listening {
+                    self.state = self.previousStateBeforeVoice ?? .idle
+                    self.previousStateBeforeVoice = nil
+                }
+            }
+            .store(in: &cancellables)
         // Mirror TTSService.isSpeaking into ClaudeMonitor.isSpeaking for UI binding
+        // and set LCD state to .speaking while TTS is active
         ttsService.$isSpeaking
             .receive(on: DispatchQueue.main)
-            .assign(to: &$isSpeaking)
+            .sink { [weak self] speaking in
+                guard let self else { return }
+                self.isSpeaking = speaking
+                if speaking {
+                    self.previousStateBeforeVoice = self.state
+                    self.state = .speaking
+                } else if self.state == .speaking {
+                    // Go back to done (TTS reads after stop), or previous state
+                    let restore = self.previousStateBeforeVoice ?? .done
+                    self.previousStateBeforeVoice = nil
+                    self.state = restore
+                    // Re-start idle timer since we're back to done
+                    if restore == .done {
+                        self.startIdleTimer(interval: 180)
+                    }
+                }
+            }
+            .store(in: &cancellables)
         // Pre-warm Whisper model at launch — loads from cache, falls back to SFSpeech if not downloaded
         Task {
             guard WhisperService.modelsDownloaded else { return }
@@ -390,9 +428,14 @@ final class ClaudeMonitor: ObservableObject {
                 ]
                 if let msg = payload["message"] as? String {
                     syntheticEvent["summary"] = msg
-                }
-                if let tool = toolName {
-                    syntheticEvent["tool"] = tool
+                    // Extract tool name from message (e.g. "Claude wants to use Bash")
+                    // Notification payloads don't have tool_name, but it's in the message
+                    if let tool = toolName {
+                        syntheticEvent["tool"] = tool
+                    } else if let title = payload["title"] as? String {
+                        // title is often "Tool Request" or the tool name itself
+                        syntheticEvent["tool"] = title
+                    }
                 }
                 let json = (try? JSONSerialization.data(withJSONObject: syntheticEvent))
                     .flatMap { String(data: $0, encoding: .utf8) } ?? ""
@@ -446,18 +489,14 @@ final class ClaudeMonitor: ObservableObject {
             eventType = "stop"
             // Extract TTS summary from last_assistant_message (per D-05, HTTP-04)
             if let summary = payload["last_assistant_message"] as? String, !summary.isEmpty {
-                // NEVER interrupt recording — recording has absolute priority
+                // Set summary immediately so LCD shows it right away
+                lastSummary = summary
+                // Speak in background if voiceOver enabled (don't block LCD update)
                 if voiceOver && !isRecording {
                     Task { [weak self] in
                         guard let self else { return }
-                        let spoken = await self.ttsService.speakSummary(summary, provider: self.ttsProvider)
-                        await MainActor.run {
-                            guard !self.isRecording else { return }
-                            self.lastSummary = spoken
-                        }
+                        _ = await self.ttsService.speakSummary(summary, provider: self.ttsProvider)
                     }
-                } else {
-                    lastSummary = summary
                 }
             } else {
                 // Log missing last_assistant_message per D-05
@@ -610,7 +649,8 @@ final class ClaudeMonitor: ObservableObject {
             awaitingUserAction = false
             pendingPermission = nil
             httpServer.permissionConnection?.cancel()
-            // No more pending.json/response.json cleanup needed
+            // Reset state so priority check doesn't block the incoming event
+            state = .idle
         }
 
         idleWork?.cancel()
@@ -655,7 +695,7 @@ final class ClaudeMonitor: ObservableObject {
     }
 
     /// Derive the overall state from all active sessions using priority-based resolution.
-    /// Priority: error(5) > approveQuestion(4) > needsInput(3) > working(2) > done(1) > idle(0)
+    /// Priority: error(7) > approveQuestion(6) > needsInput(5) > listening(4) > speaking(3) > working(2) > done(1) > idle(0)
     private func updateAggregateState() {
         // Prune sessions not seen for 2 hours (replaces sessions.json-based pruning)
         if Date().timeIntervalSince(lastPruneTime) > 30 {
@@ -675,11 +715,8 @@ final class ClaudeMonitor: ObservableObject {
 
         let values = Array(sessionStates.values)
         if values.isEmpty {
-            if state != .done {
-                // Only go idle if not in DONE (DONE->IDLE handled by timer)
-                state = .idle
-                idleStartTime = Date()
-            }
+            // Don't auto-transition — let the idle timer handle .done → .idle.
+            // Stay on whatever state we're currently in (.done, .error, etc.)
             sessionCount = 0
             return
         }

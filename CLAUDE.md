@@ -43,20 +43,22 @@ Communication uses a local HTTP server (`HTTPHookServer.swift`) running on `127.
 
 The core orchestrator. Four states: `.thinking` (tool calls in progress), `.finished` (idle, awaiting user), `.needsYou` (permission required), `.idle` (no sessions for 60s). Tracks multiple concurrent sessions via `sessionStates` dictionary.
 
-### Voice — Dual-Engine Architecture
+### Voice — Dual-Engine Multilingual Architecture
 
-Both STT and TTS use a primary engine with automatic fallback:
+Both STT and TTS use a primary engine with automatic fallback, driven by a single `kokoroLangCode` preference:
 
-- **STT**: Parakeet TDT (on-device, FluidAudio) → SFSpeech fallback. Parakeet streams partial transcripts and injects them live into the terminal via CGEvent while the user is still speaking.
-- **TTS**: Kokoro subprocess (Python venv at `~/.cache/cc-beeper/kokoro-venv/`) → Apple AVSpeechSynthesizer fallback. Kokoro communicates via stdin/stdout + WAV file watcher.
+- **STT**: WhisperKit (on-device, 99 languages, batch transcription) → SFSpeech fallback. Model size selectable (small/medium) in Settings. Language hint from `kokoroLangCode`.
+- **TTS**: Kokoro subprocess (Python venv at `~/.cache/cc-beeper/kokoro-venv/`) → Apple AVSpeechSynthesizer fallback. Supports 9 language codes (EN-US, EN-UK, FR, ES, IT, PT, HI, JA, ZH). Communicates via stdin/stdout + WAV file watcher.
+- **Language preference**: Single `kokoroLangCode` in UserDefaults drives both STT and TTS. Defaults to macOS system language on first launch. Voice picker auto-filters to current language.
 
 ### UI Structure
 
 - **Main window**: Transparent, always-on-top, 360×160px pager shell with LCD display
 - **LCD**: 286×45px screen with 14×12px animated pixel-art character, state text, clock, icons
-- **Buttons**: PNG-based with press states — Accept/Deny pill, Record, Terminal, Mute
+- **Buttons**: PNG-based with press states — Accept/Deny pill, Record, Terminal, Sound
 - **Themes**: 10 shell colors (PNG images), dark mode toggle affects LCD colors
-- **Settings**: 8-tab window (Theme, Voice Record, Voice Reader, Feedback, Hotkeys, Permissions, Setup, About)
+- **Settings**: 8-tab window (General, Audio, Voice, VoiceOver, Feedback, Hotkeys, Permissions, Setup, About)
+- **Onboarding**: Multi-step wizard (Welcome, CLI detection, Permissions, Language, Model download, Done)
 
 ### Hook Installation
 
@@ -68,7 +70,7 @@ Hook identification uses `cc-beeper/port` in the command string for safe update/
 ## Key Conventions
 
 - App activation policy is `.accessory` — no dock icon, menu bar only
-- Global hotkeys use Carbon-level key events (consumed, not leaked to focused app): ⌥A accept, ⌥D deny, ⌥R record, ⌥T terminal, ⌥M mute
+- Global hotkeys use character-based binding (layout-independent, resolves physical key via current keyboard layout): ⌥A accept, ⌥D deny, ⌥R record, ⌥T terminal, ⌥M mute
 - IPC files use strict permissions: 0o700 directories, 0o600 files, symlink rejection
 - Duplicate instance prevention via port file at `~/.claude/cc-beeper/port` — on launch, pings the port to check if another instance is responding
 - Settings persist to UserDefaults
@@ -76,6 +78,7 @@ Hook identification uses `cc-beeper/port` in the command string for safe update/
 
 ## Dependencies
 
-- **FluidAudio** (0.13.2+): On-device ML for Parakeet STT
+- **FluidAudio** (0.12.4): On-device ML (Kokoro TTS CoreML models)
+- **WhisperKit** (0.17.0+): On-device Whisper speech recognition
 - **HotKey** (0.2.1+): Global hotkey registration
 - **FoundationModels**: Apple's on-device LLM framework (linked, macOS 26+)

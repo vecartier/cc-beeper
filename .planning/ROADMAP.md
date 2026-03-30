@@ -200,9 +200,10 @@ v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and aut
 
 **Milestone Goal:** Replace the fragile Python/JSONL IPC with HTTP hooks, expand the LCD from 4 to 7 states with proper input/permission differentiation, add a permission mode spectrum with YOLO sunglasses, polish onboarding for the HTTP migration path, and overhaul the README for public launch.
 
-- [ ] **Phase 35: HTTP Hooks + Hook Improvements** - Replace Python JSONL IPC with NWListener HTTP server; hook commands use curl; all hooks async with timeout (foundation for LCD and onboarding)
+- [x] **Phase 35: HTTP Hooks + Hook Improvements** - Replace Python JSONL IPC with NWListener HTTP server; hook commands use curl; all hooks async with timeout (foundation for LCD and onboarding) (completed 2026-03-29)
 - [ ] **Phase 36: LCD States + Input Classification + Animations** - 7-state LCD with tool/permission/input context; state priority enforcement; input vs permission differentiation; per-state animations (no color changes)
 - [ ] **Phase 37: Permission Spectrum + YOLO Sunglasses** - 4-mode segmented control in popover; atomic settings.json writes; YOLO sunglasses with slide animation
+- [ ] **Phase 38: Visibility Spectrum** - 3-mode visibility (Full beeper with buttons / Compact screen-only with small shells / Menu bar only); 10 small shell PNGs; hotkey-only control in compact+menu modes; rabbit icon replaces YOLO sunglasses
 - [ ] **Phase 39: Onboarding Polish** - HTTP migration detection and upgrade path; server startup confirmation; preserve voice/language steps
 - [ ] **Phase 40: README Overhaul** - Hero GIF, feature screenshots, install instructions, how-it-works paragraph
 
@@ -432,7 +433,12 @@ Plans:
   5. Triggering a low-priority event (e.g., THINKING) while in APPROVE? state does not overwrite APPROVE? — state priority is enforced
   6. Each state has a distinct animation: IDLE is static, THINKING pulses slowly, WORKING scrolls, APPROVE? blinks fast, NEEDS INPUT blinks slowly, ERROR flashes then holds, DONE flashes then fades — LCD color stays consistent with theme
   7. APPROVE? and NEEDS INPUT are distinguishable at a glance by different blink speeds and text
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 36-01-PLAN.md — State machine expansion (4->6 states), priority enforcement, notification classification, YOLO suppression, tests
+- [ ] 36-02-PLAN.md — LCD text/sprites/animations: per-state title/detail, 24 sprite frames, blink/pulse/glitch effects, auth flash
+
 **UI hint**: yes
 **Notes**: Phase 36 needs a lightweight `readPermissionMode()` utility to check current mode from settings.json for YOLO suppression logic. This is a read-only dependency — Phase 37 builds the write path + UI. Input classification must explicitly enumerate known input types (question, gsd, discuss, multiple_choice, wcv) and default unknown types to input (false positives over false negatives).
 
@@ -488,7 +494,7 @@ Note (v5.0): Phase 27 (STT Reliability) and Phase 28 (TTS Reliability + Rename) 
 
 Note (v6.0): Phase 30 (Whisper STT) and Phase 31 (Kokoro Multilingual) both depend only on Phase 29 and touch independent subsystems. They can execute in parallel. Phase 32 (Language Preference System) depends on both 30 and 31 being complete — the unified language preference requires both engines to be multilingual. Phase 33 (Settings & Onboarding) depends on Phase 32, as it surfaces the language system in UI.
 
-**Execution Order (v7.0):** 35 -> 36 + 37 (can run in parallel) -> 39 -> 40
+**Execution Order (v7.0):** 35 -> 36 + 37 (can run in parallel) -> 38 -> 39 -> 40
 
 Note (v7.0): Phase 35 (HTTP Hooks) is the foundation — LCD states and onboarding both depend on its HTTP payload routing. Phase 36 (LCD States + Input Classification + Animations) and Phase 37 (Permission Spectrum + YOLO Sunglasses) both depend only on Phase 35 and touch independent subsystems — they can execute in parallel. Phase 39 (Onboarding Polish) depends on both Phase 35 and Phase 37 — it needs HTTP migration and permission spectrum complete. Phase 40 (README Overhaul) is last — it needs screenshots of the finished product.
 
@@ -517,7 +523,7 @@ Note (v7.0): Phase 35 (HTTP Hooks) is the foundation — LCD states and onboardi
 | 31. Kokoro Multilingual | v6.0 Multilingual Voice | 2/2 | Complete | 2026-03-29 |
 | 32. Language Preference System | v6.0 Multilingual Voice | 2/2 | Complete | 2026-03-29 |
 | 33. Settings & Onboarding | v6.0 Multilingual Voice | 0/TBD | Not started | - |
-| 35. HTTP Hooks + Hook Improvements | v7.0 Pre-Launch | 2/3 | In Progress|  |
+| 35. HTTP Hooks + Hook Improvements | v7.0 Pre-Launch | 2/3 | Complete    | 2026-03-29 |
 | 36. LCD States + Input Classification + Animations | v7.0 Pre-Launch | 0/TBD | Not started | - |
 | 37. Permission Spectrum + YOLO Sunglasses | v7.0 Pre-Launch | 0/TBD | Not started | - |
 | 39. Onboarding Polish | v7.0 Pre-Launch | 0/TBD | Not started | - |
