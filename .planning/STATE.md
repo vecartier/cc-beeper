@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v3.1
-milestone_name: Polish & Fixes
-status: verifying
-stopped_at: Completed 38-visibility-spectrum 38-01-PLAN.md
-last_updated: "2026-03-31T11:34:02.164Z"
-last_activity: 2026-03-31
+milestone: v1.0
+milestone_name: Public Launch
+status: planning
+stopped_at: Phase 39 context gathered
+last_updated: "2026-03-31T17:39:31.443Z"
+last_activity: 2026-03-31 — Roadmap created for v1.0 Public Launch (Phases 39-46)
 progress:
-  total_phases: 34
-  completed_phases: 32
-  total_plans: 69
-  completed_plans: 67
+  total_phases: 25
+  completed_phases: 14
+  total_plans: 31
+  completed_plans: 29
   percent: 0
 ---
 
@@ -18,58 +18,48 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-29)
+See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** Users can see what Claude is doing, respond to it, and give it instructions — without leaving their current workflow
-**Current focus:** Phase 37 — permission-spectrum
+**Current focus:** Phase 39 — Functional Audit & Bug Fixes (v1.0 Public Launch, first phase)
 
 ## Current Position
 
-Phase: 38
-Plan: Not started
-Status: Phase complete — ready for verification
-Next: /gsd:plan-phase 37 (or /gsd:discuss-phase 37 if you want to refine context first)
-Last activity: 2026-03-31
+Phase: 39 of 46 (Functional Audit & Bug Fixes)
+Plan: — (not yet planned)
+Status: Ready to plan
+Last activity: 2026-03-31 — Roadmap created for v1.0 Public Launch (Phases 39-46)
 
-Progress: [░░░░░░░░░░] 0% (v7.0 phases, 7 phases total)
+Progress: [░░░░░░░░░░] 0% (0/8 phases)
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed (prior milestones): 39
+- Total plans completed (prior milestones): 67
 - Average duration: ~30 min
 - Trend: Stable
+
+**By Phase:**
+
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| Prior milestones | 67 | ~33.5 hrs | ~30 min |
 
 ## Accumulated Context
 
 ### Decisions
 
-- [v7.0 start]: HTTP hooks use NWListener (localhost only); port written to ~/.claude/cc-beeper/port on startup, deleted on quit
-- [v7.0 start]: Hook commands use curl -d @- to pipe stdin JSON, -o /dev/null, || true for silent failure
-- [v7.0 start]: YOLO modes split: Guarded YOLO (bypass + deny preserved) vs Full YOLO (bypass + deny cleared); deny rules cached to cached-deny-rules.json
-- [v7.0 start]: LCD priority enforced: ERROR > APPROVE? > NEEDS INPUT > WORKING > THINKING > DONE > IDLE
-- [v7.0 start]: Input vs permission classification: unknown notification types default to NEEDS INPUT (false positives over false negatives)
-- [v7.0 start]: Phase 36 and 37 can run in parallel (both depend on Phase 35 but touch independent subsystems)
-- [v7.0 planning]: Phase 36 needs read-only permission_mode check from settings.json for YOLO suppression — lightweight utility, not the full spectrum UI from Phase 37
-- [v7.0 planning]: TTS transcript parsing (HTTP-04) may need its own plan if transcript JSON is complex — scope during Phase 35 planning
-- [v7.0 planning]: Port collision detection in Phase 35 — ping existing port file, show "already running" or clean stale file
-- [v7.0 planning]: Onboarding must handle partially-modified CC-Beeper hooks (flag, don't silently overwrite)
-- [v7.0 planning]: Input types (gsd, discuss, multiple_choice, wcv, question) are NEVER suppressed in YOLO — only permission/tool approval notifications are suppressible
-- [Phase 35-01]: NWListener port range 19222-19230 with OS fallback; failure detected via stateUpdateHandler not thrown exceptions
-- [Phase 35-01]: Permission connection deferred: store NWConnection on permission_prompt, respond via sendPermissionResponse()
-- [Phase 35-01]: PID-based instance detection replaced with port ping; stale port file cleaned up on launch
-- [Phase 35-http-hooks-hook-improvements]: Notification hook is blocking (not async) — modern Claude Code routes permission_prompt via Notification (RESEARCH.md Pitfall 5)
-- [Phase 35-http-hooks-hook-improvements]: hookMarker = cc-beeper/port identifies HTTP hooks for safe update/removal without touching user hooks
-- [Phase 37-01]: PermissionPreset enum drives all permission mode I/O — replaces raw string matching
-- [Phase 37-01]: AskUserQuestion in PermissionRequest routes to NEEDS INPUT not APPROVE? (D-04)
-- [Phase 37-01]: .sortedKeys removed from HookInstaller to prevent key reordering (D-03 bug fix)
-- [Phase 37-02]: currentPreset (PermissionPreset) replaces autoAccept (Bool) as source of truth for YOLO mode
-- [Phase 37-02]: Preset toast (RESTART SESSION TO APPLY) fires from ClaudeMonitor didSet, not from UI layer
-- [Phase 37-02]: Rabbit character takes absolute priority over glitch animation when isYolo
-- [Phase 38-01]: smallShellImageName uses currentThemeId directly — all 10 color IDs match exactly between large and small shell sets
-- [Phase 38-01]: TTS stopSpeaking fires after sessionStates[sid] = .working so Combine sink resolves state correctly before TTS stops
-- [Phase 38-01]: isPermissionPrompt matches eventName == PermissionRequest to fix connection storage for PermissionRequest hook events
+- [v7.0]: HTTP hooks use NWListener (localhost only); port written to ~/.claude/cc-beeper/port on startup, deleted on quit
+- [v7.0]: Hook commands use curl -d @- to pipe stdin JSON, -o /dev/null, || true for silent failure
+- [v7.0]: LCD priority: ERROR > APPROVE? > INPUT? > LISTENING > SPEAKING > WORKING > DONE > IDLE
+- [v7.0]: PermissionPreset enum drives all permission mode I/O
+- [v7.0]: Notification hook is blocking (not async) — Claude Code routes permission_prompt via Notification
+- [v1.0 start]: Functional audit (Phase 39) is the prerequisite gate — decomposing broken code makes bugs untraceable
+- [v1.0 start]: Decomposition order: SessionTracker → PermissionController → HotkeyManager → HookDispatcher → ClaudeMonitor slim-down
+- [v1.0 start]: HTTP auth token required (unauthenticated localhost server is a security gap)
+- [v1.0 start]: Distribution Phase 45 depends on Phase 39 being audited clean, not on decomposition
+- [v1.0 start]: FocusService (Phase 44) consolidates duplicated terminalBundleIDs from VoiceService + ClaudeMonitor
 
 ### Pending Todos
 
@@ -77,10 +67,12 @@ None.
 
 ### Blockers/Concerns
 
-- Phase 33 (v6.0 Settings & Onboarding) is still not started — does not block v7.0 phases, which start at 34
+- Phase 44 (FocusService): Ghostty AXUIElement tab bar element roles are undocumented — needs Accessibility Inspector inspection before implementation. Research flag from SUMMARY.md.
+- Phase 44 (FocusService): Cursor bundle ID `com.todesktop.230313mzl4w4u92` may change with major Cursor versions — verify before shipping.
+- Phase 44 (FocusService): JetBrains non-IntelliJ bundle IDs (WebStorm, GoLand, etc.) are pattern-derived — verify with `mdls` before hardcoding.
 
 ## Session Continuity
 
-Last session: 2026-03-31T07:40:39.530Z
-Stopped at: Completed 38-visibility-spectrum 38-01-PLAN.md
-Resume file: None
+Last session: 2026-03-31T17:39:31.427Z
+Stopped at: Phase 39 context gathered
+Resume file: .planning/phases/39-functional-audit-bug-fixes/39-CONTEXT.md

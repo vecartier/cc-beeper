@@ -436,39 +436,6 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         refocusPreviousApp()
     }
 
-    /// Injects text into the terminal WITHOUT pressing Enter.
-    /// Retained for potential future use (not used by Whisper batch path).
-    private func injectTextOnly(_ text: String) {
-        guard !text.isEmpty else { return }
-
-        let utf16 = Array(text.utf16)
-        if utf16.count <= 200 {
-            guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true),
-                  let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: false) else { return }
-            keyDown.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
-            keyUp.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: utf16)
-            keyDown.flags = []
-            keyUp.flags = []
-            keyDown.post(tap: .cghidEventTap)
-            keyUp.post(tap: .cghidEventTap)
-        } else {
-            let pb = NSPasteboard.general
-            let old = pb.string(forType: .string)
-            pb.clearContents()
-            pb.setString(text, forType: .string)
-            guard let down = CGEvent(keyboardEventSource: nil, virtualKey: 9, keyDown: true),
-                  let up = CGEvent(keyboardEventSource: nil, virtualKey: 9, keyDown: false) else { return }
-            down.flags = .maskCommand
-            up.flags = .maskCommand
-            down.post(tap: .cghidEventTap)
-            up.post(tap: .cghidEventTap)
-            usleep(100_000)
-            if let old { pb.clearContents(); pb.setString(old, forType: .string) }
-        }
-
-        log("injected (no submit): '\(text)'")
-    }
-
     // MARK: - Terminal Focus
 
     /// Focus a terminal app and wait for it to become frontmost via NSWorkspace notification (FRAG-01).
