@@ -51,7 +51,7 @@ enum ClaudeState: Equatable {
 
 // MARK: - Permission Mode
 
-/// Reflects the `permission_mode` field in ~/.claude/settings.json.
+/// Reflects `permissions.defaultMode` in ~/.claude/settings.json.
 /// Phase 37 builds the write path and UI — this is read-only.
 enum PermissionMode: Equatable {
     case cautious   // "default" or field missing
@@ -62,15 +62,27 @@ enum PermissionMode: Equatable {
 private func readPermissionMode() -> PermissionMode {
     let path = NSHomeDirectory() + "/.claude/settings.json"
     guard let data = FileManager.default.contents(atPath: path),
-          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-          let mode = json["permission_mode"] as? String else {
+          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
         return .cautious
     }
-    switch mode {
-    case "plan": return .guided
-    case "bypass": return .bypass
-    default: return .cautious
+    // Read from permissions.defaultMode (the correct Claude Code field)
+    if let perms = json["permissions"] as? [String: Any],
+       let mode = perms["defaultMode"] as? String {
+        switch mode {
+        case "plan": return .guided
+        case "bypassPermissions": return .bypass
+        default: return .cautious
+        }
     }
+    // Legacy fallback
+    if let mode = json["permission_mode"] as? String {
+        switch mode {
+        case "plan": return .guided
+        case "bypass": return .bypass
+        default: break
+        }
+    }
+    return .cautious
 }
 
 // MARK: - Pending Permission
@@ -92,9 +104,8 @@ final class ClaudeMonitor: ObservableObject {
     private static let autoApproveResponse: [String: Any] = [
         "_send_immediately": true,
         "hookSpecificOutput": [
-            "hookEventName": "Notification",
-            "decision": "allow",
-            "updatedPermissions": ["allow": true, "reason": "Auto-approved by CC-Beeper"]
+            "hookEventName": "PermissionRequest",
+            "decision": ["behavior": "allow"]
         ]
     ]
 
@@ -290,6 +301,8 @@ final class ClaudeMonitor: ObservableObject {
         widgetSize = WidgetSize(rawValue: UserDefaults.standard.string(forKey: "widgetSize") ?? "") ?? .large
         currentPreset = PermissionPresetWriter.readCurrentPreset()
         isSettingsMalformed = PermissionPresetWriter.isSettingsMalformed()
+        // Migrate legacy settings.json fields on first launch with new format
+        PermissionPresetWriter.migrateLegacyFields()
         ensureIPCDir()
         httpServer.start { [weak self] payload in
             guard let self else { return nil }
@@ -627,13 +640,13 @@ final class ClaudeMonitor: ObservableObject {
     // MARK: Actions
 
     func respondToPermission(allow: Bool) {
+        let decision: [String: Any] = allow
+            ? ["behavior": "allow"]
+            : ["behavior": "deny", "message": "Denied via CC-Beeper"]
         let response: [String: Any] = [
             "hookSpecificOutput": [
-                "hookEventName": "Notification",
-                "decision": allow ? "allow" : "deny",
-                "updatedPermissions": allow
-                    ? ["allow": true, "reason": "Approved via CC-Beeper"]
-                    : ["deny": true, "reason": "Denied via CC-Beeper"]
+                "hookEventName": "PermissionRequest",
+                "decision": decision
             ]
         ]
         httpServer.sendPermissionResponse(response)

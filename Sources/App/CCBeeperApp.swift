@@ -31,6 +31,14 @@ struct CCBeeperApp: App {
                         Self.hideMainWindow()
                         openWindow(id: "onboarding")
                     }
+                } else if monitor.widgetSize == .menuOnly {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        Self.hideMainWindow()
+                    }
+                } else if monitor.widgetSize == .compact {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        Self.resizeMainWindow(to: NSSize(width: 300, height: 193))
+                    }
                 }
             }
         }

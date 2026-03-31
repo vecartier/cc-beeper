@@ -14,13 +14,15 @@ import Foundation
 private enum TestPermissionPreset: String, CaseIterable {
     case cautious, relaxed, trusted, yolo
 
-    var permissionModeValue: String {
+    /// The value to write to `permissions.defaultMode` in settings.json.
+    var defaultModeValue: String? {
         switch self {
-        case .cautious, .relaxed, .trusted: return "default"
-        case .yolo: return "bypass"
+        case .cautious, .relaxed, .trusted: return nil
+        case .yolo: return "bypassPermissions"
         }
     }
 
+    /// Tools auto-approved by CC-Beeper via hook responses (not written to settings.json).
     var allowedTools: [String]? {
         switch self {
         case .cautious: return nil
@@ -55,12 +57,20 @@ private func applyPreset(
         settings = parsed
     }
 
-    settings["permission_mode"] = preset.permissionModeValue
-    if let tools = preset.allowedTools {
-        settings["allowedTools"] = tools
+    // Get or create permissions object
+    var perms = settings["permissions"] as? [String: Any] ?? [:]
+
+    if let mode = preset.defaultModeValue {
+        perms["defaultMode"] = mode
     } else {
-        settings.removeValue(forKey: "allowedTools")
+        perms.removeValue(forKey: "defaultMode")
     }
+
+    settings["permissions"] = perms
+
+    // Clean up legacy fields
+    settings.removeValue(forKey: "permission_mode")
+    settings.removeValue(forKey: "allowedTools")
 
     let data = try JSONSerialization.data(withJSONObject: settings, options: [.prettyPrinted])
 
@@ -82,7 +92,7 @@ private func applyPreset(
     return parsed
 }
 
-/// Replicates the PermissionPresetWriter.readCurrentPreset algorithm from a file path.
+/// Replicates the readCurrentPreset fallback logic (settings.json only, no UserDefaults).
 private func readPreset(from settingsPath: String) -> TestPermissionPreset {
     let fm = FileManager.default
     guard fm.fileExists(atPath: settingsPath),
@@ -91,17 +101,18 @@ private func readPreset(from settingsPath: String) -> TestPermissionPreset {
         return .cautious
     }
 
+    // Check permissions.defaultMode
+    if let perms = json["permissions"] as? [String: Any],
+       let mode = perms["defaultMode"] as? String,
+       mode == "bypassPermissions" {
+        return .yolo
+    }
+
+    // Legacy fallback
     if let mode = json["permission_mode"] as? String, mode == "bypass" {
         return .yolo
     }
 
-    let allowedTools = json["allowedTools"] as? [String] ?? []
-    if allowedTools.contains("Write") {
-        return .trusted
-    }
-    if allowedTools.contains("Read") {
-        return .relaxed
-    }
     return .cautious
 }
 
@@ -137,48 +148,49 @@ final class PermissionPresetWriterTests: XCTestCase {
         XCTAssertEqual(TestPermissionPreset.allCases.count, 4)
     }
 
-    // MARK: 2. Write: cautious
+    // MARK: 2. Write: cautious — no defaultMode, no legacy fields
 
-    func testCautiousWritesDefaultModeNoAllowedTools() throws {
+    func testCautiousWritesNoDefaultMode() throws {
         let path = tempDir.appendingPathComponent("settings.json").path
         let result = try applyPreset(.cautious, to: path)
 
-        XCTAssertEqual(result["permission_mode"] as? String, "default")
-        XCTAssertNil(result["allowedTools"], "cautious should remove allowedTools key")
+        let perms = result["permissions"] as? [String: Any] ?? [:]
+        XCTAssertNil(perms["defaultMode"], "cautious should not set defaultMode")
+        XCTAssertNil(result["permission_mode"], "legacy permission_mode should be removed")
+        XCTAssertNil(result["allowedTools"], "legacy allowedTools should be removed")
     }
 
-    // MARK: 3. Write: relaxed
+    // MARK: 3. Write: relaxed — no defaultMode (hooks handle auto-approve)
 
-    func testRelaxedWritesDefaultModeWithReadTools() throws {
+    func testRelaxedWritesNoDefaultMode() throws {
         let path = tempDir.appendingPathComponent("settings.json").path
         let result = try applyPreset(.relaxed, to: path)
 
-        XCTAssertEqual(result["permission_mode"] as? String, "default")
-        let tools = result["allowedTools"] as? [String]
-        XCTAssertEqual(tools, ["Read", "Glob", "Grep"])
+        let perms = result["permissions"] as? [String: Any] ?? [:]
+        XCTAssertNil(perms["defaultMode"], "relaxed should not set defaultMode")
+        XCTAssertNil(result["allowedTools"], "allowedTools should not be in settings.json")
     }
 
-    // MARK: 4. Write: trusted
+    // MARK: 4. Write: trusted — no defaultMode (hooks handle auto-approve)
 
-    func testTrustedWritesDefaultModeWithFileTools() throws {
+    func testTrustedWritesNoDefaultMode() throws {
         let path = tempDir.appendingPathComponent("settings.json").path
         let result = try applyPreset(.trusted, to: path)
 
-        XCTAssertEqual(result["permission_mode"] as? String, "default")
-        let tools = result["allowedTools"] as? [String] ?? []
-        XCTAssertTrue(tools.contains("Write"), "trusted should include Write")
-        XCTAssertTrue(tools.contains("Edit"), "trusted should include Edit")
-        XCTAssertTrue(tools.contains("NotebookEdit"), "trusted should include NotebookEdit")
+        let perms = result["permissions"] as? [String: Any] ?? [:]
+        XCTAssertNil(perms["defaultMode"], "trusted should not set defaultMode")
+        XCTAssertNil(result["allowedTools"], "allowedTools should not be in settings.json")
     }
 
-    // MARK: 5. Write: yolo
+    // MARK: 5. Write: yolo — sets bypassPermissions
 
-    func testYoloWritesBypassModeNoAllowedTools() throws {
+    func testYoloWritesBypassPermissions() throws {
         let path = tempDir.appendingPathComponent("settings.json").path
         let result = try applyPreset(.yolo, to: path)
 
-        XCTAssertEqual(result["permission_mode"] as? String, "bypass")
-        XCTAssertNil(result["allowedTools"], "yolo should not write allowedTools")
+        let perms = result["permissions"] as? [String: Any] ?? [:]
+        XCTAssertEqual(perms["defaultMode"] as? String, "bypassPermissions")
+        XCTAssertNil(result["permission_mode"], "legacy permission_mode should be removed")
     }
 
     // MARK: 6. Preserve other fields
@@ -188,18 +200,35 @@ final class PermissionPresetWriterTests: XCTestCase {
         let initial: [String: Any] = [
             "hooks": ["PreToolUse": []],
             "customField": "keep",
+            "permissions": ["allow": ["Bash(npm test)"]],
         ]
         let result = try applyPreset(.relaxed, to: path, existingContent: initial)
-
-        // Preset fields written
-        XCTAssertEqual(result["permission_mode"] as? String, "default")
 
         // Other fields preserved
         XCTAssertNotNil(result["hooks"], "hooks key should be preserved")
         XCTAssertEqual(result["customField"] as? String, "keep", "customField should be preserved")
+
+        // Existing permissions.allow preserved
+        let perms = result["permissions"] as? [String: Any] ?? [:]
+        let allow = perms["allow"] as? [String] ?? []
+        XCTAssertTrue(allow.contains("Bash(npm test)"), "existing permissions.allow should be preserved")
     }
 
-    // MARK: 7. Malformed detection: invalid JSON
+    // MARK: 7. Legacy cleanup — removes old fields
+
+    func testLegacyFieldsRemovedOnWrite() throws {
+        let path = tempDir.appendingPathComponent("settings.json").path
+        let initial: [String: Any] = [
+            "permission_mode": "bypass",
+            "allowedTools": ["Read", "Glob"],
+        ]
+        let result = try applyPreset(.cautious, to: path, existingContent: initial)
+
+        XCTAssertNil(result["permission_mode"], "legacy permission_mode should be removed")
+        XCTAssertNil(result["allowedTools"], "legacy allowedTools should be removed")
+    }
+
+    // MARK: 8. Malformed detection: invalid JSON
 
     func testMalformedJsonDetection() throws {
         let path = tempDir.appendingPathComponent("settings.json").path
@@ -209,20 +238,31 @@ final class PermissionPresetWriterTests: XCTestCase {
         XCTAssertTrue(isMalformed(at: path), "Malformed JSON should be detected")
     }
 
-    // MARK: 8. Malformed detection: valid JSON
+    // MARK: 9. Malformed detection: valid JSON
 
     func testValidJsonNotMalformed() throws {
         let path = tempDir.appendingPathComponent("settings.json").path
-        let validContent: [String: Any] = ["permission_mode": "default"]
+        let validContent: [String: Any] = ["permissions": ["defaultMode": "default"]]
         let data = try JSONSerialization.data(withJSONObject: validContent)
         try data.write(to: URL(fileURLWithPath: path))
 
         XCTAssertFalse(isMalformed(at: path), "Valid JSON should not be flagged as malformed")
     }
 
-    // MARK: 9. Read: bypass → yolo
+    // MARK: 10. Read: bypassPermissions → yolo
 
-    func testReadCurrentPresetFromBypass() throws {
+    func testReadCurrentPresetFromBypassPermissions() throws {
+        let path = tempDir.appendingPathComponent("settings.json").path
+        let content: [String: Any] = ["permissions": ["defaultMode": "bypassPermissions"]]
+        let data = try JSONSerialization.data(withJSONObject: content)
+        try data.write(to: URL(fileURLWithPath: path))
+
+        XCTAssertEqual(readPreset(from: path), .yolo)
+    }
+
+    // MARK: 11. Read: legacy bypass → yolo (migration)
+
+    func testReadCurrentPresetFromLegacyBypass() throws {
         let path = tempDir.appendingPathComponent("settings.json").path
         let content: [String: Any] = ["permission_mode": "bypass"]
         let data = try JSONSerialization.data(withJSONObject: content)
@@ -231,21 +271,7 @@ final class PermissionPresetWriterTests: XCTestCase {
         XCTAssertEqual(readPreset(from: path), .yolo)
     }
 
-    // MARK: 10. Read: default + read tools → relaxed
-
-    func testReadCurrentPresetFromDefaultWithAllowedTools() throws {
-        let path = tempDir.appendingPathComponent("settings.json").path
-        let content: [String: Any] = [
-            "permission_mode": "default",
-            "allowedTools": ["Read", "Glob", "Grep"],
-        ]
-        let data = try JSONSerialization.data(withJSONObject: content)
-        try data.write(to: URL(fileURLWithPath: path))
-
-        XCTAssertEqual(readPreset(from: path), .relaxed)
-    }
-
-    // MARK: 11. Read: empty JSON → cautious
+    // MARK: 12. Read: empty JSON → cautious
 
     func testReadCurrentPresetDefaultsToCautious() throws {
         let path = tempDir.appendingPathComponent("settings.json").path
@@ -256,29 +282,31 @@ final class PermissionPresetWriterTests: XCTestCase {
         XCTAssertEqual(readPreset(from: path), .cautious)
     }
 
-    // MARK: 12. AskUserQuestion classification
+    // MARK: 13. AskUserQuestion classification
 
     func testAskUserQuestionClassifiedAsInput() {
-        // Verify the classification rule: when hook_event_name == "PermissionRequest"
-        // and tool_name == "AskUserQuestion", the event should route to "needs_input",
-        // NOT "permission_prompt". We test the classification logic directly.
         let hookEventName = "PermissionRequest"
         let toolName = "AskUserQuestion"
 
-        // Replicate the production decision logic from ClaudeMonitor.handleHookPayload
         let isAskUserQuestion = (hookEventName == "PermissionRequest" && toolName == "AskUserQuestion")
         let classification = isAskUserQuestion ? "input" : "permission"
 
         XCTAssertEqual(classification, "input",
             "AskUserQuestion in PermissionRequest should classify as input, not permission")
-        XCTAssertTrue(isAskUserQuestion,
-            "AskUserQuestion PermissionRequest should be detected as a user question")
 
-        // Verify non-AskUserQuestion tools still classify as permission
         let otherTool = "Bash"
         let isOtherQuestion = (hookEventName == "PermissionRequest" && otherTool == "AskUserQuestion")
         let otherClassification = isOtherQuestion ? "input" : "permission"
         XCTAssertEqual(otherClassification, "permission",
             "Bash in PermissionRequest should classify as permission")
+    }
+
+    // MARK: 14. allowedTools enum values (hook-side only)
+
+    func testAllowedToolsForPresets() {
+        XCTAssertNil(TestPermissionPreset.cautious.allowedTools)
+        XCTAssertEqual(TestPermissionPreset.relaxed.allowedTools, ["Read", "Glob", "Grep"])
+        XCTAssertEqual(TestPermissionPreset.trusted.allowedTools, ["Read", "Glob", "Grep", "Write", "Edit", "NotebookEdit"])
+        XCTAssertNil(TestPermissionPreset.yolo.allowedTools)
     }
 }

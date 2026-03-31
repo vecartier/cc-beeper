@@ -105,6 +105,8 @@ final class HTTPHookServer {
         let tmp = Self.portFile + ".tmp"
         let content = "\(port)"
         try? content.write(toFile: tmp, atomically: false, encoding: .utf8)
+        // Remove existing port file first — moveItem fails if destination exists
+        try? FileManager.default.removeItem(atPath: Self.portFile)
         try? FileManager.default.moveItem(atPath: tmp, toPath: Self.portFile)
         try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: Self.portFile)
     }
