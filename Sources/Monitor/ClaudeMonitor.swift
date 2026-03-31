@@ -250,12 +250,7 @@ final class ClaudeMonitor: ObservableObject {
     // MARK: - Actions
 
     func goToConversation() {
-        for app in NSWorkspace.shared.runningApplications {
-            if let bid = app.bundleIdentifier, AppConstants.terminalBundleIDs.contains(bid) {
-                app.activate()
-                return
-            }
-        }
+        FocusService.focusClaudeSession()
     }
 
     func triggerSummary() {

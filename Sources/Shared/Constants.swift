@@ -15,6 +15,32 @@ enum AppConstants {
         "com.github.wez.wezterm",
     ]
 
+    // MARK: - IDE Bundle IDs (IDE-01, IDE-02)
+
+    /// IDEs with integrated terminals that can run Claude Code.
+    static let ideBundleIDs: Set<String> = [
+        "com.microsoft.VSCode",
+        "com.todesktop.230313mzl4w4u92",   // Cursor
+        "dev.zed.Zed",
+        "com.mitchellh.ghostty",
+    ]
+
+    /// JetBrains IDE family (IDE-02).
+    static let jetbrainsBundleIDs: Set<String> = [
+        "com.jetbrains.intellij",
+        "com.jetbrains.WebStorm",
+        "com.jetbrains.goland",
+        "com.jetbrains.pycharm",
+        "com.jetbrains.CLion",
+        "com.jetbrains.rider",
+        "com.jetbrains.rustrover",
+        "com.jetbrains.fleet",
+    ]
+
+    /// All apps that can host a Claude Code session (terminals + IDEs).
+    static let allFocusableBundleIDs: Set<String> =
+        terminalBundleIDs.union(ideBundleIDs).union(jetbrainsBundleIDs)
+
     // MARK: - Kokoro Paths (FRAG-08)
 
     /// Python interpreter inside the Kokoro TTS virtual environment.

@@ -21,8 +21,17 @@ private struct TestInjectionGuard {
         "com.github.wez.wezterm",
     ]
 
+    static let ideBundleIDs: Set<String> = [
+        "com.microsoft.VSCode",
+        "com.todesktop.230313mzl4w4u92",
+        "dev.zed.Zed",
+        "com.mitchellh.ghostty",
+    ]
+
+    static let allFocusable: Set<String> = terminalBundleIDs.union(ideBundleIDs)
+
     static func shouldInject(frontmostBundleID: String) -> Bool {
-        return terminalBundleIDs.contains(frontmostBundleID)
+        return allFocusable.contains(frontmostBundleID)
     }
 }
 
@@ -61,7 +70,7 @@ final class VoiceInjectionXCTests: XCTestCase {
 
     func testInjectionGuard_NonTerminalApp_ShouldAbort() {
         XCTAssertFalse(TestInjectionGuard.shouldInject(frontmostBundleID: "com.apple.Safari"))
-        XCTAssertFalse(TestInjectionGuard.shouldInject(frontmostBundleID: "com.microsoft.VSCode"))
+        XCTAssertFalse(TestInjectionGuard.shouldInject(frontmostBundleID: "com.apple.Finder"))
         XCTAssertFalse(TestInjectionGuard.shouldInject(frontmostBundleID: ""))
     }
 
@@ -69,8 +78,15 @@ final class VoiceInjectionXCTests: XCTestCase {
         XCTAssertEqual(TestInjectionGuard.terminalBundleIDs.count, 6, "Must have exactly 6 known terminals")
         for bid in TestInjectionGuard.terminalBundleIDs {
             XCTAssertTrue(TestInjectionGuard.shouldInject(frontmostBundleID: bid),
-                          "\(bid) must be recognized as a terminal")
+                          "\(bid) must be recognized as focusable")
         }
+    }
+
+    func testInjectionGuard_IDEApps_ShouldInject() {
+        XCTAssertTrue(TestInjectionGuard.shouldInject(frontmostBundleID: "com.microsoft.VSCode"))
+        XCTAssertTrue(TestInjectionGuard.shouldInject(frontmostBundleID: "com.todesktop.230313mzl4w4u92"))
+        XCTAssertTrue(TestInjectionGuard.shouldInject(frontmostBundleID: "dev.zed.Zed"))
+        XCTAssertTrue(TestInjectionGuard.shouldInject(frontmostBundleID: "com.mitchellh.ghostty"))
     }
 
     func testInjectionGuard_EmptyBundleID_ShouldAbort() {
