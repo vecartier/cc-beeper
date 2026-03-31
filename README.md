@@ -53,31 +53,64 @@ CC-Beeper is a floating macOS widget that sits on your desktop like a retro page
 
 ---
 
+## Features
+
+<table>
+<tr>
+<td align="center"><strong>Live LCD Monitor</strong></td>
+<td align="center"><strong>Permission Spectrum</strong></td>
+<td align="center"><strong>Widget Sizes</strong></td>
+<td align="center"><strong>Permissions</strong></td>
+</tr>
+<tr>
+<td>Floating retro pager shows Claude's live state with pixel-art animations — 8 distinct states, each with its own character and rhythm</td>
+<td>Switch between Strict, Relaxed, Cautious, and YOLO from the menu bar. One click, no JSON editing.</td>
+<td>Large (full beeper + buttons), Compact (LCD only), or Menu Only — pick your footprint</td>
+<td>Approve or deny file writes, shell commands, and network calls without touching the terminal</td>
+</tr>
+<tr>
+<td align="center"><strong>Voice Record</strong></td>
+<td align="center"><strong>Voice Reader</strong></td>
+<td align="center"><strong>Themes</strong></td>
+<td align="center"><strong>Global Hotkeys</strong></td>
+</tr>
+<tr>
+<td>Press record, dictate your message — CC-Beeper transcribes on-device and injects it into Claude Code</td>
+<td>CC-Beeper reads Claude's responses aloud using on-device AI voices (Kokoro) or Apple TTS</td>
+<td>10 color shells with dark mode support: black, blue, green, mint, orange, pink, purple, red, white, yellow</td>
+<td>Control everything from any app — accept, deny, record, mute, jump to terminal. AZERTY/QWERTZ compatible.</td>
+</tr>
+</table>
+
+---
+
 ## LCD States
 
 The LCD display is the heart of CC-Beeper. Each state has a distinct pixel-art character animation, color, and rhythm so you can tell what's happening from across the room.
 
 <!-- TODO: Strip image showing all states side by side -->
 
-| State | LCD Text | What it means | Animation |
-|-------|----------|---------------|-----------|
-| **IDLE** | `ZZZ...` | No active session. Beeper is sleeping. | Static — no animation. Dim backlight. |
-| **WORKING** | `WORKING` + tool context | Claude is busy — running commands, editing files, reasoning. | Horizontal scanner bar. Active green tint. |
-| **DONE** | `DONE!` | Claude finished. Your turn. | Brief green flash, then fades to idle after 3 seconds. |
-| **APPROVE?** | `APPROVE?` + tool context | Claude needs permission for a tool. **Go now.** | Fast blink (0.8s cycle). Warm yellow/orange. Urgent. |
-| **NEEDS INPUT** | `NEEDS INPUT` | Claude asked you a question. Not a permission — a real question. | Slow steady blink (2s cycle). Cool blue/cyan. Calm. |
-| **ERROR** | `ERROR` + reason | Something broke — rate limit, connection lost, crash. | Single red flash, then static hold until next event. |
-| **LISTENING** | `LISTENING` | Recording your voice — speak your message to Claude. | Mic pulse animation. |
-| **SPEAKING** | `SPEAKING` | Reading Claude's response aloud. | Speaker pulse animation. |
+| State | LCD Title | Subtitle examples | Animation |
+|-------|-----------|-------------------|-----------|
+| **SNOOZING** | `SNOOZING` | *Idle*, *Out cold*, *Gone fishing* + elapsed time | Static. Character sleeps. |
+| **WORKING** | `WORKING` | *Running*, *Tinkering*, *Crunching* + tool name | Character animates. Bounce on state entry. |
+| **DONE!** | `DONE!` | *That's a wrap*, *Over to you*, *Your turn* | 10 title blinks on entry, then fades to idle after 3 seconds. |
+| **ALLOW?** | `ALLOW?` | *Knocking*, *Requesting*, *Pretty please* + tool context | 10 title blinks on entry. Bounce. |
+| **INPUT?** | `INPUT?` | *Asks*, *Psst*, *Paging you* + message excerpt | 10 title blinks on entry. Bounce. |
+| **ERROR** | `ERROR` | *Oops*, *Uh oh*, *Welp* + error detail | Glitch effect (0.5s), then 10 title blinks. |
+| **LISTENING** | `LISTENING` | *Mic on*, *All ears*, *Go ahead* | Continuous gentle flash while recording. |
+| **RECAP** | `RECAP` | *Catching you up*, *Here's what happened*, *Quick summary* | Continuous gentle flash while speaking. |
 
-### APPROVE? vs NEEDS INPUT
+Every state transition triggers a bounce (character hops up and back down). Subtitles are randomly picked from a pool each time the state changes, so the LCD never feels repetitive.
 
-These are the two "go check your terminal" states. They look and feel completely different on purpose:
+### ALLOW? vs INPUT?
 
-- **APPROVE?** = Claude is **blocked and waiting**. Fast blink, warm color. The feeling is *go now*.
-- **NEEDS INPUT** = Claude **asked a question**. Slow blink, cool color. The feeling is *when you get a chance*.
+These are the two "go check your terminal" states:
 
-In YOLO mode, permission prompts (APPROVE?) are auto-approved silently. Questions (NEEDS INPUT) always surface — they're not permissions, they're Claude asking you something real.
+- **ALLOW?** = Claude needs permission for a tool. Approve or deny from the widget or with a hotkey.
+- **INPUT?** = Claude asked you a question. Not a permission — a real question you need to answer in the terminal.
+
+In YOLO mode, ALLOW? is auto-approved silently. INPUT? always surfaces — it's not a permission, it's Claude asking you something real.
 
 ---
 

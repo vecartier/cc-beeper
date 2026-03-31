@@ -43,16 +43,16 @@ Communication uses a local HTTP server (`HTTPHookServer.swift`) running on `127.
 
 The core orchestrator. Eight states with priority-based resolution:
 
-| Priority | State | LCD Text | Trigger |
-|----------|-------|----------|---------|
+| Priority | State | LCD Title | Trigger |
+|----------|-------|-----------|---------|
 | 7 | `.error` | ERROR | StopFailure event |
-| 6 | `.approveQuestion` | APPROVE? | Permission prompt (non-YOLO) |
-| 5 | `.needsInput` | NEEDS INPUT | Question/discussion from Claude |
+| 6 | `.approveQuestion` | ALLOW? | Permission prompt (non-YOLO) |
+| 5 | `.needsInput` | INPUT? | Question/discussion from Claude |
 | 4 | `.listening` | LISTENING | Voice recording active |
-| 3 | `.speaking` | SPEAKING | TTS reading response |
+| 3 | `.speaking` | RECAP | TTS reading response |
 | 2 | `.working` | WORKING | PreToolUse event |
 | 1 | `.done` | DONE! | Stop event (auto-transitions to idle) |
-| 0 | `.idle` | ZZZ... | No sessions for 60s |
+| 0 | `.idle` | SNOOZING | No sessions for 60s |
 
 Higher priority states override lower ones. Tracks multiple concurrent sessions via `sessionStates` dictionary.
 
