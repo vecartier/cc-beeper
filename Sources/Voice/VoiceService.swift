@@ -6,6 +6,16 @@ import ApplicationServices
 
 final class VoiceService: ObservableObject, @unchecked Sendable {
 
+    /// Known terminal bundle IDs for focus and injection safety (AUDIT-08).
+    private static let terminalBundleIDs: Set<String> = [
+        "com.apple.Terminal",
+        "com.googlecode.iterm2",
+        "dev.warp.Warp-Stable",
+        "io.alacritty",
+        "net.kovidgoyal.kitty",
+        "com.github.wez.wezterm",
+    ]
+
     @Published var isRecording: Bool = false
     @Published var lastTranscriptPreview: String = ""
     @Published var recordingError: String? = nil
@@ -382,6 +392,13 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
         focusTerminal()
         usleep(200_000) // wait for terminal focus
 
+        // Verify terminal is actually frontmost before posting CGEvents (AUDIT-08)
+        let frontBundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? ""
+        guard Self.terminalBundleIDs.contains(frontBundleID) else {
+            log("Injection aborted — frontmost app '\(frontBundleID)' is not a terminal")
+            return
+        }
+
         let utf16 = Array(text.utf16)
         if utf16.count <= 200 {
             guard let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: 0, keyDown: true),
@@ -399,6 +416,7 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
             let old = pb.string(forType: .string)
             pb.clearContents()
             pb.setString(text, forType: .string)
+            let afterWriteCount = pb.changeCount  // Capture AFTER our writes (AUDIT-07)
             guard let down = CGEvent(keyboardEventSource: nil, virtualKey: 9, keyDown: true),
                   let up = CGEvent(keyboardEventSource: nil, virtualKey: 9, keyDown: false) else { return }
             down.flags = .maskCommand
@@ -406,7 +424,12 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
             down.post(tap: .cghidEventTap)
             up.post(tap: .cghidEventTap)
             usleep(100_000)
-            if let old { pb.clearContents(); pb.setString(old, forType: .string) }
+            // Restore only if no external clipboard write occurred during paste window (AUDIT-07)
+            if pb.changeCount == afterWriteCount {
+                if let old { pb.clearContents(); pb.setString(old, forType: .string) }
+            } else {
+                log("Clipboard changed externally during injection — skipping restore")
+            }
         }
 
         // Press Enter
@@ -458,16 +481,8 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
 
     private func focusTerminal() {
         // Use NSRunningApplication.activate() — synchronous activation, no sleep needed (Bug 3 fix)
-        let terminalBundleIDs: Set<String> = [
-            "com.apple.Terminal",
-            "com.googlecode.iterm2",
-            "dev.warp.Warp-Stable",
-            "io.alacritty",
-            "net.kovidgoyal.kitty",
-            "com.github.wez.wezterm",
-        ]
         for app in NSWorkspace.shared.runningApplications {
-            guard let bid = app.bundleIdentifier, terminalBundleIDs.contains(bid) else { continue }
+            guard let bid = app.bundleIdentifier, Self.terminalBundleIDs.contains(bid) else { continue }
             app.activate(options: [.activateIgnoringOtherApps])
             log("focused terminal via activate: \(bid)")
             return

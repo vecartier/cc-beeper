@@ -76,6 +76,7 @@ struct HookInstaller {
 
         // Async hook event configurations: (event name, timeout in seconds, statusMessage or nil)
         let asyncConfigs: [(String, Int, String?)] = [
+            ("UserPromptSubmit", 5, nil),  // Fires when user submits prompt — prevents Stewing bug (AUDIT-03)
             ("PreToolUse",  5, "CC-Beeper monitoring\u{2026}"),  // \u2026 = ellipsis
             ("PostToolUse", 5, nil),
             ("Stop",        5, nil),

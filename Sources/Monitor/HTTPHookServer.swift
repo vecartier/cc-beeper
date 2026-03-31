@@ -35,11 +35,9 @@ final class HTTPHookServer {
     /// Per-connection receive buffers, keyed by ObjectIdentifier of the NWConnection.
     private var connectionBuffers: [ObjectIdentifier: Data] = [:]
 
-    /// Stored connection for blocking PermissionRequest / permission_prompt Notification flow (per D-01).
-    /// When a Notification with notification_type == "permission_prompt" arrives,
-    /// the connection is stored here. When respondToPermission() is called,
-    /// the HTTP response is sent to this connection.
-    private(set) var permissionConnection: NWConnection?
+    /// Ordered array of pending permission connections, keyed by session ID (AUDIT-04).
+    /// FIFO ordering: oldest request first. Array preserves insertion order (dictionaries do not).
+    private(set) var pendingPermissionConnections: [(sessionId: String, connection: NWConnection)] = []
 
     // MARK: - Public API
 
@@ -57,16 +55,47 @@ final class HTTPHookServer {
         activePort = 0
     }
 
-    /// Send a permission response to the deferred HTTP connection.
-    /// Must only be called after a permission_prompt Notification has been received.
-    func sendPermissionResponse(_ payload: [String: Any]) {
-        guard let connection = permissionConnection else { return }
-        permissionConnection = nil
+    /// Send a permission response to the deferred HTTP connection for a specific session (AUDIT-04).
+    /// Returns true if more pending connections remain (so caller can surface the next one).
+    @discardableResult
+    func sendPermissionResponse(_ payload: [String: Any], for sessionId: String) -> Bool {
+        guard let index = pendingPermissionConnections.firstIndex(where: { $0.sessionId == sessionId }) else { return false }
+        let connection = pendingPermissionConnections.remove(at: index).connection
         if let body = try? JSONSerialization.data(withJSONObject: payload) {
             sendResponse(200, body: body, on: connection)
         } else {
             sendResponse(200, body: Data(), on: connection)
         }
+        return !pendingPermissionConnections.isEmpty
+    }
+
+    /// Cancel and deny all orphaned permission connections for a session that moved on.
+    func cancelOrphanedPermission(for sessionId: String) {
+        let denyPayload: [String: Any] = [
+            "hookSpecificOutput": [
+                "hookEventName": "PermissionRequest",
+                "decision": ["behavior": "deny", "message": "Session moved on"]
+            ]
+        ]
+        pendingPermissionConnections.removeAll { entry in
+            if entry.sessionId == sessionId {
+                if let body = try? JSONSerialization.data(withJSONObject: denyPayload) {
+                    sendResponse(200, body: body, on: entry.connection)
+                } else {
+                    entry.connection.cancel()
+                }
+                return true
+            }
+            return false
+        }
+    }
+
+    /// Cancel all pending permission connections (used during cleanup).
+    func cancelAllPermissions() {
+        for entry in pendingPermissionConnections {
+            entry.connection.cancel()
+        }
+        pendingPermissionConnections.removeAll()
     }
 
     // MARK: - Instance Detection
@@ -304,7 +333,8 @@ final class HTTPHookServer {
                     || eventName == "PermissionRequest"
 
                 if isPermissionPrompt {
-                    permissionConnection = connection
+                    let sessionId = (payload["session_id"] as? String) ?? ""
+                    pendingPermissionConnections.append((sessionId: sessionId, connection: connection))
                     // Do NOT send response yet — waiting for user to approve/deny
                 } else {
                     if let body = try? JSONSerialization.data(withJSONObject: result) {

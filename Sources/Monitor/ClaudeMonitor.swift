@@ -446,6 +446,8 @@ final class ClaudeMonitor: ObservableObject {
         // Translate hook_event_name to existing event types
         let eventType: String
         switch hookEventName {
+        case "UserPromptSubmit":
+            eventType = "pre_tool"  // Reuse working-state transition (AUDIT-03)
         case "PreToolUse":
             eventType = "pre_tool"
         case "PostToolUse":
@@ -512,6 +514,20 @@ final class ClaudeMonitor: ObservableObject {
                     self?.authFlashMessage = nil
                 }
                 return nil
+
+            case "idle_prompt":
+                // idle_prompt means Claude finished and is waiting for user — this is DONE,
+                // not INPUT?. Route to done to match the session's actual state (AUDIT-01).
+                let syntheticEvent: [String: Any] = [
+                    "event": "stop",
+                    "sid": sessionId,
+                    "ts": ts,
+                ]
+                if let json = try? JSONSerialization.data(withJSONObject: syntheticEvent),
+                   let jsonStr = String(data: json, encoding: .utf8) {
+                    processEvent(jsonStr)
+                }
+                return nil  // Async — no response needed
 
             default:
                 // Unknown type — default to NEEDS INPUT (per D-12, INP-03)
@@ -640,6 +656,7 @@ final class ClaudeMonitor: ObservableObject {
     // MARK: Actions
 
     func respondToPermission(allow: Bool) {
+        guard let permission = pendingPermission else { return }
         let decision: [String: Any] = allow
             ? ["behavior": "allow"]
             : ["behavior": "deny", "message": "Denied via CC-Beeper"]
@@ -649,11 +666,21 @@ final class ClaudeMonitor: ObservableObject {
                 "decision": decision
             ]
         ]
-        httpServer.sendPermissionResponse(response)
+        let hasMore = httpServer.sendPermissionResponse(response, for: permission.id)
 
         pendingPermission = nil
         awaitingUserAction = false
-        state = allow ? .working : .done
+
+        if hasMore {
+            // FIFO: surface next pending permission request (AUDIT-04)
+            if let next = httpServer.pendingPermissionConnections.first {
+                pendingPermission = PendingPermission(id: next.sessionId, tool: "", summary: "Pending permission")
+                awaitingUserAction = true
+                state = .approveQuestion
+            }
+        } else {
+            state = allow ? .working : .done
+        }
     }
 
     func goToConversation() {
@@ -700,11 +727,11 @@ final class ClaudeMonitor: ObservableObject {
             idleWork?.cancel()
             let tool = event["tool"] as? String ?? ""
             let summary = event["summary"] as? String ?? tool.lowercased()
-            // Use sessionId as the permission ID (no more pending.json ID)
-            pendingPermission = PendingPermission(id: sid, tool: tool, summary: summary)
             setupGlobalHotkeys()
 
             if currentPreset == .yolo {
+                // YOLO auto-approve needs pendingPermission set for respondToPermission
+                pendingPermission = PendingPermission(id: sid, tool: tool, summary: summary)
                 Task { @MainActor [weak self] in
                     try? await Task.sleep(nanoseconds: 300_000_000)
                     self?.respondToPermission(allow: true)
@@ -712,10 +739,16 @@ final class ClaudeMonitor: ObservableObject {
             } else {
                 if !sid.isEmpty { sessionStates[sid] = .approveQuestion }
                 sessionCount = sessionStates.count
-                awaitingUserAction = true
-                thinkingStartTime = Date() // Reset timer for each new permission/question
-                state = .approveQuestion
-                playAlert()
+                // Only show this permission if no other permission is currently displayed (FIFO)
+                if pendingPermission == nil {
+                    pendingPermission = PendingPermission(id: sid, tool: tool, summary: summary)
+                    awaitingUserAction = true
+                    thinkingStartTime = Date()
+                    state = .approveQuestion
+                    playAlert()
+                }
+                // If pendingPermission is already set, this request is queued in
+                // httpServer.pendingPermissionConnections and will surface when the current one resolves
             }
             return
         }
@@ -736,12 +769,19 @@ final class ClaudeMonitor: ObservableObject {
         // If we're awaiting user action but Claude is working again,
         // the permission was resolved elsewhere (user accepted in terminal, or hook timed out).
         if awaitingUserAction && (type == "pre_tool" || type == "post_tool" || type == "stop" || type == "stop_failure") {
-            // Claude moved on — permission was resolved elsewhere (terminal or timeout)
-            awaitingUserAction = false
-            pendingPermission = nil
-            httpServer.permissionConnection?.cancel()
-            // Reset state so priority check doesn't block the incoming event
-            state = .idle
+            // Claude moved on for THIS session — clean up its orphaned permission connection (AUDIT-04)
+            httpServer.cancelOrphanedPermission(for: sid)
+            if httpServer.pendingPermissionConnections.isEmpty {
+                awaitingUserAction = false
+                pendingPermission = nil
+                state = .idle
+            } else {
+                // Other sessions still have pending permissions — surface the next one
+                if let next = httpServer.pendingPermissionConnections.first {
+                    pendingPermission = PendingPermission(id: next.sessionId, tool: "", summary: "Pending permission")
+                    state = .approveQuestion
+                }
+            }
         }
 
         idleWork?.cancel()

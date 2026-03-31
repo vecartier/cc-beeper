@@ -10,11 +10,12 @@
 - ✅ **v4.0 Offline Voice** - Phases 23-26 (shipped 2026-03-27)
 - ✅ **v5.0 Polish & Distribution** - Phases 27-28 (shipped 2026-03-27)
 - ✅ **v6.0 Multilingual Voice** - Phases 30-33 (shipped 2026-03-29)
-- 📋 **v7.0 Pre-Launch** - Phases 34-40 (planned)
+- ✅ **v7.0 Pre-Launch** - Phases 35-38 (shipped 2026-03-31)
+- 🚧 **v1.0 Public Launch** - Phases 39-46 (in progress)
 
 ## Overview
 
-v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and auto-speak summaries. v3.0 Public Launch made CC-Beeper ready for strangers: code cleanup, onboarding, rich menu popover, Groq voice, visual polish, DMG distribution, and a landing-style GitHub README. v3.1 Polish & Fixes erases all Claumagotchi traces (laptop-wide and in-repo), fixes the broken auto-speak TTS flow, refreshes the GitHub presence with new cover art and rewritten copy, and adds a beeper-shaped menu bar icon. v4.0 Offline Voice replaces all cloud voice APIs with on-device AI: FluidAudio brings Parakeet TDT for transcription and Kokoro-82M for TTS, eliminating every API key dependency. v5.0 Polish & Distribution fixes the two voice reliability regressions introduced by the offline models, renames "Auto-speak" to "VoiceOver" throughout the app, and ships a branded DMG + Homebrew tap. v6.0 Multilingual Voice replaces Parakeet with Whisper for 99-language speech recognition, extends Kokoro to all 9 supported language codes, introduces a unified language preference, and adds language selection to both Settings and onboarding. v7.0 Pre-Launch replaces the fragile Python/JSONL IPC with HTTP hooks, expands the LCD from 4 to 7 states with proper input/permission differentiation, adds a permission mode spectrum with YOLO sunglasses, polishes onboarding for the HTTP migration path, and overhauls the README for public launch.
+v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and auto-speak summaries. v3.0 Public Launch made CC-Beeper ready for strangers: code cleanup, onboarding, rich menu popover, Groq voice, visual polish, DMG distribution, and a landing-style GitHub README. v3.1 Polish & Fixes erases all Claumagotchi traces (laptop-wide and in-repo), fixes the broken auto-speak TTS flow, refreshes the GitHub presence with new cover art and rewritten copy, and adds a beeper-shaped menu bar icon. v4.0 Offline Voice replaces all cloud voice APIs with on-device AI: FluidAudio brings Parakeet TDT for transcription and Kokoro-82M for TTS, eliminating every API key dependency. v5.0 Polish & Distribution fixes the two voice reliability regressions introduced by the offline models, renames "Auto-speak" to "VoiceOver" throughout the app, and ships a branded DMG + Homebrew tap. v6.0 Multilingual Voice replaces Parakeet with Whisper for 99-language speech recognition, extends Kokoro to all 9 supported language codes, introduces a unified language preference, and adds language selection to both Settings and onboarding. v7.0 Pre-Launch replaces the fragile Python/JSONL IPC with HTTP hooks, expands the LCD from 4 to 8 states with proper input/permission differentiation, adds a permission mode spectrum with YOLO rabbit, and ships compact + menu-only view modes. v1.0 Public Launch is the first real public release: full functional audit, internal architecture overhaul, security hardening, IDE support, professional distribution, and GitHub release v1.0.
 
 ## Phases
 
@@ -196,16 +197,27 @@ v1.1 hardened the foundation. v2.0 Voice Loop added hands-free voice I/O and aut
 
 </details>
 
-### v7.0 Pre-Launch (Planned)
+### v7.0 Pre-Launch (Complete)
 
-**Milestone Goal:** Replace the fragile Python/JSONL IPC with HTTP hooks, expand the LCD from 4 to 7 states with proper input/permission differentiation, add a permission mode spectrum with YOLO sunglasses, polish onboarding for the HTTP migration path, and overhaul the README for public launch.
+**Milestone Goal:** Replace the fragile Python/JSONL IPC with HTTP hooks, expand the LCD from 4 to 8 states with proper input/permission differentiation, add a permission mode spectrum with YOLO rabbit, polish onboarding for the HTTP migration path, and overhaul the README for public launch.
 
-- [x] **Phase 35: HTTP Hooks + Hook Improvements** - Replace Python JSONL IPC with NWListener HTTP server; hook commands use curl; all hooks async with timeout (foundation for LCD and onboarding) (completed 2026-03-29)
-- [ ] **Phase 36: LCD States + Input Classification + Animations** - 7-state LCD with tool/permission/input context; state priority enforcement; input vs permission differentiation; per-state animations (no color changes)
+- [x] **Phase 35: HTTP Hooks + Hook Improvements** - Replace Python JSONL IPC with NWListener HTTP server; hook commands use curl; all hooks async with timeout (completed 2026-03-29)
+- [x] **Phase 36: LCD States + Input Classification + Animations** - 8-state LCD with tool/permission/input context; state priority enforcement; input vs permission differentiation; per-state animations (completed 2026-03-30)
 - [x] **Phase 37: Permission Spectrum + YOLO Rabbit** - 4-mode segmented control in popover; atomic settings.json writes; rabbit icon in YOLO modes (completed 2026-03-30)
-- [x] **Phase 38: Visibility Spectrum** - 3-mode visibility (Full beeper with buttons / Compact screen-only with small shells / Menu bar only); 10 small shell PNGs; hotkey-only control in compact+menu modes; rabbit icon replaces YOLO sunglasses (completed 2026-03-31)
-- [ ] **Phase 39: Onboarding Polish** - HTTP migration detection and upgrade path; server startup confirmation; preserve voice/language steps
-- [ ] **Phase 40: README Overhaul** - Hero GIF, feature screenshots, install instructions, how-it-works paragraph
+- [x] **Phase 38: Visibility Spectrum** - 3-mode visibility (Full beeper / Compact screen-only / Menu bar only); 10 small shell PNGs; hotkey-only control in compact+menu modes (completed 2026-03-31)
+
+### 🚧 v1.0 Public Launch (In Progress)
+
+**Milestone Goal:** Full functional audit, internal quality overhaul, security hardening, IDE support, professional distribution, and polish for the first real public release — GitHub release tagged v1.0.
+
+- [ ] **Phase 39: Functional Audit & Bug Fixes** — Verify all 8 LCD states and fix correctness bugs before touching architecture
+- [ ] **Phase 40: Fragility Fixes & Constant Consolidation** — Eliminate usleep, silent failures, and scattered hardcoded values
+- [ ] **Phase 41: ClaudeMonitor Decomposition & Dead Code** — Extract 4 sub-components and remove dead code that creates noise
+- [ ] **Phase 42: Security — HTTP Auth Token** — Add bearer token authentication to the hook server
+- [ ] **Phase 43: Protocol DI & Test Coverage** — Define protocols for testable seams and cover the state machine, dispatcher, and permission logic
+- [ ] **Phase 44: FocusService + IDE & Tab Focus** — Unified focus routing with tab-level terminal targeting and IDE support
+- [ ] **Phase 45: Distribution** — Branded DMG drag-to-install and Homebrew cask on custom tap
+- [ ] **Phase 46: Polish & Launch** — Onboarding enhancements, settings cleanup, README finalization, and GitHub release v1.0
 
 ## Phase Details
 
@@ -479,29 +491,104 @@ Plans:
 - [ ] 38-01-PLAN.md — Copy 10 small shell PNGs, add ThemeManager.smallShellImageName, fix TTS interrupt on PreToolUse, fix HTTP permission connection for PermissionRequest
 - [ ] 38-02-PLAN.md — Create CompactView, wire 3-mode view routing in CCBeeperApp, add window resize with top-left anchoring, human visual verification
 
+---
 
-### Phase 39: Onboarding Polish
-**Goal**: Returning users with old JSONL-based hooks see a clear migration path; new users start CC-Beeper with the HTTP server confirmed running; all existing voice and language steps are preserved
-**Depends on**: Phase 35, Phase 37
-**Requirements**: ONBD-01, ONBD-02, ONBD-03, ONBD-04
+### Phase 39: Functional Audit & Bug Fixes
+**Goal**: All 8 LCD states trigger correctly from real Claude Code hook events and concurrent session priority resolves accurately — the state machine is verified correct before any structural changes
+**Depends on**: Nothing (first phase of v1.0 — establishes correctness baseline before architecture work begins)
+**Requirements**: AUDIT-01, AUDIT-02, AUDIT-03, AUDIT-04, AUDIT-05, AUDIT-06, AUDIT-07, AUDIT-08
 **Success Criteria** (what must be TRUE):
-  1. A user with old cc-beeper-hook.py entries in settings.json sees a migration step in onboarding that shows what will change and upgrades to HTTP hooks on confirmation
-  2. If old hooks have been manually modified (partial match — contains cc-beeper but differs from expected), onboarding flags them: "These look like CC-Beeper hooks but have been modified — migrate anyway or keep yours?"
-  3. Onboarding completes only after confirming the HTTP server is listening — a user who sees the Done screen can be confident the HTTP endpoint is active
-  4. Voice provider selection, language preference, and model download steps appear in onboarding exactly as they did before — no regression in voice onboarding
-  5. If settings.json is malformed when onboarding tries to write HTTP hooks, onboarding surfaces a clear error and does not corrupt the file
+  1. Sending a PreToolUse hook fires WORKING state, Stop fires DONE, StopFailure fires ERROR — no wrong-state display across all 8 states
+  2. When two Claude sessions run simultaneously, the higher-priority state wins on the LCD and the lower-priority state is preserved until resolved
+  3. The "Stewing/thinking" state from Claude Code displays as WORKING, not SNOOZING
+  4. Two simultaneous permission requests from different sessions both appear in the pending queue without one overwriting the other
+  5. A Kokoro subprocess crash triggers automatic fallback to Apple TTS and the next TTS request restarts the Kokoro process
+**Plans**: 3 plans
+
+Plans:
+- [ ] 39-01-PLAN.md — State machine audit: register UserPromptSubmit hook, fix idle_prompt, extend 8-state tests
+- [ ] 39-02-PLAN.md — Permission concurrency: replace single-slot with FIFO array, orphan cleanup, session-aware routing
+- [ ] 39-03-PLAN.md — TTS crash recovery + voice injection safety: terminationHandler, restart logic, changeCount guard, frontmost app check
+
+### Phase 40: Fragility Fixes & Constant Consolidation
+**Goal**: All timing-sensitive code is event-driven, every silent failure surfaces a visible error, and every hardcoded value has exactly one canonical definition
+**Depends on**: Phase 39 (audit confirms what is broken before replacing fragile patterns)
+**Requirements**: FRAG-01, FRAG-02, FRAG-03, FRAG-04, FRAG-05, FRAG-06, FRAG-07, FRAG-08, FRAG-09
+**Success Criteria** (what must be TRUE):
+  1. Option-T triggers terminal focus without any usleep delay — activation waits for NSWorkspace.didActivateApplicationNotification
+  2. Clipboard paste succeeds even when the user modifies clipboard contents between copy and paste (changeCount comparison prevents overwrite)
+  3. A port file write failure, NWListener startup failure, or AppMover copy failure each produce a visible error (LCD error state or alert) instead of silently passing
+  4. Terminal bundle IDs, LCD color hex values, and the Kokoro venv path each appear in exactly one place in the codebase
+**Plans**: TBD
+
+### Phase 41: ClaudeMonitor Decomposition & Dead Code
+**Goal**: ClaudeMonitor is a thin orchestrator under 250 lines, four focused sub-components exist as separate files, and all dead code is removed
+**Depends on**: Phase 40 (constants consolidated and fragility fixed before components are extracted to new files)
+**Requirements**: ARCH-01, ARCH-02, ARCH-03, ARCH-04, ARCH-05, ARCH-06, ARCH-07, ARCH-08, ARCH-09
+**Success Criteria** (what must be TRUE):
+  1. SessionTracker, HookDispatcher, PermissionController, and HotkeyManager each exist as separate Swift files under Sources/Monitor/
+  2. ClaudeMonitor.swift is under 250 lines and contains no state management logic, payload parsing, or hotkey registration
+  3. PocketTTSService, the legacy cc-beeper-hook.py script, VoiceService.injectTextOnly, and all stale UserDefaults migration blocks are absent from the project
+  4. The app builds with zero warnings and passes a full permission-flow smoke test (hook fires → LCD shows ALLOW? → user clicks approve → Claude Code receives response)
+**Plans**: TBD
+
+### Phase 42: Security — HTTP Auth Token
+**Goal**: The CC-Beeper hook server rejects any request that does not carry the correct bearer token — unauthenticated curl calls from other processes are refused with a 401
+**Depends on**: Phase 41 (HTTPHookServer interface is finalized during decomposition before the auth layer is added on top)
+**Requirements**: SEC-01, SEC-02, SEC-03, SEC-04
+**Success Criteria** (what must be TRUE):
+  1. A raw curl POST to the hook endpoint without an Authorization header returns HTTP 401 and no state change occurs in the app
+  2. The bearer token file exists at ~/.claude/cc-beeper/token with 0o600 permissions after first launch and is not world-readable
+  3. Hook commands installed by HookInstaller include the Authorization: Bearer header and hook events continue to fire correctly end-to-end
+**Plans**: TBD
+
+### Phase 43: Protocol DI & Test Coverage
+**Goal**: Core systems have protocol-based seams that enable injection in tests, and the state machine, hook dispatcher, and permission logic each have passing unit tests
+**Depends on**: Phase 41 (extracted components must exist before protocols are defined for them and tests are written against them)
+**Requirements**: TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
+**Success Criteria** (what must be TRUE):
+  1. VoiceService, TTSService, and HTTPHookServer each have a corresponding Swift protocol used at their injection sites
+  2. All 8 LCD states and the priority-resolution logic pass unit tests — no state can be triggered by the wrong input or overwritten by a lower-priority state
+  3. All 6 hook event types route to the correct handler in HookDispatcher unit tests
+  4. All 4 permission presets produce the expected auto-approve, auto-deny, or ask behavior in PermissionController unit tests
+  5. A synthesized HTTP POST in a test harness produces the correct LCD state update, verifying the hook-to-LCD integration path end-to-end
+**Plans**: TBD
+
+### Phase 44: FocusService + IDE & Tab Focus
+**Goal**: Option-T focuses the exact terminal tab containing the active Claude session, falls back gracefully when tab targeting is unavailable, and works when Claude Code runs inside a VS Code, Cursor, Zed, JetBrains, or Ghostty IDE
+**Depends on**: Phase 41 (FocusService consolidates duplicated focus logic from VoiceService and ClaudeMonitor; those components must be extracted first)
+**Requirements**: IDE-01, IDE-02, IDE-03, IDE-04, IDE-05, TAB-01, TAB-02, TAB-03, TAB-04
+**Success Criteria** (what must be TRUE):
+  1. Option-T in iTerm2 raises the exact tab running the Claude session matched by session PID via AppleScript — not just the iTerm2 window
+  2. Option-T in Terminal.app raises the exact tab running the Claude session via AppleScript
+  3. Option-T in Ghostty focuses the correct tab by matching the working directory of the Claude process
+  4. When tab targeting is not possible (unsupported terminal or AppleScript failure), Option-T falls back to app-level activation with no error thrown
+  5. Option-T when Claude Code runs in VS Code, Cursor, Zed, or a JetBrains IDE focuses the correct IDE application
+  6. Voice recording injection works when an IDE terminal panel is focused — the IDE is activated, the terminal panel shortcut is sent, and text is injected
 **Plans**: TBD
 **UI hint**: yes
 
-### Phase 40: README Overhaul
-**Goal**: The GitHub README opens with a hero GIF showing the full LCD state cycle, features inline screenshots of key UI moments, and gives any Claude Code user everything they need to install and understand CC-Beeper in one read
-**Depends on**: Phase 39
-**Requirements**: GH-01, GH-02, GH-03
+### Phase 45: Distribution
+**Goal**: Users can install CC-Beeper with a single Homebrew command or by downloading a professional drag-to-install DMG from GitHub Releases
+**Depends on**: Phase 39 (app must be functional and audited before packaging for public distribution)
+**Requirements**: DIST-01, DIST-02, DIST-03, DIST-04
 **Success Criteria** (what must be TRUE):
-  1. The README opens with a hero GIF cycling IDLE → THINKING → WORKING → APPROVE? → DONE — a first-time visitor sees the beeper in action before reading a single word
-  2. Inline screenshots show the LCD state display, the permission mode segmented control, the YOLO sunglasses, and the menu bar presence
-  3. A first-time Claude Code user can install CC-Beeper (Homebrew or DMG), configure it, and understand how it works using only the README — no external docs needed
+  1. The DMG mounts to show a branded background with the CC-Beeper app icon and an Applications folder alias positioned correctly for drag-to-install
+  2. Running `brew install --cask cc-beeper` on a clean machine downloads and installs CC-Beeper from the GitHub Releases DMG without errors
 **Plans**: TBD
+
+### Phase 46: Polish & Launch
+**Goal**: Onboarding introduces new users to personalization options, the Settings window is clean, the README and GitHub repo are launch-ready, and v1.0 is tagged
+**Depends on**: Phase 45 (distribution must be ready before tagging the release), Phase 44 (IDE support must be complete for the README to document it accurately)
+**Requirements**: POLISH-01, POLISH-02, POLISH-03, POLISH-04, POLISH-05, POLISH-06, POLISH-07, POLISH-08
+**Success Criteria** (what must be TRUE):
+  1. A new user completing onboarding has selected a beeper color/theme, a widget size, and a permission preset before reaching the Done screen
+  2. Onboarding transitions are smooth and visuals are consistent — no layout jumps, mismatched button styles, or stale copy from prior milestones
+  3. The Settings window tabs are clean — no options for removed features, no duplicate labels, no references to PocketTTS or legacy Python hook
+  4. The GitHub README includes a hero GIF, feature screenshots, and copy-pasteable install instructions covering both Homebrew and DMG paths
+  5. The GitHub repository has no stale files, an accurate description, and a published v1.0 release tag with a changelog
+**Plans**: TBD
+**UI hint**: yes
 
 ## Progress
 
@@ -519,9 +606,13 @@ Note (v5.0): Phase 27 (STT Reliability) and Phase 28 (TTS Reliability + Rename) 
 
 Note (v6.0): Phase 30 (Whisper STT) and Phase 31 (Kokoro Multilingual) both depend only on Phase 29 and touch independent subsystems. They can execute in parallel. Phase 32 (Language Preference System) depends on both 30 and 31 being complete — the unified language preference requires both engines to be multilingual. Phase 33 (Settings & Onboarding) depends on Phase 32, as it surfaces the language system in UI.
 
-**Execution Order (v7.0):** 35 -> 36 + 37 (can run in parallel) -> 38 -> 39 -> 40
+**Execution Order (v7.0):** 35 -> 36 + 37 (can run in parallel) -> 38
 
-Note (v7.0): Phase 35 (HTTP Hooks) is the foundation — LCD states and onboarding both depend on its HTTP payload routing. Phase 36 (LCD States + Input Classification + Animations) and Phase 37 (Permission Spectrum + YOLO Sunglasses) both depend only on Phase 35 and touch independent subsystems — they can execute in parallel. Phase 39 (Onboarding Polish) depends on both Phase 35 and Phase 37 — it needs HTTP migration and permission spectrum complete. Phase 40 (README Overhaul) is last — it needs screenshots of the finished product.
+Note (v7.0): Phase 35 (HTTP Hooks) is the foundation — LCD states and onboarding both depend on its HTTP payload routing. Phase 36 (LCD States + Input Classification + Animations) and Phase 37 (Permission Spectrum + YOLO Rabbit) both depend only on Phase 35 and touch independent subsystems — they can execute in parallel. Phase 38 (Visibility Spectrum) depends on Phase 37 for the permission rendering integration.
+
+**Execution Order (v1.0):** 39 -> 40 -> 41 -> 42 -> 43 -> 44 -> 45 -> 46
+
+Note (v1.0): All phases are sequentially dependent. Phase 39 (Functional Audit) must run first — decomposing broken code makes bugs untraceable. Phase 40 (Fragility + Constants) consolidates scattered values before extraction moves them into new files. Phase 41 (Decomposition + Dead Code) creates the clean component boundaries that Phase 42 (Security), Phase 43 (Tests), and Phase 44 (FocusService) all depend on. Phase 45 (Distribution) requires a functionally audited app. Phase 46 (Polish + Launch) is last — it documents and tags a complete product.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -548,9 +639,15 @@ Note (v7.0): Phase 35 (HTTP Hooks) is the foundation — LCD states and onboardi
 | 31. Kokoro Multilingual | v6.0 Multilingual Voice | 2/2 | Complete | 2026-03-29 |
 | 32. Language Preference System | v6.0 Multilingual Voice | 2/2 | Complete | 2026-03-29 |
 | 33. Settings & Onboarding | v6.0 Multilingual Voice | 0/TBD | Not started | - |
-| 35. HTTP Hooks + Hook Improvements | v7.0 Pre-Launch | 2/3 | Complete    | 2026-03-29 |
+| 35. HTTP Hooks + Hook Improvements | v7.0 Pre-Launch | 2/3 | Complete | 2026-03-29 |
 | 36. LCD States + Input Classification + Animations | v7.0 Pre-Launch | 0/TBD | Not started | - |
-| 37. Permission Spectrum + YOLO Sunglasses | v7.0 Pre-Launch | 2/2 | Complete    | 2026-03-30 |
-| 38. Visibility Spectrum | v7.0 Pre-Launch | 0/2 | Complete    | 2026-03-31 |
-| 39. Onboarding Polish | v7.0 Pre-Launch | 0/TBD | Not started | - |
-| 40. README Overhaul | v7.0 Pre-Launch | 0/TBD | Not started | - |
+| 37. Permission Spectrum + YOLO Rabbit | v7.0 Pre-Launch | 2/2 | Complete | 2026-03-30 |
+| 38. Visibility Spectrum | v7.0 Pre-Launch | 0/2 | Complete | 2026-03-31 |
+| 39. Functional Audit & Bug Fixes | v1.0 Public Launch | 0/3 | In progress | - |
+| 40. Fragility Fixes & Constant Consolidation | v1.0 Public Launch | 0/TBD | Not started | - |
+| 41. ClaudeMonitor Decomposition & Dead Code | v1.0 Public Launch | 0/TBD | Not started | - |
+| 42. Security — HTTP Auth Token | v1.0 Public Launch | 0/TBD | Not started | - |
+| 43. Protocol DI & Test Coverage | v1.0 Public Launch | 0/TBD | Not started | - |
+| 44. FocusService + IDE & Tab Focus | v1.0 Public Launch | 0/TBD | Not started | - |
+| 45. Distribution | v1.0 Public Launch | 0/TBD | Not started | - |
+| 46. Polish & Launch | v1.0 Public Launch | 0/TBD | Not started | - |

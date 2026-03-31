@@ -118,6 +118,22 @@ final class TTSService: ObservableObject, @unchecked Sendable {
         kokoroProcess = process
         kokoroStdin = stdinPipe.fileHandleForWriting
 
+        process.terminationHandler = { [weak self] terminatedProcess in
+            DispatchQueue.main.async {
+                guard let self, self.kokoroProcess === terminatedProcess else { return }
+                // Unexpected crash — not intentional shutdown (AUDIT-05)
+                self.kokoroReady = false
+                self.kokoroProcess = nil
+                self.kokoroStdin = nil
+                if self.isSpeaking {
+                    self.audioPlayer?.stop()
+                    self.audioPlayer = nil
+                    self.isSpeaking = false
+                }
+                self.log("Kokoro: subprocess crashed (exit code \(terminatedProcess.terminationStatus))")
+            }
+        }
+
         // Set up file watcher for tts-output.wav
         setupOutputWatcher()
 
@@ -235,6 +251,11 @@ final class TTSService: ObservableObject, @unchecked Sendable {
         case "kokoro":
             if kokoroReady {
                 speakWithKokoro(text)
+            } else if kokoroProcess == nil {
+                // Process crashed or was never started — attempt restart (AUDIT-06)
+                log("Kokoro: process not running — attempting restart for TTS request")
+                pendingKokoroText = text
+                launchKokoro()
             } else {
                 log("Kokoro not ready — queuing speech")
                 pendingKokoroText = text

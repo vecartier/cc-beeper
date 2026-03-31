@@ -15,6 +15,7 @@ final class HookInstallerHTTPTests: XCTestCase {
 
     // Replicate event configs from HookInstaller (must stay in sync)
     private let asyncConfigs: [(String, Int, String?)] = [
+        ("UserPromptSubmit", 5, nil),
         ("PreToolUse",  5, "CC-Beeper monitoring\u{2026}"),
         ("PostToolUse", 5, nil),
         ("Stop",        5, nil),
@@ -119,7 +120,7 @@ final class HookInstallerHTTPTests: XCTestCase {
 
     /// All 4 async hook event configs must produce entries with async: true (HOOK-01).
     func testAllAsyncHooksHaveAsyncTrue() {
-        XCTAssertEqual(asyncConfigs.count, 4, "Expected exactly 4 async event configs")
+        XCTAssertEqual(asyncConfigs.count, 5, "Expected exactly 5 async event configs")
         for (event, timeout, statusMessage) in asyncConfigs {
             var hookEntry: [String: Any] = [
                 "type": "command",
@@ -135,7 +136,24 @@ final class HookInstallerHTTPTests: XCTestCase {
         }
     }
 
-    /// All 4 async hook event configs must have timeout value 5 (seconds, not 5000ms) (HOOK-01).
+    /// UserPromptSubmit must be registered as an async hook to fix the Stewing bug (AUDIT-03).
+    func testUserPromptSubmitIsRegistered() {
+        let eventNames = asyncConfigs.map(\.0)
+        XCTAssertTrue(eventNames.contains("UserPromptSubmit"),
+                      "UserPromptSubmit must be in asyncConfigs (AUDIT-03: Stewing bug fix)")
+    }
+
+    /// UserPromptSubmit must NOT have a statusMessage (it fires silently).
+    func testUserPromptSubmitHasNoStatusMessage() {
+        guard let config = asyncConfigs.first(where: { $0.0 == "UserPromptSubmit" }) else {
+            XCTFail("UserPromptSubmit must be in asyncConfigs")
+            return
+        }
+        XCTAssertNil(config.2, "UserPromptSubmit must NOT have a statusMessage")
+        XCTAssertEqual(config.1, 5, "UserPromptSubmit must have timeout: 5")
+    }
+
+    /// All 5 async hook event configs must have timeout value 5 (seconds, not 5000ms) (HOOK-01).
     func testAllAsyncHooksHaveTimeoutFiveSeconds() {
         for (event, timeout, _) in asyncConfigs {
             XCTAssertEqual(timeout, 5,
