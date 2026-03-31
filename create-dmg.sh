@@ -22,10 +22,12 @@ cp -R CC-Beeper.app "$STAGING/"
 ln -s /Applications "$STAGING/Applications"
 
 # Copy background image into hidden .background folder
+# Background image: place docs/dmg-background.png (660x400) to enable
 if [ -f "docs/dmg-background.png" ]; then
     cp docs/dmg-background.png "$STAGING/.background/dmg-background.png"
+    HAS_BG=true
 else
-    echo "Warning: docs/dmg-background.png not found — DMG will have no background"
+    HAS_BG=false
 fi
 
 # Create a read-write DMG for window styling
@@ -47,21 +49,28 @@ echo "Mounted at: $MOUNT_POINT (device: $DEV_NODE)"
 # Give Finder a moment to register the volume
 sleep 1
 
-# Apply window styling via AppleScript
-osascript << APPLESCRIPT
+# Build AppleScript for window styling
+BG_LINE=""
+if [ "$HAS_BG" = true ]; then
+    BG_LINE='set background picture of theViewOptions to file ".background:dmg-background.png"'
+fi
+
+# Apply window styling via AppleScript (non-fatal — may timeout in headless/CI environments)
+osascript << APPLESCRIPT || echo "Warning: AppleScript styling timed out — DMG layout may need manual adjustment"
 tell application "Finder"
     tell disk "$VOLUME_NAME"
         open
         set current view of container window to icon view
         set toolbar visible of container window to false
         set statusbar visible of container window to false
-        set bounds of container window to {100, 100, 760, 500}
+        set bounds of container window to {100, 100, 660, 460}
         set theViewOptions to the icon view options of container window
         set arrangement of theViewOptions to not arranged
         set icon size of theViewOptions to 128
-        set background picture of theViewOptions to file ".background:dmg-background.png"
-        set position of item "CC-Beeper.app" of container window to {180, 200}
-        set position of item "Applications" of container window to {480, 200}
+        set text size of theViewOptions to 13
+        ${BG_LINE}
+        set position of item "CC-Beeper.app" of container window to {150, 170}
+        set position of item "Applications" of container window to {410, 170}
         close
         open
         update without registering applications
