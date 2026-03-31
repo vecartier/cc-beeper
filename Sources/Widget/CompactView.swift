@@ -20,11 +20,11 @@ struct CompactView: View {
                 .interpolation(.high)
                 .frame(width: shellW, height: shellH)
 
-            // LCD screen -- same ScreenView as full mode (per D-06)
-            ScreenView()
+            // LCD screen -- compact mode (icon-only badge)
+            ScreenView(compact: true)
                 .frame(width: lcdW, height: lcdH)
                 .clipped()
-                .offset(x: 24, y: 23)
+                .offset(x: 26, y: 31)
                 .allowsHitTesting(false)
         }
         .frame(width: shellW, height: shellH)

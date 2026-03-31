@@ -1,8 +1,9 @@
 import SwiftUI
 
 struct ScreenView: View {
+    var compact: Bool = false
     var body: some View {
-        ScreenContentView()
+        ScreenContentView(compact: compact)
     }
 }
 

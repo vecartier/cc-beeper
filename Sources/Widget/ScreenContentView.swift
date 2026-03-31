@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ScreenContentView: View {
+    var compact: Bool = false
     @EnvironmentObject var monitor: ClaudeMonitor
     @EnvironmentObject var themeManager: ThemeManager
     @State private var animFrame = 0
@@ -31,11 +32,8 @@ struct ScreenContentView: View {
 
                 // Status: big title + scrolling detail
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(titleText)
-                        .font(.system(size: 13, weight: .heavy, design: .monospaced))
-                        .foregroundColor(themeManager.lcdOn)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
+                    MarqueeText(text: titleText, font: .system(size: 13, weight: .heavy, design: .monospaced), color: themeManager.lcdOn)
+                        .frame(height: 16)
                         .opacity(titleOpacity)
 
                     if let detail = detailText {
@@ -46,11 +44,13 @@ struct ScreenContentView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 // Permission mode badge
-                HStack(spacing: 3) {
+                HStack(spacing: compact ? 0 : 3) {
                     Image(systemName: monitor.currentPreset.badgeIcon)
-                        .font(.system(size: 9))
-                    Text(monitor.currentPreset.badgeLabel)
-                        .font(.system(size: 9, weight: .black, design: .monospaced))
+                        .font(.system(size: compact ? 8 : 9))
+                    if !compact {
+                        Text(monitor.currentPreset.badgeLabel)
+                            .font(.system(size: 9, weight: .black, design: .monospaced))
+                    }
                 }
                 .foregroundColor(themeManager.lcdOn)
                 .padding(.horizontal, 5)
@@ -61,8 +61,8 @@ struct ScreenContentView: View {
                 )
                 .offset(x: -2, y: -8)
             }
-            .padding(.leading, 10)
-            .padding(.trailing, 6)
+            .padding(.leading, compact ? 14 : 10)
+            .padding(.trailing, compact ? 12 : 6)
             .padding(.vertical, 3)
 
             // Auth flash overlay (LCD-07) — shows over current content for 2-3s
@@ -187,14 +187,14 @@ struct ScreenContentView: View {
 
     private var titleText: String {
         switch monitor.state {
-        case .idle: return "Snoozing"
-        case .working: return "Working"
-        case .done: return "Done!"
-        case .error: return "Error"
-        case .approveQuestion: return "Allow?"
-        case .needsInput: return "Needs input"
-        case .listening: return "Listening"
-        case .speaking: return "Reading recap"
+        case .idle: return "SNOOZING"
+        case .working: return "WORKING"
+        case .done: return "DONE!"
+        case .error: return "ERROR"
+        case .approveQuestion: return "ALLOW?"
+        case .needsInput: return "INPUT?"
+        case .listening: return "LISTENING"
+        case .speaking: return "RECAP"
         }
     }
 
