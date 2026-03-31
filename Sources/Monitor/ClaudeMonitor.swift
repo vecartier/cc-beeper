@@ -695,13 +695,8 @@ final class ClaudeMonitor: ObservableObject {
     }
 
     private func activateTerminal() {
-        let ids = [
-            "com.apple.Terminal", "com.googlecode.iterm2",
-            "dev.warp.Warp-Stable", "io.alacritty",
-            "net.kovidgoyal.kitty", "com.github.wez.wezterm",
-        ]
         for app in NSWorkspace.shared.runningApplications {
-            if let bid = app.bundleIdentifier, ids.contains(bid) {
+            if let bid = app.bundleIdentifier, AppConstants.terminalBundleIDs.contains(bid) {
                 app.activate()
                 return
             }

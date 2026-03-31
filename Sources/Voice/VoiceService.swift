@@ -6,15 +6,8 @@ import ApplicationServices
 
 final class VoiceService: ObservableObject, @unchecked Sendable {
 
-    /// Known terminal bundle IDs for focus and injection safety (AUDIT-08).
-    private static let terminalBundleIDs: Set<String> = [
-        "com.apple.Terminal",
-        "com.googlecode.iterm2",
-        "dev.warp.Warp-Stable",
-        "io.alacritty",
-        "net.kovidgoyal.kitty",
-        "com.github.wez.wezterm",
-    ]
+    /// Shared terminal bundle IDs from AppConstants (FRAG-06).
+    private static let terminalBundleIDs = AppConstants.terminalBundleIDs
 
     @Published var isRecording: Bool = false
     @Published var lastTranscriptPreview: String = ""
@@ -389,8 +382,7 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
     private func injectAndSubmit(_ text: String) {
         guard !text.isEmpty else { return }
 
-        focusTerminal()
-        usleep(200_000) // wait for terminal focus
+        focusTerminal() // waits for activation notification (FRAG-01)
 
         // Verify terminal is actually frontmost before posting CGEvents (AUDIT-08)
         let frontBundleID = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? ""
@@ -479,15 +471,50 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
 
     // MARK: - Terminal Focus
 
-    private func focusTerminal() {
-        // Use NSRunningApplication.activate() — synchronous activation, no sleep needed (Bug 3 fix)
+    /// Focus a terminal app and wait for it to become frontmost via NSWorkspace notification (FRAG-01).
+    /// Returns true if terminal was successfully focused.
+    @discardableResult
+    private func focusTerminal() -> Bool {
+        var targetApp: NSRunningApplication?
         for app in NSWorkspace.shared.runningApplications {
             guard let bid = app.bundleIdentifier, Self.terminalBundleIDs.contains(bid) else { continue }
-            app.activate(options: [.activateIgnoringOtherApps])
-            log("focused terminal via activate: \(bid)")
-            return
+            targetApp = app
+            break
         }
-        log("no terminal found to focus")
+        guard let app = targetApp else {
+            log("no terminal found to focus")
+            return false
+        }
+
+        // If already frontmost, no wait needed
+        if NSWorkspace.shared.frontmostApplication?.processIdentifier == app.processIdentifier {
+            log("terminal already frontmost: \(app.bundleIdentifier ?? "")")
+            return true
+        }
+
+        // Wait for activation via notification instead of usleep (FRAG-01)
+        let semaphore = DispatchSemaphore(value: 0)
+        let observer = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil,
+            queue: nil
+        ) { notification in
+            if let activated = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+               activated.processIdentifier == app.processIdentifier {
+                semaphore.signal()
+            }
+        }
+        app.activate()
+        // Wait up to 500ms for activation (generous but bounded)
+        let result = semaphore.wait(timeout: .now() + 0.5)
+        NSWorkspace.shared.notificationCenter.removeObserver(observer)
+
+        if result == .timedOut {
+            log("terminal focus timed out — proceeding anyway: \(app.bundleIdentifier ?? "")")
+        } else {
+            log("focused terminal via notification: \(app.bundleIdentifier ?? "")")
+        }
+        return true
     }
 
     // MARK: - Refocus Previous App

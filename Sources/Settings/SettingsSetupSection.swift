@@ -42,8 +42,7 @@ struct SettingsSetupSection: View {
     private func performUninstall() {
         let script = Bundle.main.bundlePath
             .replacingOccurrences(of: "/CC-Beeper.app", with: "/uninstall.py")
-        let fallback = NSHomeDirectory() + "/Desktop/CC-Beeper/uninstall.py"
-        let path = FileManager.default.fileExists(atPath: script) ? script : fallback
+        let path = script
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/python3")

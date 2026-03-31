@@ -6,7 +6,7 @@ final class KokoroDepsInstaller: ObservableObject {
     @Published var installProgress: String = ""
     @Published var installError: String?
 
-    private static let venvPython = NSHomeDirectory() + "/.cache/cc-beeper/kokoro-venv/bin/python3"
+    private static let venvPython = AppConstants.kokoroVenvPython
 
     /// Check if language deps are installed (runs python -c "import module" and checks exit code).
     func areDepsInstalled(for langCode: String) async -> Bool {

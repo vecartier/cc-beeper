@@ -126,19 +126,34 @@ final class HTTPHookServer {
         return port
     }
 
-    /// Write the active port number atomically to the port file.
+    /// Write the active port number atomically to the port file (FRAG-03: surface failures).
     func writePort(_ port: UInt16) {
         let dir = (Self.portFile as NSString).deletingLastPathComponent
-        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+        do {
+            try FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+        } catch {
+            portWriteError = "Failed to create IPC directory: \(error.localizedDescription)"
+            return
+        }
 
         let tmp = Self.portFile + ".tmp"
         let content = "\(port)"
-        try? content.write(toFile: tmp, atomically: false, encoding: .utf8)
-        // Remove existing port file first — moveItem fails if destination exists
-        try? FileManager.default.removeItem(atPath: Self.portFile)
-        try? FileManager.default.moveItem(atPath: tmp, toPath: Self.portFile)
-        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: Self.portFile)
+        do {
+            try content.write(toFile: tmp, atomically: false, encoding: .utf8)
+            try? FileManager.default.removeItem(atPath: Self.portFile)
+            try FileManager.default.moveItem(atPath: tmp, toPath: Self.portFile)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: Self.portFile)
+            portWriteError = nil
+        } catch {
+            portWriteError = "Failed to write port file: \(error.localizedDescription)"
+        }
     }
+
+    /// Last port write error, if any (FRAG-03). Nil means success.
+    private(set) var portWriteError: String?
+
+    /// Last listener error, if any (FRAG-04). Nil means success.
+    private(set) var listenerError: String?
 
     /// Remove the port file if it exists.
     func removePort() {
@@ -165,6 +180,7 @@ final class HTTPHookServer {
         )
 
         guard let newListener = try? NWListener(using: params) else {
+            listenerError = "Failed to create NWListener on port \(portToTry.rawValue)"
             return
         }
 
@@ -175,6 +191,7 @@ final class HTTPHookServer {
                 case .ready:
                     let boundPort = newListener.port?.rawValue ?? 0
                     self.activePort = boundPort
+                    self.listenerError = nil
                     self.writePort(boundPort)
                 case .failed(let error):
                     // Check for port-in-use error — try next port

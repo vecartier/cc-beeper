@@ -62,25 +62,15 @@ final class TTSService: ObservableObject, @unchecked Sendable {
     // MARK: - Kokoro Lifecycle
 
     func launchKokoro() {
-        let venvPython = NSHomeDirectory() + "/.cache/cc-beeper/kokoro-venv/bin/python3"
+        let venvPython = AppConstants.kokoroVenvPython
         guard FileManager.default.fileExists(atPath: venvPython) else {
             log("Kokoro: venv not found — run setup-kokoro.sh first")
             return
         }
 
-        let serverScript: String
-        if let bundled = Bundle.main.path(forResource: "kokoro-tts-server", ofType: "py") {
-            serverScript = bundled
-        } else {
-            let candidates = [
-                NSHomeDirectory() + "/Desktop/CC-Beeper/Sources/kokoro-tts-server.py",
-                NSHomeDirectory() + "/Desktop/cc-beeper/Sources/kokoro-tts-server.py",
-            ]
-            guard let found = candidates.first(where: { FileManager.default.fileExists(atPath: $0) }) else {
-                log("Kokoro: server script not found")
-                return
-            }
-            serverScript = found
+        guard let serverScript = Bundle.main.path(forResource: "kokoro-tts-server", ofType: "py") else {
+            log("Kokoro: server script not found in app bundle")
+            return
         }
 
         // Clean up stale files

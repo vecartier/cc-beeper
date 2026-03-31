@@ -62,7 +62,12 @@ struct AppMover {
             )
             NSApp.terminate(nil)
         } catch {
-            // Silent failure — the app still works from its current location.
+            // Surface error to user instead of silently swallowing (FRAG-05)
+            let alert = NSAlert()
+            alert.messageText = "Could not move to Applications"
+            alert.informativeText = error.localizedDescription
+            alert.addButton(withTitle: "OK")
+            alert.runModal()
         }
     }
 }

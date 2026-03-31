@@ -77,7 +77,7 @@ struct ScreenContentView: View {
 
 // Vignette
             RadialGradient(
-                colors: [.clear, Color(hex: "1A3008").opacity(0.25)],
+                colors: [.clear, AppConstants.lcdShadowTint.opacity(0.25)],
                 center: .center,
                 startRadius: 60,
                 endRadius: 160
@@ -86,7 +86,7 @@ struct ScreenContentView: View {
 
             // Pixel grid
             Canvas { context, size in
-                let lineColor = Color(hex: "2A4A10").opacity(themeManager.darkMode ? 0.25 : 0.12)
+                let lineColor = AppConstants.lcdGridLine.opacity(themeManager.darkMode ? 0.25 : 0.12)
                 let spacing: CGFloat = 2.0
                 let lineW: CGFloat = 0.5
 
@@ -111,7 +111,7 @@ struct ScreenContentView: View {
 
             // Inner shadow top
             LinearGradient(
-                colors: [Color(hex: "1A3008").opacity(0.15), .clear],
+                colors: [AppConstants.lcdShadowTint.opacity(0.15), .clear],
                 startPoint: .top,
                 endPoint: .center
             )

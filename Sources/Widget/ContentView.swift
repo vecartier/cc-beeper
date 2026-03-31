@@ -118,9 +118,9 @@ struct ContentView: View {
 
     private var ledGreenColor: Color {
         if monitor.state == .working || monitor.state.needsAttention {
-            return Color(white: 0.35)
+            return AppConstants.ledOff
         }
-        return Color(hex: "4ADE80")
+        return AppConstants.ledGreen
     }
 
     private var ledGreenGlow: Bool {
@@ -129,9 +129,9 @@ struct ContentView: View {
 
     private var ledAlertColor: Color {
         if monitor.state == .working || monitor.state.needsAttention {
-            return Color(hex: "FACC15")
+            return AppConstants.ledAmber
         }
-        return Color(white: 0.35)
+        return AppConstants.ledOff
     }
 
     private var ledAlertActive: Bool {
