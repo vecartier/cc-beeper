@@ -89,5 +89,5 @@ cp Sources/kokoro-tts-server.py "$RESOURCES_DIR/kokoro-tts-server.py" 2>/dev/nul
 
 echo "Built CC-Beeper.app"
 
-codesign --force --deep --sign "$SIGNING_IDENTITY" CC-Beeper.app
+codesign --force --deep --sign "$SIGNING_IDENTITY" --entitlements CC-Beeper.entitlements CC-Beeper.app
 echo "Signed CC-Beeper.app (identity: $SIGNING_IDENTITY)"

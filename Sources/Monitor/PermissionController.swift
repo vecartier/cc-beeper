@@ -66,7 +66,9 @@ extension ClaudeMonitor {
                 state = .approveQuestion
             }
         } else {
-            state = allow ? .working : .done
+            // Let aggregate state resolve from all active sessions rather than
+            // hardcoding — prevents hiding other working sessions (AUDIT-FIX).
+            updateAggregateState()
         }
     }
 }

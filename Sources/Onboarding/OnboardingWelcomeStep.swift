@@ -5,18 +5,23 @@ struct OnboardingWelcomeStep: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Cover image
-            if let coverPath = Bundle.main.path(forResource: "cover", ofType: "png"),
-               let nsImage = NSImage(contentsOfFile: coverPath) {
-                Image(nsImage: nsImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 200)
-                    .clipped()
-            }
-
-            VStack(spacing: 20) {
+            VStack(spacing: 24) {
                 Spacer()
+
+                // App icon with macOS squircle mask
+                if let iconPath = Bundle.main.path(forResource: "AppIcon", ofType: "icns"),
+                   let nsImage = NSImage(contentsOfFile: iconPath) {
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .frame(width: 96, height: 96)
+                        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                } else if let iconPath = (Bundle.main.resourcePath.map { $0 + "/../../../icon.png" }),
+                          let nsImage = NSImage(contentsOfFile: iconPath) {
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .frame(width: 96, height: 96)
+                        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                }
 
                 VStack(spacing: 10) {
                     Text("Welcome to CC-Beeper")
@@ -31,21 +36,13 @@ struct OnboardingWelcomeStep: View {
                 }
 
                 Spacer()
-
-                Button {
-                    viewModel.goNext()
-                } label: {
-                    Text("Get Started")
-                        .font(.title3.weight(.semibold))
-                        .frame(maxWidth: 240)
-                        .padding(.vertical, 6)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.orange)
-                .controlSize(.large)
-                .padding(.bottom, 36)
             }
             .padding(.horizontal, 48)
+
+            OnboardingFooter(
+                primaryLabel: "Get Started",
+                primaryAction: { viewModel.goNext() }
+            )
         }
     }
 }

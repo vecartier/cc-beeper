@@ -177,6 +177,7 @@ final class ClaudeMonitor: ObservableObject {
     var sessionLastSeen: [String: Date] = [:]
     let httpServer = HTTPHookServer()
     var idleWork: DispatchWorkItem?
+    var doneDebounceWork: DispatchWorkItem?
     var lastPruneTime: Date = .distantPast
     var localKeyMonitor: Any?
     var carbonHotKeys: [Any] = []
@@ -302,9 +303,13 @@ final class ClaudeMonitor: ObservableObject {
                 if recording {
                     self.state = .listening
                 } else if self.state == .listening {
+                    // Let aggregate resolve — don't blindly set .done, which
+                    // could hide a pending permission prompt (AUDIT-FIX).
                     self.updateAggregateState()
-                    if self.state == .listening { self.state = .done }
-                    if self.state == .done { self.startIdleTimer(interval: 180) }
+                    if self.state == .listening || self.state == .idle {
+                        self.state = .done
+                        self.startIdleTimer(interval: 180)
+                    }
                 }
             }
             .store(in: &cancellables)
@@ -317,8 +322,10 @@ final class ClaudeMonitor: ObservableObject {
                     self.state = .speaking
                 } else if self.state == .speaking {
                     self.updateAggregateState()
-                    if self.state == .speaking { self.state = .done }
-                    if self.state == .done { self.startIdleTimer(interval: 180) }
+                    if self.state == .speaking || self.state == .idle {
+                        self.state = .done
+                        self.startIdleTimer(interval: 180)
+                    }
                 }
             }
             .store(in: &cancellables)

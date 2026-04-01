@@ -89,14 +89,6 @@ final class HTTPHookServer {
         try? FileManager.default.removeItem(atPath: Self.tokenFile)
     }
 
-    /// Read the bearer token from the token file (used by HookInstaller).
-    static func readToken() -> String? {
-        guard let data = FileManager.default.contents(atPath: tokenFile),
-              let str = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !str.isEmpty else { return nil }
-        return str
-    }
-
     /// Send a permission response to the deferred HTTP connection for a specific session (AUDIT-04).
     /// Returns true if more pending connections remain (so caller can surface the next one).
     @discardableResult
@@ -130,14 +122,6 @@ final class HTTPHookServer {
             }
             return false
         }
-    }
-
-    /// Cancel all pending permission connections (used during cleanup).
-    func cancelAllPermissions() {
-        for entry in pendingPermissionConnections {
-            entry.connection.cancel()
-        }
-        pendingPermissionConnections.removeAll()
     }
 
     // MARK: - Instance Detection
@@ -286,7 +270,7 @@ final class HTTPHookServer {
 
     private func processBuffer(for connection: NWConnection) {
         let key = ObjectIdentifier(connection)
-        guard var buffer = connectionBuffers[key] else { return }
+        guard let buffer = connectionBuffers[key] else { return }
 
         // Find \r\n\r\n header terminator
         guard let headerRange = findHeaderEnd(in: buffer) else {

@@ -60,8 +60,8 @@ enum PermissionPreset: String, CaseIterable, Equatable {
     var label: String {
         switch self {
         case .cautious: return "Strict"
-        case .trusted: return "Cautious"
         case .relaxed: return "Relaxed"
+        case .trusted: return "Trusted"
         case .yolo: return "YOLO"
         }
     }

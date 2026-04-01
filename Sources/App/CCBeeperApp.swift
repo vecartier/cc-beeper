@@ -26,18 +26,27 @@ struct CCBeeperApp: App {
                 }
             }
             .onAppear {
-                if !hasCompletedOnboarding {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        Self.hideMainWindow()
+                // Hide immediately to prevent flash — delayed block decides visibility
+                Self.hideMainWindow()
+
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    if !hasCompletedOnboarding {
                         openWindow(id: "onboarding")
+                    } else if monitor.widgetSize == .menuOnly {
+                        // Stay hidden
+                    } else {
+                        // Widget should be visible — resize and show
+                        let size = monitor.widgetSize == .compact
+                            ? NSSize(width: 300, height: 193)
+                            : NSSize(width: 440, height: 240)
+                        Self.resizeMainWindow(to: size)
+                        Self.showMainWindow()
                     }
-                } else if monitor.widgetSize == .menuOnly {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        Self.hideMainWindow()
-                    }
-                } else if monitor.widgetSize == .compact {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        Self.resizeMainWindow(to: NSSize(width: 300, height: 193))
+                    // Close any stale onboarding window restored by SwiftUI
+                    if hasCompletedOnboarding {
+                        for window in NSApp.windows where window.identifier?.rawValue == "onboarding" {
+                            window.orderOut(nil)
+                        }
                     }
                 }
             }
@@ -169,17 +178,10 @@ struct CCBeeperApp: App {
         return false
     }
 
-    static func toggleMainWindow() {
-        for window in NSApp.windows where window.identifier?.rawValue == "main" {
-            window.isVisible ? window.orderOut(nil) : window.makeKeyAndOrderFront(nil)
-            return
-        }
-    }
-
     static func showMainWindow() {
         for window in NSApp.windows where window.identifier?.rawValue == "main" {
             if !window.isVisible {
-                window.makeKeyAndOrderFront(nil)
+                window.orderFrontRegardless()
             }
             return
         }

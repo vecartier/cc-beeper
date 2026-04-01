@@ -12,12 +12,18 @@ struct OnboardingCLIStep: View {
                     .font(.system(size: 48))
                     .foregroundStyle(.primary)
 
-                Text("Claude Code Setup")
-                    .font(.title2)
-                    .fontWeight(.bold)
+                VStack(spacing: 8) {
+                    Text("Claude Code Setup")
+                        .font(.title2)
+                        .fontWeight(.bold)
+
+                    Text("CC-Beeper connects via hooks to react to Claude in real time.")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
 
                 VStack(spacing: 16) {
-                    // Claude CLI detection row
                     SetupRow(
                         icon: viewModel.isClaudeDetected ? "checkmark.circle.fill" : "exclamationmark.triangle.fill",
                         iconColor: viewModel.isClaudeDetected ? .green : .orange,
@@ -26,7 +32,6 @@ struct OnboardingCLIStep: View {
                         link: viewModel.isClaudeDetected ? nil : ("Install Claude Code", URL(string: "https://docs.anthropic.com/en/docs/claude-code/overview")!)
                     )
 
-                    // Hooks installation row
                     SetupRow(
                         icon: viewModel.isHooksInstalled ? "checkmark.circle.fill" : "circle",
                         iconColor: viewModel.isHooksInstalled ? .green : .secondary,
@@ -50,9 +55,7 @@ struct OnboardingCLIStep: View {
             OnboardingFooter(
                 primaryLabel: "Next",
                 primaryAction: { viewModel.goNext() },
-                primaryDisabled: !viewModel.isClaudeDetected,
-                showSkip: true,
-                skipAction: { viewModel.goNext() }
+                primaryDisabled: !viewModel.isClaudeDetected
             )
         }
         .onAppear {
@@ -123,7 +126,7 @@ struct OnboardingFooter: View {
                     .padding(.vertical, 6)
             }
             .buttonStyle(.borderedProminent)
-            .tint(.orange)
+            .tint(AppConstants.accent)
             .controlSize(.large)
             .disabled(primaryDisabled)
 

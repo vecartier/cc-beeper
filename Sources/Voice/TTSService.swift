@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import os.log
 
 final class TTSService: ObservableObject, @unchecked Sendable {
 
@@ -27,20 +28,10 @@ final class TTSService: ObservableObject, @unchecked Sendable {
 
     // MARK: - Logging
 
-    private static let logPath = NSHomeDirectory() + "/.claude/cc-beeper/tts.log"
+    private static let logger = Logger(subsystem: "com.vecartier.cc-beeper", category: "tts")
 
     func log(_ msg: String) {
-        let line = "[\(Date())] \(msg)\n"
-        if let fh = FileHandle(forWritingAtPath: Self.logPath) {
-            fh.seekToEndOfFile()
-            fh.write(line.data(using: .utf8)!)
-            fh.closeFile()
-        } else {
-            FileManager.default.createFile(
-                atPath: Self.logPath, contents: line.data(using: .utf8),
-                attributes: [.posixPermissions: 0o600]
-            )
-        }
+        Self.logger.info("\(msg, privacy: .public)")
     }
 
     // MARK: - Public API
@@ -199,26 +190,47 @@ final class TTSService: ObservableObject, @unchecked Sendable {
         }
     }
 
+    /// Write data to Kokoro subprocess stdin, catching broken pipe errors.
+    /// Returns false if the write failed (pipe broken / process dead).
+    @discardableResult
+    private func writeToKokoro(_ data: Data) -> Bool {
+        guard let stdin = kokoroStdin else { return false }
+        guard kokoroProcess?.isRunning == true else {
+            log("Kokoro: write failed — process not running")
+            kokoroReady = false
+            kokoroStdin = nil
+            kokoroProcess = nil
+            return false
+        }
+        do {
+            try stdin.write(contentsOf: data)
+            return true
+        } catch {
+            log("Kokoro: stdin write failed — \(error.localizedDescription)")
+            kokoroReady = false
+            kokoroStdin = nil
+            return false
+        }
+    }
+
     func setKokoroVoice(_ voice: String) {
-        guard let stdin = kokoroStdin else {
+        guard kokoroStdin != nil else {
             log("Kokoro: setKokoroVoice(\(voice)) — stdin nil, Kokoro not running")
             return
         }
         let cmd = "VOICE:\(voice)\n"
-        if let data = cmd.data(using: .utf8) {
-            stdin.write(data)
+        if let data = cmd.data(using: .utf8), writeToKokoro(data) {
             log("Kokoro: voice set to \(voice)")
         }
     }
 
     func setKokoroLangCode(_ code: String) {
-        guard let stdin = kokoroStdin else {
+        guard kokoroStdin != nil else {
             log("Kokoro: setKokoroLangCode(\(code)) — stdin nil, Kokoro not running")
             return
         }
         let cmd = "LANG:\(code)\n"
-        if let data = cmd.data(using: .utf8) {
-            stdin.write(data)
+        if let data = cmd.data(using: .utf8), writeToKokoro(data) {
             log("Kokoro: lang set to \(code)")
         }
     }
@@ -261,7 +273,7 @@ final class TTSService: ObservableObject, @unchecked Sendable {
         log("Kokoro: speaking: \(text.prefix(200))")
         isSpeaking = true
 
-        guard let stdin = kokoroStdin else {
+        guard kokoroStdin != nil else {
             log("Kokoro: no stdin pipe — falling back to Apple voice")
             speakWithAva(text)
             return
@@ -270,7 +282,10 @@ final class TTSService: ObservableObject, @unchecked Sendable {
         // Send text to subprocess — it generates WAV and writes to tts-output.wav
         let line = text.replacingOccurrences(of: "\n", with: " ") + "\n"
         guard let data = line.data(using: .utf8) else { return }
-        stdin.write(data)
+        if !writeToKokoro(data) {
+            log("Kokoro: write failed — falling back to Apple voice")
+            speakWithAva(text)
+        }
         // File watcher will pick up the result and play it
     }
 

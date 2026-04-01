@@ -10,7 +10,7 @@ struct OnboardingDoneStep: View {
                 Spacer()
 
                 Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: 56))
+                    .font(.system(size: 48))
                     .foregroundStyle(.green)
 
                 VStack(spacing: 10) {
@@ -18,18 +18,17 @@ struct OnboardingDoneStep: View {
                         .font(.largeTitle)
                         .fontWeight(.bold)
 
-                    Text("CC-Beeper will appear in your menu bar and react to Claude's activity in real time.")
+                    Text("CC-Beeper lives in your menu bar and reacts\nto Claude in real time.")
                         .font(.body)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                         .lineSpacing(2)
-                        .padding(.horizontal, 32)
                 }
 
-                // Important note
+                // Restart notice
                 HStack(spacing: 10) {
                     Image(systemName: "info.circle.fill")
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(AppConstants.accent)
                         .font(.title3)
                     Text("Restart any running Claude Code sessions for hooks to take effect.")
                         .font(.callout)
@@ -42,25 +41,20 @@ struct OnboardingDoneStep: View {
                 Spacer()
             }
 
-            Button {
-                viewModel.completeOnboarding()
-                for window in NSApp.windows {
-                    if window.identifier?.rawValue == "main" {
-                        window.makeKeyAndOrderFront(nil)
-                    }
-                    if window.identifier?.rawValue == "onboarding" {
-                        window.orderOut(nil)
+            OnboardingFooter(
+                primaryLabel: "Launch CC-Beeper",
+                primaryAction: {
+                    viewModel.completeOnboarding()
+                    for window in NSApp.windows {
+                        if window.identifier?.rawValue == "main" {
+                            window.makeKeyAndOrderFront(nil)
+                        }
+                        if window.identifier?.rawValue == "onboarding" {
+                            window.orderOut(nil)
+                        }
                     }
                 }
-            } label: {
-                Text("Launch CC-Beeper")
-                    .font(.title3.weight(.semibold))
-                    .frame(maxWidth: 240)
-                    .padding(.vertical, 6)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .padding(.bottom, 36)
+            )
         }
     }
 }

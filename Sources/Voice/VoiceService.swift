@@ -3,6 +3,7 @@ import AVFoundation
 import Speech
 import AppKit
 import ApplicationServices
+import os.log
 
 final class VoiceService: ObservableObject, @unchecked Sendable {
 
@@ -45,20 +46,10 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
 
     // MARK: - Logging
 
-    private static let logPath = NSHomeDirectory() + "/.claude/cc-beeper/voice.log"
+    private static let logger = Logger(subsystem: "com.vecartier.cc-beeper", category: "voice")
 
     private func log(_ msg: String) {
-        let line = "[\(Date())] \(msg)\n"
-        if let fh = FileHandle(forWritingAtPath: Self.logPath) {
-            fh.seekToEndOfFile()
-            fh.write(line.data(using: .utf8)!)
-            fh.closeFile()
-        } else {
-            FileManager.default.createFile(
-                atPath: Self.logPath, contents: line.data(using: .utf8),
-                attributes: [.posixPermissions: 0o600]
-            )
-        }
+        Self.logger.info("\(msg, privacy: .public)")
     }
 
     // MARK: - Public API
@@ -268,24 +259,30 @@ final class VoiceService: ObservableObject, @unchecked Sendable {
 
         recognitionTask = recognizer.recognitionTask(with: request) { [weak self] result, error in
             guard let self else { return }
+            // Callback fires on an arbitrary thread — dispatch all state
+            // mutations to MainActor to avoid data races (CONCURRENCY-FIX).
             if let result {
                 let text = result.bestTranscription.formattedString
-                self.lastTranscript = text
-
-                // When we get the final result (after endAudio), inject it
-                if result.isFinal {
-                    self.recognitionTask = nil
-                    self.log("final transcript: '\(text)'")
-                    self.lastTranscriptPreview = text
-                    if !text.isEmpty {
-                        self.injectAndSubmit(text)
+                let isFinal = result.isFinal
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    self.lastTranscript = text
+                    if isFinal {
+                        self.recognitionTask = nil
+                        self.log("final transcript: '\(text)'")
+                        self.lastTranscriptPreview = text
+                        if !text.isEmpty {
+                            self.injectAndSubmit(text)
+                        }
                     }
                 }
             }
             if let error {
                 let code = (error as NSError).code
                 if code != 216 { // 216 = cancelled, expected
-                    self.log("recognition error: \(code)")
+                    Task { @MainActor [weak self] in
+                        self?.log("recognition error: \(code)")
+                    }
                 }
             }
         }

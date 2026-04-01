@@ -9,10 +9,12 @@ final class OnboardingViewModel: ObservableObject {
     enum Step: Int, CaseIterable {
         case welcome = 0
         case cliAndHooks = 1
-        case permissions = 2
-        case modelDownload = 3
-        case language = 4
-        case done = 5
+        case theme = 2
+        case mode = 3
+        case permissions = 4
+        case voice = 5
+        case hotkeys = 6
+        case done = 7
     }
 
     @Published var currentStep: Step = .welcome
@@ -22,6 +24,13 @@ final class OnboardingViewModel: ObservableObject {
     @Published var isAccessibilityGranted: Bool = false
     @Published var isMicGranted: Bool = false
     @Published var isSpeechGranted: Bool = false
+
+    // MARK: - Theme & Size State
+    @Published var selectedThemeId: String
+    @Published var selectedSize: WidgetSize
+
+    // MARK: - Mode State
+    @Published var selectedPreset: PermissionPreset
 
     // MARK: - Model Download State
     @Published var modelDownloadProgress: Double = 0
@@ -37,6 +46,13 @@ final class OnboardingViewModel: ObservableObject {
     @Published var langDepsReady: Bool = true
     let depsInstaller = KokoroDepsInstaller()
 
+    // MARK: - Hotkey State
+    @Published var hotkeyAccept: String
+    @Published var hotkeyDeny: String
+    @Published var hotkeyVoice: String
+    @Published var hotkeyTerminal: String
+    @Published var hotkeyMute: String
+
     var totalSteps: Int { Step.allCases.count }
     var progress: Double { Double(currentStep.rawValue) / Double(totalSteps - 1) }
 
@@ -44,6 +60,18 @@ final class OnboardingViewModel: ObservableObject {
 
     init() {
         isModelReady = WhisperService.modelsDownloaded && PocketTTSService.modelsDownloaded
+
+        // Load current preferences or defaults
+        selectedThemeId = UserDefaults.standard.string(forKey: "themeId") ?? "black"
+        selectedSize = WidgetSize(rawValue: UserDefaults.standard.string(forKey: "widgetSize") ?? "") ?? .large
+        selectedPreset = PermissionPresetWriter.readCurrentPreset()
+
+        hotkeyAccept = UserDefaults.standard.string(forKey: "hotkeyChar_accept") ?? "A"
+        hotkeyDeny = UserDefaults.standard.string(forKey: "hotkeyChar_deny") ?? "D"
+        hotkeyVoice = UserDefaults.standard.string(forKey: "hotkeyChar_voice") ?? "R"
+        hotkeyTerminal = UserDefaults.standard.string(forKey: "hotkeyChar_terminal") ?? "T"
+        hotkeyMute = UserDefaults.standard.string(forKey: "hotkeyChar_mute") ?? "M"
+
         // Detect system language for default selection
         let systemLocale = Locale.preferredLanguages.first ?? "en"
         let detected = KokoroVoiceCatalog.kokoroLangCode(fromSystemLocale: systemLocale) ?? "a"
@@ -62,6 +90,19 @@ final class OnboardingViewModel: ObservableObject {
         currentStep = prev
     }
 
+    // MARK: - Theme & Size
+
+    func applyThemeAndSize() {
+        UserDefaults.standard.set(selectedThemeId, forKey: "themeId")
+        UserDefaults.standard.set(selectedSize.rawValue, forKey: "widgetSize")
+    }
+
+    // MARK: - Mode
+
+    func applyMode() {
+        try? PermissionPresetWriter.applyPreset(selectedPreset)
+    }
+
     // MARK: - Model Download
 
     func downloadModels() {
@@ -71,7 +112,7 @@ final class OnboardingViewModel: ObservableObject {
         modelDownloadPhase = "Preparing..."
 
         Task {
-            // Phase 1: Whisper (0–50%) — replaces Parakeet per D-05/D-11
+            // Phase 1: Whisper (0–50%)
             do {
                 try await WhisperService.shared.downloadModel(size: .selected) { [weak self] fraction, label in
                     Task { @MainActor in
@@ -107,14 +148,14 @@ final class OnboardingViewModel: ObservableObject {
         }
     }
 
-    // MARK: - CLI Detection (called on step 1 appear)
+    // MARK: - CLI Detection
 
     func detectClaude() {
         isClaudeDetected = ClaudeDetector.isInstalled
         isHooksInstalled = HookInstaller.isInstalled
     }
 
-    // MARK: - Hook Installation (one-shot, called on button tap)
+    // MARK: - Hook Installation
 
     func installHooks() {
         hookInstallError = nil
@@ -148,7 +189,7 @@ final class OnboardingViewModel: ObservableObject {
         isSpeechGranted = SFSpeechRecognizer.authorizationStatus() == .authorized
     }
 
-    // MARK: - Permission Requests (one-shot, on button tap ONLY)
+    // MARK: - Permission Requests
 
     func requestAccessibility() {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
@@ -188,11 +229,6 @@ final class OnboardingViewModel: ObservableObject {
         NSWorkspace.shared.open(url)
     }
 
-    func openSpokenContent() {
-        guard let url = URL(string: "x-apple.systempreferences:com.apple.Accessibility-Settings.extension?SpokenContent") else { return }
-        NSWorkspace.shared.open(url)
-    }
-
     // MARK: - Language Selection
 
     func checkLangDeps() {
@@ -216,10 +252,26 @@ final class OnboardingViewModel: ObservableObject {
         UserDefaults.standard.set(KokoroVoiceCatalog.defaultVoice(for: selectedLangCode), forKey: "kokoroVoice")
     }
 
+    // MARK: - Hotkeys
+
+    func applyHotkeys() {
+        UserDefaults.standard.set(hotkeyAccept, forKey: "hotkeyChar_accept")
+        UserDefaults.standard.set(hotkeyDeny, forKey: "hotkeyChar_deny")
+        UserDefaults.standard.set(hotkeyVoice, forKey: "hotkeyChar_voice")
+        UserDefaults.standard.set(hotkeyTerminal, forKey: "hotkeyChar_terminal")
+        UserDefaults.standard.set(hotkeyMute, forKey: "hotkeyChar_mute")
+    }
+
     // MARK: - Completion
 
     func completeOnboarding() {
+        applyThemeAndSize()
+        applyMode()
+        applyLanguageChoice()
+        applyHotkeys()
         UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+        // Remove saved window frame so SwiftUI doesn't restore the onboarding window
+        UserDefaults.standard.removeObject(forKey: "NSWindow Frame onboarding")
         stopPolling()
     }
 

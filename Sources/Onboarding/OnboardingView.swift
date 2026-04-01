@@ -7,10 +7,17 @@ struct OnboardingView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Progress bar
-            ProgressView(value: viewModel.progress)
-                .progressViewStyle(.linear)
-                .frame(height: 4)
-                .tint(.white)
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Rectangle()
+                        .fill(Color.white.opacity(0.1))
+                    Rectangle()
+                        .fill(AppConstants.accent)
+                        .frame(width: geo.size.width * viewModel.progress)
+                        .animation(.easeInOut(duration: 0.3), value: viewModel.progress)
+                }
+            }
+            .frame(height: 3)
 
             // Step content
             Group {
@@ -19,12 +26,16 @@ struct OnboardingView: View {
                     OnboardingWelcomeStep(viewModel: viewModel)
                 case .cliAndHooks:
                     OnboardingCLIStep(viewModel: viewModel)
+                case .theme:
+                    OnboardingThemeStep(viewModel: viewModel)
+                case .mode:
+                    OnboardingModeStep(viewModel: viewModel)
                 case .permissions:
                     OnboardingPermissionsStep(viewModel: viewModel)
-                case .modelDownload:
-                    OnboardingModelDownloadStep(viewModel: viewModel)
-                case .language:
-                    OnboardingLanguageStep(viewModel: viewModel)
+                case .voice:
+                    OnboardingVoiceStep(viewModel: viewModel)
+                case .hotkeys:
+                    OnboardingHotkeysStep(viewModel: viewModel)
                 case .done:
                     OnboardingDoneStep(viewModel: viewModel)
                 }

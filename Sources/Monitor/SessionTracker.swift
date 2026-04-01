@@ -75,6 +75,7 @@ extension ClaudeMonitor {
 
         switch type {
         case "pre_tool", "post_tool":
+            doneDebounceWork?.cancel()  // Cancel pending DONE transition (DONE-DEBOUNCE)
             let tool = event["tool"] as? String
             if let tool { currentTool = tool }
             if sessionStates[sid] != .working {
@@ -85,23 +86,33 @@ extension ClaudeMonitor {
                 ttsService.stopSpeaking()
             }
             updateAggregateState()
-        case "post_tool_error":
-            if !sid.isEmpty { sessionStates[sid] = .working }
-            updateAggregateState()
         case "stop":
             if !sid.isEmpty { sessionStates[sid] = .done }
             thinkingStartTime = nil
             currentTool = nil
-            updateAggregateState()
-            if state == .done {
-                if currentPreset != .yolo { playDoneChime() }
-                startIdleTimer(interval: 180)
+            // Debounce DONE: wait before showing DONE to avoid false flashes from
+            // subagent stops or brief gaps between turns (DONE-DEBOUNCE).
+            doneDebounceWork?.cancel()
+            let work = DispatchWorkItem { [weak self] in
+                guard let self else { return }
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    self.updateAggregateState()
+                    if self.state == .done {
+                        if self.currentPreset != .yolo { self.playDoneChime() }
+                        self.startIdleTimer(interval: 180)
+                    }
+                }
             }
+            doneDebounceWork = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0, execute: work)
         case "stop_failure":
             if !sid.isEmpty { sessionStates[sid] = .error }
             thinkingStartTime = nil
             currentTool = nil
             updateAggregateState()
+            // Auto-recover from error after 30s so the widget doesn't stay stuck (AUDIT-FIX).
+            if state == .error { startIdleTimer(interval: 30) }
         case "session_start":
             if !sid.isEmpty { sessionStates[sid] = .working }
             updateAggregateState()

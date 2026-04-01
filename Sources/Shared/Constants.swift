@@ -1,5 +1,32 @@
 import SwiftUI
 
+// MARK: - Color Hex
+
+extension Color {
+    static func hexComponents(_ hex: String) -> (r: Double, g: Double, b: Double) {
+        let cleaned = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: cleaned).scanHexInt64(&int)
+        switch cleaned.count {
+        case 6:
+            return (
+                r: Double(int >> 16) / 255,
+                g: Double(int >> 8 & 0xFF) / 255,
+                b: Double(int & 0xFF) / 255
+            )
+        default:
+            return (r: 0, g: 0, b: 0)
+        }
+    }
+
+    init(hex: String) {
+        let c = Self.hexComponents(hex)
+        self.init(.sRGB, red: c.r, green: c.g, blue: c.b)
+    }
+}
+
+// MARK: - App Constants
+
 /// Canonical definitions for values used across multiple files (FRAG-06, FRAG-07, FRAG-08).
 enum AppConstants {
 
@@ -40,6 +67,11 @@ enum AppConstants {
     /// All apps that can host a Claude Code session (terminals + IDEs).
     static let allFocusableBundleIDs: Set<String> =
         terminalBundleIDs.union(ideBundleIDs).union(jetbrainsBundleIDs)
+
+    // MARK: - Brand Colors
+
+    /// Primary accent color for CTAs and highlights.
+    static let accent = Color(hex: "E86A1B")
 
     // MARK: - Kokoro Paths (FRAG-08)
 
