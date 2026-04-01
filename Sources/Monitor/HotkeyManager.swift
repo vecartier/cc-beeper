@@ -34,11 +34,15 @@ extension ClaudeMonitor {
         }
 
         registerHotKey(character: hotkeyAccept, label: "Accept") { [weak self] in
-            guard let self, self.pendingPermission != nil else { return }
+            guard let self else { return }
+            self.ttsService.log("Accept hotkey pressed — pendingPermission=\(self.pendingPermission != nil)")
+            guard self.pendingPermission != nil else { return }
             Task { @MainActor in self.respondToPermission(allow: true) }
         }
         registerHotKey(character: hotkeyDeny, label: "Deny") { [weak self] in
-            guard let self, self.pendingPermission != nil else { return }
+            guard let self else { return }
+            self.ttsService.log("Deny hotkey pressed — pendingPermission=\(self.pendingPermission != nil)")
+            guard self.pendingPermission != nil else { return }
             Task { @MainActor in self.respondToPermission(allow: false) }
         }
         registerHotKey(character: hotkeyVoice, label: "Voice") { [weak self] in

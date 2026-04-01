@@ -32,6 +32,16 @@ final class TTSService: ObservableObject, @unchecked Sendable {
 
     func log(_ msg: String) {
         Self.logger.info("\(msg, privacy: .public)")
+        // Also write to file for diagnostics (os.Logger info not persisted)
+        let path = NSHomeDirectory() + "/.claude/cc-beeper/tts.log"
+        let line = "[\(ISO8601DateFormatter().string(from: Date()))] \(msg)\n"
+        if let d = line.data(using: .utf8) {
+            if let fh = FileHandle(forWritingAtPath: path) {
+                fh.seekToEndOfFile(); fh.write(d); try? fh.close()
+            } else {
+                try? d.write(to: URL(fileURLWithPath: path))
+            }
+        }
     }
 
     // MARK: - Public API
@@ -162,10 +172,17 @@ final class TTSService: ObservableObject, @unchecked Sendable {
     private var lastOutputHash: Int = 0
 
     private func onOutputFileChanged() {
+        let exists = FileManager.default.fileExists(atPath: Self.outputFile)
+        let size = (try? FileManager.default.attributesOfItem(atPath: Self.outputFile)[.size] as? Int) ?? 0
+        log("Kokoro: onOutputFileChanged — exists=\(exists), size=\(size), lastHash=\(lastOutputHash)")
+
         guard let data = FileManager.default.contents(atPath: Self.outputFile),
               data.count > 44 else { return } // 44 = WAV header minimum
         let hash = data.hashValue
-        guard hash != lastOutputHash else { return }
+        guard hash != lastOutputHash else {
+            log("Kokoro: hash unchanged (\(hash)) — skipping")
+            return
+        }
         lastOutputHash = hash
 
         log("Kokoro: received \(data.count) bytes WAV from file")

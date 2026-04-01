@@ -11,6 +11,16 @@ extension ClaudeMonitor {
     func handleHookPayload(_ payload: [String: Any]) -> [String: Any]? {
         guard let hookEventName = payload["hook_event_name"] as? String else { return nil }
         let sessionId = payload["session_id"] as? String ?? ""
+
+        // Persistent hook log for diagnostics
+        let hookLogPath = Self.ipcDir + "/hooks.log"
+        let hasMsg = payload["last_assistant_message"] != nil
+        let logLine = "[\(ISO8601DateFormatter().string(from: Date()))] \(hookEventName) sid=\(sessionId.prefix(8)) hasMsg=\(hasMsg)\n"
+        if let d = logLine.data(using: .utf8), let fh = FileHandle(forWritingAtPath: hookLogPath) {
+            fh.seekToEndOfFile(); fh.write(d); try? fh.close()
+        } else if let d = logLine.data(using: .utf8) {
+            try? d.write(to: URL(fileURLWithPath: hookLogPath))
+        }
         let toolName = payload["tool_name"] as? String
         let ts = Int(Date().timeIntervalSince1970)
 

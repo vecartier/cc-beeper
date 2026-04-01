@@ -24,7 +24,7 @@ enum ClaudeState: Equatable {
         case .done: "DONE!"
         case .error: "ERROR"
         case .approveQuestion: "APPROVE?"
-        case .needsInput: "NEEDS INPUT"
+        case .needsInput: "INPUT?"
         case .listening: "LISTENING"
         case .speaking: "SPEAKING"
         }

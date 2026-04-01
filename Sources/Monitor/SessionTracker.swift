@@ -145,11 +145,19 @@ extension ClaudeMonitor {
         let values = Array(sessionStates.values)
         if values.isEmpty {
             sessionCount = 0
+            if state != .listening && state != .speaking {
+                let oldState = state
+                state = .idle
+                if oldState != .idle {
+                    idleStartTime = Date()
+                }
+            }
             return
         }
 
         let highest = values.max(by: { $0.priority < $1.priority }) ?? .idle
-        if highest.priority >= state.priority || state == .done || state == .idle {
+        // Always update aggregate state unless voice is active (local, not session-driven)
+        if state != .listening && state != .speaking {
             let oldState = state
             state = highest
             if state == .idle && oldState != .idle {
