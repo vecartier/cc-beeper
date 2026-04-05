@@ -111,7 +111,7 @@ struct ContentView: View {
         }
 
         // Buzz/vibration
-        buzzService.handleStateChange(newState, vibrationEnabled: monitor.vibrationEnabled, soundEnabled: monitor.soundEnabled)
+        buzzService.handleStateChange(newState, vibrationEnabled: monitor.vibrationEnabled, soundEnabled: monitor.soundEnabled && !monitor.isMuted)
     }
 
     // MARK: - LEDs

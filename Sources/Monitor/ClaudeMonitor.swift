@@ -87,6 +87,14 @@ final class ClaudeMonitor: ObservableObject {
     @Published var vibrationEnabled: Bool {
         didSet { UserDefaults.standard.set(vibrationEnabled, forKey: "vibrationEnabled") }
     }
+    @Published var isMuted: Bool {
+        didSet {
+            UserDefaults.standard.set(isMuted, forKey: "isMuted")
+            if isMuted && ttsService.isSpeaking {
+                ttsService.stopSpeaking()
+            }
+        }
+    }
     @Published var sessionCount: Int = 0
     @Published var errorDetail: String? = nil
     @Published var inputMessage: String? = nil
@@ -204,6 +212,7 @@ final class ClaudeMonitor: ObservableObject {
     init() {
         soundEnabled = UserDefaults.standard.object(forKey: "soundEnabled") as? Bool ?? true
         vibrationEnabled = UserDefaults.standard.object(forKey: "vibrationEnabled") as? Bool ?? true
+        isMuted = UserDefaults.standard.bool(forKey: "isMuted")
         widgetSize = WidgetSize(rawValue: UserDefaults.standard.string(forKey: "widgetSize") ?? "") ?? .large
         currentPreset = PermissionPresetWriter.readCurrentPreset()
         isSettingsMalformed = PermissionPresetWriter.isSettingsMalformed()
@@ -255,17 +264,17 @@ final class ClaudeMonitor: ObservableObject {
     }
 
     func triggerSummary() {
-        guard let text = lastSummary, !text.isEmpty, !ttsService.isSpeaking else { return }
+        guard !isMuted, let text = lastSummary, !text.isEmpty, !ttsService.isSpeaking else { return }
         Task { await ttsService.speakSummary(text, provider: ttsProvider) }
     }
 
     func playAlert() {
-        guard soundEnabled else { return }
+        guard soundEnabled, !isMuted else { return }
         NSSound(named: "Ping")?.play()
     }
 
     func playDoneChime() {
-        guard soundEnabled else { return }
+        guard soundEnabled, !isMuted else { return }
         NSSound(named: "Pop")?.play()
     }
 

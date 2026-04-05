@@ -81,6 +81,11 @@ struct CCBeeperApp: App {
 
             Divider()
 
+            // Mute
+            Button(monitor.isMuted ? "Unmute" : "Mute") {
+                monitor.isMuted.toggle()
+            }
+
             // Sleep / Wake
             Button(monitor.isActive ? "Sleep" : "Wake") {
                 monitor.isActive.toggle()
@@ -96,6 +101,8 @@ struct CCBeeperApp: App {
                     Self.resizeMainWindow(to: windowSize)
                 }
             }
+
+            Divider()
 
             // Permission mode
             Menu("Permission \u{2014} \(monitor.currentPreset.label)") {

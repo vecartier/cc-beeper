@@ -164,7 +164,7 @@ extension ClaudeMonitor {
     private func handleStopPayload(_ payload: [String: Any], sessionId: String) {
         if let summary = payload["last_assistant_message"] as? String, !summary.isEmpty {
             lastSummary = summary
-            if voiceOver && !isRecording {
+            if voiceOver && !isMuted && !isRecording {
                 Task { [weak self] in
                     guard let self else { return }
                     _ = await self.ttsService.speakSummary(summary, provider: self.ttsProvider)
