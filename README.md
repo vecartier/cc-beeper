@@ -56,7 +56,7 @@ Four modes that control how much CC-Beeper auto-approves on your behalf. Switcha
 
 ### Dictation (STT)
 
-Dictate prompts into Claude Code without touching the keyboard. Toggle with **⌥R** from anywhere.
+Dictate prompts into Claude Code without touching the keyboard. Toggle with **⌥R** from anywhere, or **double clap** to go fully hands-free — clap twice to start recording, twice again to stop and send.
 
 - **WhisperKit** — on-device transcription, 99 languages, small (~2 GB) or medium (~5 GB) model
 - **Apple SFSpeech** fallback when Whisper isn't available
