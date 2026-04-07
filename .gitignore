@@ -12,6 +12,8 @@ AppIcon.icns
 # Claude Code
 .claude/
 .planning/
+CLAUDE.md
+NOTARIZATION.md
 
 # Dev tooling
 *.html

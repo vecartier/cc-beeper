@@ -85,7 +85,7 @@ cat > CC-Beeper.app/Contents/Info.plist << 'PLIST'
 PLIST
 
 # Bundle Kokoro TTS server script
-cp Sources/kokoro-tts-server.py "$RESOURCES_DIR/kokoro-tts-server.py" 2>/dev/null || true
+cp scripts/kokoro-tts-server.py "$RESOURCES_DIR/kokoro-tts-server.py" 2>/dev/null || true
 
 echo "Built CC-Beeper.app"
 

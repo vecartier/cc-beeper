@@ -6,7 +6,7 @@ build:
 install: build
 	@echo ""
 	@echo "Setting up Claude Code hooks..."
-	@python3 setup.py
+	@python3 scripts/setup.py
 	@echo ""
 	@echo "Installing to /Applications..."
 	@pkill -x CC-Beeper 2>/dev/null; sleep 1; rm -rf /Applications/CC-Beeper.app
@@ -16,22 +16,22 @@ install: build
 
 uninstall: no-autoupdate
 	@echo "Uninstalling CC-Beeper..."
-	@python3 uninstall.py
+	@python3 scripts/uninstall.py
 
 clean:
 	@rm -rf .build CC-Beeper.app CC-Beeper.dmg
 	@echo "Cleaned build artifacts"
 
 dmg:
-	@./create-dmg.sh
+	@./scripts/create-dmg.sh
 
 update:
-	@./update.sh
+	@./scripts/update.sh
 
 autoupdate:
 	# NOTE: plist file retains legacy name com.cc-beeper.autoupdate.plist — rename not required for functionality
 	@REPO="$$(cd "$(CURDIR)" && pwd)" && \
-	sed "s|__REPO_PATH__|$$REPO|g" com.cc-beeper.autoupdate.plist \
+	sed "s|__REPO_PATH__|$$REPO|g" scripts/com.cc-beeper.autoupdate.plist \
 		> ~/Library/LaunchAgents/com.cc-beeper.autoupdate.plist && \
 	launchctl bootout gui/$$(id -u) ~/Library/LaunchAgents/com.cc-beeper.autoupdate.plist 2>/dev/null || true && \
 	launchctl bootstrap gui/$$(id -u) ~/Library/LaunchAgents/com.cc-beeper.autoupdate.plist && \
