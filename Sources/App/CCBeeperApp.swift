@@ -60,6 +60,20 @@ struct CCBeeperApp: App {
                     Self.showMainWindow()
                 }
             }
+            .alert("Permissions needed", isPresented: .init(
+                get: { hasCompletedOnboarding && !monitor.missingPermissions.isEmpty },
+                set: { if !$0 { monitor.missingPermissions = [] } }
+            )) {
+                Button("Open System Settings") {
+                    NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy")!)
+                    monitor.missingPermissions = []
+                }
+                Button("Later", role: .cancel) {
+                    monitor.missingPermissions = []
+                }
+            } message: {
+                Text("CC-Beeper needs \(monitor.missingPermissions.joined(separator: ", ")) to work properly. Grant them in System Settings > Privacy & Security.")
+            }
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)

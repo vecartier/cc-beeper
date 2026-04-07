@@ -2,6 +2,8 @@ import Foundation
 import Combine
 import AppKit
 import ApplicationServices
+import AVFoundation
+import Speech
 import HotKey
 import Carbon.HIToolbox
 
@@ -266,6 +268,25 @@ final class ClaudeMonitor: ObservableObject {
         idleStartTime = Date()
         preWarmWhisper()
         launchKokoro()
+        checkPermissions()
+    }
+
+    // MARK: - Permission Health Check
+
+    @Published var missingPermissions: [String] = []
+
+    func checkPermissions() {
+        var missing: [String] = []
+        if !AXIsProcessTrusted() {
+            missing.append("Accessibility")
+        }
+        if AVCaptureDevice.authorizationStatus(for: .audio) != .authorized {
+            missing.append("Microphone")
+        }
+        if SFSpeechRecognizer.authorizationStatus() != .authorized {
+            missing.append("Speech Recognition")
+        }
+        missingPermissions = missing
     }
 
     deinit {
