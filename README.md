@@ -14,10 +14,7 @@
   <img src="https://img.shields.io/badge/%EF%A3%BF_DOWNLOAD_FOR_MAC-DMG-black?style=for-the-badge&labelColor=555555" alt="Download for Mac">
 </a>
 
-<br>
 
-![macOS 26+](https://img.shields.io/badge/macOS-26+-black?style=flat-square)
-![GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square)
 
 </div>
 
