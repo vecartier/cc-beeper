@@ -40,14 +40,14 @@ struct OnboardingTTSStep: View {
                                     .font(ClaudeTheme.sans(13, weight: .semibold))
                                     .foregroundStyle(ClaudeTheme.nearBlack)
                                 if viewModel.isTtsDownloading {
-                                    HStack(spacing: 5) {
+                                    HStack(spacing: 6) {
                                         ProgressView()
-                                            .scaleEffect(0.5)
-                                            .frame(width: 10, height: 10)
+                                            .controlSize(.small)
+                                            .tint(ClaudeTheme.terracotta)
                                         Text("Downloading...")
+                                            .font(ClaudeTheme.sans(11))
+                                            .foregroundStyle(ClaudeTheme.terracotta)
                                     }
-                                    .font(ClaudeTheme.sans(11))
-                                    .foregroundStyle(ClaudeTheme.stone)
                                 } else if viewModel.isTtsReady {
                                     Text("~930 MB · Ready")
                                         .font(ClaudeTheme.sans(11))
