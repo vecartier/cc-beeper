@@ -8,7 +8,7 @@ Never miss a permission request, task completion, or error again — even when C
 
 <img src="assets/hero.gif" width="320">
 
-<br><br><br>
+<br><br>
 
 <a href="https://github.com/vecartier/cc-beeper/releases/latest/download/CC-Beeper.dmg">
   <img src="https://img.shields.io/badge/%EF%A3%BF_DOWNLOAD_FOR_MAC-DMG-black?style=for-the-badge&labelColor=555555" alt="Download for Mac">
