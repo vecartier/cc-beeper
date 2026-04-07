@@ -210,6 +210,8 @@ final class ClaudeMonitor: ObservableObject {
 
     // MARK: - Init
 
+    @Published var servicesStarted: Bool = false
+
     init() {
         soundEnabled = UserDefaults.standard.object(forKey: "soundEnabled") as? Bool ?? true
         vibrationEnabled = UserDefaults.standard.object(forKey: "vibrationEnabled") as? Bool ?? true
@@ -218,12 +220,6 @@ final class ClaudeMonitor: ObservableObject {
         currentPreset = PermissionPresetWriter.readCurrentPreset()
         isSettingsMalformed = PermissionPresetWriter.isSettingsMalformed()
         PermissionPresetWriter.migrateLegacyFields()
-        ensureIPCDir()
-        httpServer.start { [weak self] payload in
-            guard let self else { return nil }
-            return self.handleHookPayload(payload)
-        }
-        setupGlobalHotkeys()
         // Migrate legacy voiceOver key
         if UserDefaults.standard.object(forKey: "voiceOver") == nil,
            let legacy = UserDefaults.standard.object(forKey: "autoSpeak") as? Bool {
@@ -247,10 +243,27 @@ final class ClaudeMonitor: ObservableObject {
         if let v = UserDefaults.standard.string(forKey: "hotkeyChar_terminal") { hotkeyTerminal = v }
         if let v = UserDefaults.standard.string(forKey: "hotkeyChar_mute") { hotkeyMute = v }
         isActive = UserDefaults.standard.object(forKey: "isActive") as? Bool ?? true
-        idleStartTime = Date()
         voiceService.ttsService = ttsService
         wireVoiceStateBindings()
         wireVoiceCommands()
+
+        // Only start services if onboarding is already complete
+        if UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") {
+            startServices()
+        }
+    }
+
+    /// Start all background services — called after onboarding completes or on launch if already set up.
+    func startServices() {
+        guard !servicesStarted else { return }
+        servicesStarted = true
+        ensureIPCDir()
+        httpServer.start { [weak self] payload in
+            guard let self else { return nil }
+            return self.handleHookPayload(payload)
+        }
+        setupGlobalHotkeys()
+        idleStartTime = Date()
         preWarmWhisper()
         launchKokoro()
     }

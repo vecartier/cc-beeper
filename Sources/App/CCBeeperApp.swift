@@ -50,6 +50,16 @@ struct CCBeeperApp: App {
                     }
                 }
             }
+            .onChange(of: hasCompletedOnboarding) { _, completed in
+                if completed {
+                    monitor.startServices()
+                    let size = monitor.widgetSize == .compact
+                        ? NSSize(width: 300, height: 193)
+                        : NSSize(width: 440, height: 240)
+                    Self.resizeMainWindow(to: size)
+                    Self.showMainWindow()
+                }
+            }
         }
         .windowStyle(.hiddenTitleBar)
         .windowResizability(.contentSize)
@@ -74,6 +84,13 @@ struct CCBeeperApp: App {
         .defaultSize(width: 580, height: 420)
 
         MenuBarExtra {
+            if !hasCompletedOnboarding {
+                Text("Setup in progress...")
+                    .foregroundColor(.secondary)
+                Divider()
+                Button("Quit CC-Beeper") { NSApp.terminate(nil) }
+                    .keyboardShortcut("q")
+            } else {
             // Status
             Text("Sessions: \(monitor.sessionCount)")
             Text(monitor.state.label)
@@ -177,6 +194,7 @@ struct CCBeeperApp: App {
 
             Button("Quit CC-Beeper") { NSApp.terminate(nil) }
                 .keyboardShortcut("q")
+            } // end if/else hasCompletedOnboarding
         } label: {
             Image(nsImage: BeeperIcon.image(state: monitor.menuBarIconState))
         }
