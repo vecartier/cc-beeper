@@ -10,6 +10,12 @@ echo "Creating DMG with create-dmg..."
 
 rm -f CC-Beeper.dmg
 
+# Stage app in temp directory (create-dmg expects a source folder)
+STAGING="/tmp/cc-beeper-dmg-staging"
+rm -rf "$STAGING"
+mkdir -p "$STAGING"
+cp -R CC-Beeper.app "$STAGING/"
+
 create-dmg \
     --volname "CC-Beeper" \
     --window-pos 200 120 \
@@ -20,7 +26,9 @@ create-dmg \
     --hide-extension "CC-Beeper.app" \
     --no-internet-enable \
     CC-Beeper.dmg \
-    CC-Beeper.app
+    "$STAGING"
+
+rm -rf "$STAGING"
 
 echo ""
 echo "Created CC-Beeper.dmg"
