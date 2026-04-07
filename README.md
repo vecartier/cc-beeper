@@ -17,8 +17,7 @@
 <br>
 
 ![macOS 26+](https://img.shields.io/badge/macOS-26+-black?style=flat-square)
-![License: GPL-3.0](https://img.shields.io/github/license/vecartier/cc-beeper?style=flat-square)
-![GitHub stars](https://img.shields.io/github/stars/vecartier/cc-beeper?style=flat-square)
+![GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square)
 
 </div>
 
@@ -55,6 +54,8 @@ At a glance, know exactly what Claude is up to. CC-Beeper tracks 8 states, each 
 | **LISTENING** | <img src="assets/states/listening.png" width="200"> | Recording your voice for dictation. |
 | **RECAP** | <img src="assets/states/recap.png" width="200"> | Reading Claude's last response aloud. |
 
+---
+
 ### Auto-Accept Modes
 
 When Claude Code needs to use a tool, CC-Beeper can auto-approve it or ask you first. Four presets let you dial the automation while keeping control. Switchable anytime from the menu bar.
@@ -65,6 +66,8 @@ When Claude Code needs to use a tool, CC-Beeper can auto-approve it or ask you f
 | **Relaxed** | Reads are fine. Asks before writes and commands. |
 | **Trusted** | File operations are fine. Asks before shell commands. |
 | **YOLO** | Don't ask. Just do it. Auto-approves everything — including file writes, deletes, and shell commands. |
+
+---
 
 ### Voice
 
@@ -83,6 +86,8 @@ Claude finished? Hear the summary out loud.
 - **Kokoro** — on-device, 54 voices across 9 languages
 - **Apple Speech** — built-in fallback
 
+---
+
 ### Global Hotkeys
 
 Use them from any app, in any keyboard layout (AZERTY, QWERTZ, Dvorak). All remappable in Settings.
@@ -94,6 +99,8 @@ Use them from any app, in any keyboard layout (AZERTY, QWERTZ, Dvorak). All rema
 | **⌥R** | Toggle voice recording |
 | **⌥T** | Focus the active terminal |
 | **⌥M** | Stop TTS / replay last response |
+
+---
 
 ### Themes, Sizes & Sound
 
@@ -193,7 +200,7 @@ The authors are not liable for any damage, data loss, or unintended consequences
 
 ## Contributing
 
-CC-Beeper is fully vibe-coded — feature suggestions and code improvements are welcome.
+Feature suggestions and code improvements are welcome.
 
 1. Fork the repo
 2. Create a feature branch (`git checkout -b feature/your-idea`)
@@ -210,7 +217,7 @@ GPL-3.0 — see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-**Designed & vibe-coded by [Victor Cartier](https://github.com/vecartier) with [Claude Code](https://docs.anthropic.com/en/docs/claude-code).**
+**Built by [Victor Cartier](https://github.com/vecartier)**
 
 Free · Open Source · Native macOS
 
