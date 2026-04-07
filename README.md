@@ -20,7 +20,7 @@
 
 ---
 
-## Why
+## Why I Made This
 
 You kick off a task in Claude Code. Then life happens. Claude finishes, or hits an error, or needs a permission — but your terminal is buried under three windows.
 
