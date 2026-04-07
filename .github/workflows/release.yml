@@ -16,7 +16,7 @@ jobs:
       - name: Build DMG
         env:
           SIGNING_IDENTITY: "-"
-        run: ./create-dmg.sh
+        run: ./scripts/create-dmg.sh
 
       # To enable notarization, add these repository secrets:
       #   APPLE_ID     — your Apple ID email (developer@example.com)
