@@ -39,12 +39,12 @@ private struct CheckDisc: View {
     var body: some View {
         ZStack {
             Circle()
-                .fill(ClaudeTheme.green)
+                .fill(OnboardingTheme.green)
                 .frame(width: 52, height: 52)
-                .shadow(color: ClaudeTheme.green.opacity(0.3), radius: 8, x: 0, y: 4)
+                .shadow(color: OnboardingTheme.green.opacity(0.3), radius: 8, x: 0, y: 4)
             Image(systemName: "checkmark")
                 .font(.system(size: 22, weight: .bold))
-                .foregroundStyle(ClaudeTheme.ivory)
+                .foregroundStyle(OnboardingTheme.ivory)
         }
     }
 }

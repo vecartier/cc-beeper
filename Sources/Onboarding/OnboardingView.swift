@@ -13,9 +13,9 @@ struct OnboardingView: View {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         Rectangle()
-                            .fill(ClaudeTheme.borderCream)
+                            .fill(OnboardingTheme.borderCream)
                         Rectangle()
-                            .fill(ClaudeTheme.terracotta)
+                            .fill(OnboardingTheme.terracotta)
                             .frame(width: geo.size.width * viewModel.displayProgress)
                             .animation(.easeInOut(duration: 0.3), value: viewModel.displayProgress)
                     }
@@ -54,8 +54,8 @@ struct OnboardingView: View {
             .animation(.easeInOut(duration: 0.25), value: viewModel.currentStep)
         }
         .frame(width: 600, height: 520)
-        .background(isDarkStep ? ClaudeTheme.nearBlack : ClaudeTheme.parchment)
-        .foregroundStyle(isDarkStep ? ClaudeTheme.ivory : ClaudeTheme.nearBlack)
+        .background(isDarkStep ? OnboardingTheme.nearBlack : OnboardingTheme.parchment)
+        .foregroundStyle(isDarkStep ? OnboardingTheme.ivory : OnboardingTheme.nearBlack)
         .animation(.easeInOut(duration: 0.25), value: isDarkStep)
         .onAppear {
             if UserDefaults.standard.bool(forKey: "hasCompletedOnboarding") {

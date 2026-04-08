@@ -22,29 +22,29 @@ struct OnboardingSTTStep: View {
                 // WhisperKit card
                 Button { viewModel.sttProvider = "whisper" } label: {
                     HStack(spacing: 12) {
-                        engineIcon(symbol: "waveform", color: ClaudeTheme.terracotta)
+                        engineIcon(symbol: "waveform", color: OnboardingTheme.terracotta)
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text("WhisperKit · On-device")
-                                .font(ClaudeTheme.sans(13, weight: .semibold))
-                                .foregroundStyle(ClaudeTheme.nearBlack)
+                                .font(OnboardingTheme.sans(13, weight: .semibold))
+                                .foregroundStyle(OnboardingTheme.nearBlack)
                             if viewModel.isSttDownloading {
                                 HStack(spacing: 6) {
                                     ProgressView()
                                         .controlSize(.small)
                                         .colorScheme(.dark)
                                     Text("Downloading (this may take a moment)...")
-                                        .font(ClaudeTheme.sans(11))
-                                        .foregroundStyle(ClaudeTheme.terracotta)
+                                        .font(OnboardingTheme.sans(11))
+                                        .foregroundStyle(OnboardingTheme.terracotta)
                                 }
                             } else if viewModel.isSttReady {
                                 Text("~500 MB · Ready")
-                                    .font(ClaudeTheme.sans(11))
-                                    .foregroundStyle(ClaudeTheme.green)
+                                    .font(OnboardingTheme.sans(11))
+                                    .foregroundStyle(OnboardingTheme.green)
                             } else {
                                 Text("~500 MB · 99 languages · Best accuracy")
-                                    .font(ClaudeTheme.sans(11))
-                                    .foregroundStyle(ClaudeTheme.stone)
+                                    .font(OnboardingTheme.sans(11))
+                                    .foregroundStyle(OnboardingTheme.stone)
                             }
                         }
 
@@ -53,7 +53,7 @@ struct OnboardingSTTStep: View {
                         if viewModel.isSttReady {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 18))
-                                .foregroundStyle(ClaudeTheme.green)
+                                .foregroundStyle(OnboardingTheme.green)
                         } else if !viewModel.isSttDownloading {
                             Button(action: { viewModel.downloadWhisper() }) {
                                 HStack(spacing: 4) {
@@ -61,12 +61,12 @@ struct OnboardingSTTStep: View {
                                         .font(.system(size: 10, weight: .semibold))
                                     Text("Download")
                                 }
-                                .font(ClaudeTheme.sans(12, weight: .semibold))
-                                .foregroundStyle(ClaudeTheme.nearBlack)
+                                .font(OnboardingTheme.sans(12, weight: .semibold))
+                                .foregroundStyle(OnboardingTheme.nearBlack)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
-                                .background(Capsule().fill(ClaudeTheme.ivory))
-                                .overlay(Capsule().strokeBorder(ClaudeTheme.ringWarm, lineWidth: 1))
+                                .background(Capsule().fill(OnboardingTheme.ivory))
+                                .overlay(Capsule().strokeBorder(OnboardingTheme.ringWarm, lineWidth: 1))
                             }
                             .buttonStyle(.plain)
                         }
@@ -78,15 +78,15 @@ struct OnboardingSTTStep: View {
                 // Apple Speech card
                 Button { viewModel.sttProvider = "apple" } label: {
                     HStack(spacing: 12) {
-                        engineIcon(symbol: "applelogo", color: ClaudeTheme.stone)
+                        engineIcon(symbol: "applelogo", color: OnboardingTheme.stone)
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Apple Speech")
-                                .font(ClaudeTheme.sans(13, weight: .semibold))
-                                .foregroundStyle(ClaudeTheme.nearBlack)
+                                .font(OnboardingTheme.sans(13, weight: .semibold))
+                                .foregroundStyle(OnboardingTheme.nearBlack)
                             Text("No download · Built-in macOS speech")
-                                .font(ClaudeTheme.sans(11))
-                                .foregroundStyle(ClaudeTheme.stone)
+                                .font(OnboardingTheme.sans(11))
+                                .foregroundStyle(OnboardingTheme.stone)
                         }
 
                         Spacer()
@@ -102,7 +102,7 @@ struct OnboardingSTTStep: View {
     private func engineIcon(symbol: String, color: Color) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(ClaudeTheme.parchment)
+                .fill(OnboardingTheme.parchment)
                 .frame(width: 34, height: 34)
             Image(systemName: symbol)
                 .font(.system(size: 16, weight: .medium))

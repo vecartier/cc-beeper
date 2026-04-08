@@ -19,7 +19,7 @@ struct OnboardingBackChevron: View {
         Button(action: action) {
             Image(systemName: "chevron.left")
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(ClaudeTheme.stone)
+                .foregroundStyle(OnboardingTheme.stone)
                 .frame(width: 32, height: 32)
                 .contentShape(Rectangle())
         }
@@ -36,8 +36,8 @@ struct OnboardingSkipButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(ClaudeTheme.sans(13, weight: .medium))
-                .foregroundStyle(ClaudeTheme.stone)
+                .font(OnboardingTheme.sans(13, weight: .medium))
+                .foregroundStyle(OnboardingTheme.stone)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .contentShape(Rectangle())
@@ -77,20 +77,20 @@ struct OnboardingShell<Content: View>: View {
             // Title block
             VStack(spacing: 10) {
                 Text(Self.stepLabel(number: stepNumber, total: totalSteps))
-                    .font(ClaudeTheme.mono(10, weight: .medium))
+                    .font(OnboardingTheme.mono(10, weight: .medium))
                     .tracking(1.5)
-                    .foregroundStyle(ClaudeTheme.stone)
+                    .foregroundStyle(OnboardingTheme.stone)
 
                 Text(title)
-                    .font(ClaudeTheme.serif(24, weight: .medium))
-                    .foregroundStyle(ClaudeTheme.nearBlack)
+                    .font(OnboardingTheme.serif(24, weight: .medium))
+                    .foregroundStyle(OnboardingTheme.nearBlack)
                     .multilineTextAlignment(.center)
                     .lineSpacing(2)
 
                 if let subtitle {
                     Text(subtitle)
-                        .font(ClaudeTheme.sans(13))
-                        .foregroundStyle(ClaudeTheme.stone)
+                        .font(OnboardingTheme.sans(13))
+                        .foregroundStyle(OnboardingTheme.stone)
                         .multilineTextAlignment(.center)
                         .lineSpacing(3)
                         .frame(maxWidth: 440)
@@ -139,9 +139,9 @@ struct OnboardingSplashShell<LeadView: View>: View {
     let primaryAction: () -> Void
     @ViewBuilder let leadIcon: () -> LeadView
 
-    private var eyebrowColor: Color { isDark ? ClaudeTheme.warmSilver : ClaudeTheme.stone }
-    private var headlineColor: Color { isDark ? ClaudeTheme.ivory : ClaudeTheme.nearBlack }
-    private var captionColor: Color { isDark ? ClaudeTheme.warmSilver : ClaudeTheme.stone }
+    private var eyebrowColor: Color { isDark ? OnboardingTheme.warmSilver : OnboardingTheme.stone }
+    private var headlineColor: Color { isDark ? OnboardingTheme.ivory : OnboardingTheme.nearBlack }
+    private var captionColor: Color { isDark ? OnboardingTheme.warmSilver : OnboardingTheme.stone }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -149,7 +149,7 @@ struct OnboardingSplashShell<LeadView: View>: View {
             HStack {
                 if showBack {
                     OnboardingBackChevron(action: onBack)
-                        .foregroundStyle(isDark ? ClaudeTheme.warmSilver : ClaudeTheme.stone)
+                        .foregroundStyle(isDark ? OnboardingTheme.warmSilver : OnboardingTheme.stone)
                 }
                 Spacer()
             }
@@ -167,22 +167,22 @@ struct OnboardingSplashShell<LeadView: View>: View {
             VStack(spacing: 10) {
                 if !eyebrow.isEmpty {
                     Text(eyebrow.uppercased())
-                        .font(ClaudeTheme.mono(10, weight: .medium))
+                        .font(OnboardingTheme.mono(10, weight: .medium))
                         .tracking(1.5)
                         .foregroundStyle(eyebrowColor)
                 }
 
                 Text(title)
                     .font(titleIsHero
-                          ? ClaudeTheme.serif(44, weight: .bold)
-                          : ClaudeTheme.serif(24, weight: .medium))
+                          ? OnboardingTheme.serif(44, weight: .bold)
+                          : OnboardingTheme.serif(24, weight: .medium))
                     .foregroundStyle(headlineColor)
                     .multilineTextAlignment(.center)
                     .lineSpacing(2)
 
                 if let subtitle {
                     Text(subtitle)
-                        .font(ClaudeTheme.sans(13))
+                        .font(OnboardingTheme.sans(13))
                         .foregroundStyle(captionColor)
                         .multilineTextAlignment(.center)
                         .lineSpacing(3)

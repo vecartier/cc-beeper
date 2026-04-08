@@ -21,17 +21,17 @@ struct OnboardingCLIStep: View {
                 if !viewModel.isClaudeDetected {
                     HStack(spacing: 4) {
                         Text("Claude Code CLI not found.")
-                            .foregroundStyle(ClaudeTheme.stone)
+                            .foregroundStyle(OnboardingTheme.stone)
                         Link("Install it", destination: URL(string: "https://docs.anthropic.com/en/docs/claude-code/overview")!)
-                            .foregroundStyle(ClaudeTheme.terracotta)
+                            .foregroundStyle(OnboardingTheme.terracotta)
                     }
-                    .font(ClaudeTheme.sans(12))
+                    .font(OnboardingTheme.sans(12))
                 }
 
                 if let error = viewModel.hookInstallError {
                     Text(error)
-                        .font(ClaudeTheme.sans(11))
-                        .foregroundStyle(ClaudeTheme.crimson)
+                        .font(OnboardingTheme.sans(11))
+                        .foregroundStyle(OnboardingTheme.crimson)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: 400)
                 }
@@ -67,31 +67,31 @@ struct SettingsJsonCard: View {
     var body: some View {
         HStack(spacing: 20) {
             Text("~/.claude/settings.json")
-                .font(ClaudeTheme.mono(13))
-                .foregroundStyle(ClaudeTheme.nearBlack)
+                .font(OnboardingTheme.mono(13))
+                .foregroundStyle(OnboardingTheme.nearBlack)
             Spacer(minLength: 16)
             badge
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 14)
         .frame(minWidth: 340)
-        .claudeCard(radius: ClaudeTheme.radiusMedium)
+        .onboardingCard(radius: OnboardingTheme.radiusMedium)
     }
 
     @ViewBuilder private var badge: some View {
         switch status {
         case .pending:
-            badgePill(text: "+ 6 hooks", color: ClaudeTheme.green)
+            badgePill(text: "+ 6 hooks", color: OnboardingTheme.green)
         case .installed:
-            badgePill(text: "Installed", color: ClaudeTheme.green)
+            badgePill(text: "Installed", color: OnboardingTheme.green)
         case .noClaude:
-            badgePill(text: "No Claude", color: ClaudeTheme.amber)
+            badgePill(text: "No Claude", color: OnboardingTheme.amber)
         }
     }
 
     private func badgePill(text: String, color: Color) -> some View {
         Text(text.uppercased())
-            .font(ClaudeTheme.mono(10, weight: .semibold))
+            .font(OnboardingTheme.mono(10, weight: .semibold))
             .tracking(0.5)
             .foregroundStyle(color)
             .padding(.horizontal, 8)
@@ -122,17 +122,17 @@ struct SetupRow: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(ClaudeTheme.sans(13, weight: .medium))
-                    .foregroundStyle(ClaudeTheme.nearBlack)
+                    .font(OnboardingTheme.sans(13, weight: .medium))
+                    .foregroundStyle(OnboardingTheme.nearBlack)
                 if let subtitle {
                     Text(subtitle)
-                        .font(ClaudeTheme.sans(11))
-                        .foregroundStyle(ClaudeTheme.stone)
+                        .font(OnboardingTheme.sans(11))
+                        .foregroundStyle(OnboardingTheme.stone)
                 }
                 if let link {
                     Link(link.0, destination: link.1)
-                        .font(ClaudeTheme.sans(11))
-                        .foregroundStyle(ClaudeTheme.terracotta)
+                        .font(OnboardingTheme.sans(11))
+                        .foregroundStyle(OnboardingTheme.terracotta)
                 }
             }
 
@@ -141,12 +141,12 @@ struct SetupRow: View {
             if let action {
                 Button(action.0) { action.1() }
                     .buttonStyle(.bordered)
-                    .tint(ClaudeTheme.terracotta)
+                    .tint(OnboardingTheme.terracotta)
                     .controlSize(.small)
             }
         }
         .padding(14)
-        .claudeCard(radius: ClaudeTheme.radiusMedium)
+        .onboardingCard(radius: OnboardingTheme.radiusMedium)
     }
 }
 
@@ -164,13 +164,13 @@ struct OnboardingFooter: View {
                 primaryAction()
             } label: {
                 Text(primaryLabel)
-                    .font(ClaudeTheme.sans(14, weight: .semibold))
-                    .foregroundStyle(ClaudeTheme.ivory)
+                    .font(OnboardingTheme.sans(14, weight: .semibold))
+                    .foregroundStyle(OnboardingTheme.ivory)
                     .frame(maxWidth: 240)
                     .padding(.vertical, 12)
                     .background(
-                        RoundedRectangle(cornerRadius: ClaudeTheme.radiusMedium, style: .continuous)
-                            .fill(primaryDisabled ? ClaudeTheme.warmSilver : ClaudeTheme.terracotta)
+                        RoundedRectangle(cornerRadius: OnboardingTheme.radiusMedium, style: .continuous)
+                            .fill(primaryDisabled ? OnboardingTheme.warmSilver : OnboardingTheme.terracotta)
                     )
                     .contentShape(Rectangle())
             }
@@ -187,8 +187,8 @@ struct OnboardingFooter: View {
                                 .font(.system(size: 10, weight: .semibold))
                             Text("Back")
                         }
-                        .font(ClaudeTheme.sans(11))
-                        .foregroundStyle(ClaudeTheme.stone)
+                        .font(OnboardingTheme.sans(11))
+                        .foregroundStyle(OnboardingTheme.stone)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -199,8 +199,8 @@ struct OnboardingFooter: View {
                         skipAction()
                     } label: {
                         Text("Skip")
-                            .font(ClaudeTheme.sans(11))
-                            .foregroundStyle(ClaudeTheme.stone)
+                            .font(OnboardingTheme.sans(11))
+                            .foregroundStyle(OnboardingTheme.stone)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)

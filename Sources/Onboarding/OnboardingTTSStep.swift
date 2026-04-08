@@ -33,29 +33,29 @@ struct OnboardingTTSStep: View {
                 Button { viewModel.ttsProvider = "kokoro" } label: {
                     VStack(spacing: 10) {
                         HStack(spacing: 12) {
-                            engineIcon(symbol: "waveform", color: ClaudeTheme.terracotta)
+                            engineIcon(symbol: "waveform", color: OnboardingTheme.terracotta)
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Kokoro · On-device")
-                                    .font(ClaudeTheme.sans(13, weight: .semibold))
-                                    .foregroundStyle(ClaudeTheme.nearBlack)
+                                    .font(OnboardingTheme.sans(13, weight: .semibold))
+                                    .foregroundStyle(OnboardingTheme.nearBlack)
                                 if viewModel.isTtsDownloading {
                                     HStack(spacing: 6) {
                                         ProgressView()
                                             .controlSize(.small)
                                             .colorScheme(.dark)
                                         Text("Downloading (this may take a moment)...")
-                                            .font(ClaudeTheme.sans(11))
-                                            .foregroundStyle(ClaudeTheme.terracotta)
+                                            .font(OnboardingTheme.sans(11))
+                                            .foregroundStyle(OnboardingTheme.terracotta)
                                     }
                                 } else if viewModel.isTtsReady {
                                     Text("~930 MB · Ready")
-                                        .font(ClaudeTheme.sans(11))
-                                        .foregroundStyle(ClaudeTheme.green)
+                                        .font(OnboardingTheme.sans(11))
+                                        .foregroundStyle(OnboardingTheme.green)
                                 } else {
                                     Text("~930 MB · 9 languages · Natural voices")
-                                        .font(ClaudeTheme.sans(11))
-                                        .foregroundStyle(ClaudeTheme.stone)
+                                        .font(OnboardingTheme.sans(11))
+                                        .foregroundStyle(OnboardingTheme.stone)
                                 }
                             }
 
@@ -64,7 +64,7 @@ struct OnboardingTTSStep: View {
                             if viewModel.isTtsReady {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.system(size: 18))
-                                    .foregroundStyle(ClaudeTheme.green)
+                                    .foregroundStyle(OnboardingTheme.green)
                             } else if !viewModel.isTtsDownloading {
                                 Button(action: { viewModel.downloadKokoro() }) {
                                     HStack(spacing: 4) {
@@ -72,12 +72,12 @@ struct OnboardingTTSStep: View {
                                             .font(.system(size: 10, weight: .semibold))
                                         Text("Download")
                                     }
-                                    .font(ClaudeTheme.sans(12, weight: .semibold))
-                                    .foregroundStyle(ClaudeTheme.nearBlack)
+                                    .font(OnboardingTheme.sans(12, weight: .semibold))
+                                    .foregroundStyle(OnboardingTheme.nearBlack)
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 6)
-                                    .background(Capsule().fill(ClaudeTheme.ivory))
-                                    .overlay(Capsule().strokeBorder(ClaudeTheme.ringWarm, lineWidth: 1))
+                                    .background(Capsule().fill(OnboardingTheme.ivory))
+                                    .overlay(Capsule().strokeBorder(OnboardingTheme.ringWarm, lineWidth: 1))
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -88,8 +88,8 @@ struct OnboardingTTSStep: View {
 
                             HStack(spacing: 10) {
                                 Text("Language")
-                                    .font(ClaudeTheme.sans(12))
-                                    .foregroundStyle(ClaudeTheme.stone)
+                                    .font(OnboardingTheme.sans(12))
+                                    .foregroundStyle(OnboardingTheme.stone)
                                 Spacer()
                                 Picker("", selection: $viewModel.selectedLangCode) {
                                     ForEach(sortedLangCodes, id: \.code) { lang in
@@ -110,15 +110,15 @@ struct OnboardingTTSStep: View {
                 // Apple Speech card
                 Button { viewModel.ttsProvider = "apple" } label: {
                     HStack(spacing: 12) {
-                        engineIcon(symbol: "applelogo", color: ClaudeTheme.stone)
+                        engineIcon(symbol: "applelogo", color: OnboardingTheme.stone)
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Apple Speech")
-                                .font(ClaudeTheme.sans(13, weight: .semibold))
-                                .foregroundStyle(ClaudeTheme.nearBlack)
+                                .font(OnboardingTheme.sans(13, weight: .semibold))
+                                .foregroundStyle(OnboardingTheme.nearBlack)
                             Text("No download · Built-in macOS voice")
-                                .font(ClaudeTheme.sans(11))
-                                .foregroundStyle(ClaudeTheme.stone)
+                                .font(OnboardingTheme.sans(11))
+                                .foregroundStyle(OnboardingTheme.stone)
                         }
 
                         Spacer()
@@ -139,7 +139,7 @@ struct OnboardingTTSStep: View {
     private func engineIcon(symbol: String, color: Color) -> some View {
         ZStack {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(ClaudeTheme.parchment)
+                .fill(OnboardingTheme.parchment)
                 .frame(width: 34, height: 34)
             Image(systemName: symbol)
                 .font(.system(size: 16, weight: .medium))
@@ -159,30 +159,30 @@ struct LangDepsCard: View {
                 HStack {
                     ProgressView().scaleEffect(0.7)
                     Text(viewModel.depsInstaller.installProgress)
-                        .font(ClaudeTheme.sans(11))
-                        .foregroundStyle(ClaudeTheme.stone)
+                        .font(OnboardingTheme.sans(11))
+                        .foregroundStyle(OnboardingTheme.stone)
                         .lineLimit(1)
                 }
             } else {
                 let langName = KokoroVoiceCatalog.languageNames[viewModel.selectedLangCode] ?? "This language"
                 let sizeHint = viewModel.selectedLangCode == "j" ? " (~500 MB)" : " (~45 MB)"
                 Text("\(langName) needs extra dependencies\(sizeHint).")
-                    .font(ClaudeTheme.sans(11))
-                    .foregroundStyle(ClaudeTheme.stone)
+                    .font(OnboardingTheme.sans(11))
+                    .foregroundStyle(OnboardingTheme.stone)
 
                 Button("Install") { viewModel.installLangDeps() }
                     .buttonStyle(.bordered)
-                    .tint(ClaudeTheme.terracotta)
+                    .tint(OnboardingTheme.terracotta)
                     .controlSize(.small)
 
                 if let error = viewModel.depsInstaller.installError {
                     Text(error)
-                        .font(ClaudeTheme.sans(11))
-                        .foregroundStyle(ClaudeTheme.crimson)
+                        .font(OnboardingTheme.sans(11))
+                        .foregroundStyle(OnboardingTheme.crimson)
                 }
             }
         }
         .padding(12)
-        .claudeCard(radius: ClaudeTheme.radiusMedium)
+        .onboardingCard(radius: OnboardingTheme.radiusMedium)
     }
 }

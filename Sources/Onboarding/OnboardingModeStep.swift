@@ -49,10 +49,10 @@ private struct PresetCard: View {
 
     private var accentColor: Color {
         switch preset {
-        case .cautious: return ClaudeTheme.green
-        case .relaxed: return ClaudeTheme.stone
-        case .trusted: return ClaudeTheme.amber
-        case .yolo: return ClaudeTheme.crimson
+        case .cautious: return OnboardingTheme.green
+        case .relaxed: return OnboardingTheme.stone
+        case .trusted: return OnboardingTheme.amber
+        case .yolo: return OnboardingTheme.crimson
         }
     }
 
@@ -66,12 +66,12 @@ private struct PresetCard: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(preset.label.uppercased())
-                        .font(ClaudeTheme.mono(11, weight: .semibold))
+                        .font(OnboardingTheme.mono(11, weight: .semibold))
                         .tracking(0.5)
-                        .foregroundStyle(ClaudeTheme.nearBlack)
+                        .foregroundStyle(OnboardingTheme.nearBlack)
                     Text(shortDescription)
-                        .font(ClaudeTheme.sans(11))
-                        .foregroundStyle(ClaudeTheme.stone)
+                        .font(OnboardingTheme.sans(11))
+                        .foregroundStyle(OnboardingTheme.stone)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -82,12 +82,12 @@ private struct PresetCard: View {
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                RoundedRectangle(cornerRadius: ClaudeTheme.radiusMedium, style: .continuous)
-                    .fill(isSelected ? Color(hex: "FBF7F4") : ClaudeTheme.ivory)
+                RoundedRectangle(cornerRadius: OnboardingTheme.radiusMedium, style: .continuous)
+                    .fill(isSelected ? Color(hex: "FBF7F4") : OnboardingTheme.ivory)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: ClaudeTheme.radiusMedium, style: .continuous)
-                    .strokeBorder(isSelected ? ClaudeTheme.terracotta : ClaudeTheme.borderCream, lineWidth: isSelected ? 1.5 : 1)
+                RoundedRectangle(cornerRadius: OnboardingTheme.radiusMedium, style: .continuous)
+                    .strokeBorder(isSelected ? OnboardingTheme.terracotta : OnboardingTheme.borderCream, lineWidth: isSelected ? 1.5 : 1)
             )
         }
         .buttonStyle(.plain)

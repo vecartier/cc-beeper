@@ -25,11 +25,11 @@ struct OnboardingHotkeysStep: View {
                 if !viewModel.isAccessibilityGranted {
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(ClaudeTheme.amber)
+                            .foregroundStyle(OnboardingTheme.amber)
                             .font(.system(size: 10))
                         Text("Accessibility permission required for hotkeys to work.")
-                            .font(ClaudeTheme.sans(10))
-                            .foregroundStyle(ClaudeTheme.stone)
+                            .font(OnboardingTheme.sans(10))
+                            .foregroundStyle(OnboardingTheme.stone)
                     }
                     .padding(.top, 6)
                 }
@@ -51,8 +51,8 @@ private struct OnboardingHotkeyPill: View {
     var body: some View {
         HStack {
             Text(action)
-                .font(ClaudeTheme.sans(12))
-                .foregroundStyle(ClaudeTheme.nearBlack)
+                .font(OnboardingTheme.sans(12))
+                .foregroundStyle(OnboardingTheme.nearBlack)
 
             Spacer()
 
@@ -61,28 +61,28 @@ private struct OnboardingHotkeyPill: View {
             } label: {
                 HStack(spacing: 3) {
                     Text("⌥")
-                        .font(ClaudeTheme.mono(11))
-                        .foregroundStyle(ClaudeTheme.stone)
+                        .font(OnboardingTheme.mono(11))
+                        .foregroundStyle(OnboardingTheme.stone)
                     Text(isRecording ? "..." : key)
-                        .font(ClaudeTheme.mono(12, weight: .semibold))
-                        .foregroundStyle(ClaudeTheme.nearBlack)
+                        .font(OnboardingTheme.mono(12, weight: .semibold))
+                        .foregroundStyle(OnboardingTheme.nearBlack)
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
                 .background(
-                    RoundedRectangle(cornerRadius: ClaudeTheme.radiusSmall, style: .continuous)
-                        .fill(isRecording ? ClaudeTheme.terracotta.opacity(0.15) : ClaudeTheme.ivory)
+                    RoundedRectangle(cornerRadius: OnboardingTheme.radiusSmall, style: .continuous)
+                        .fill(isRecording ? OnboardingTheme.terracotta.opacity(0.15) : OnboardingTheme.ivory)
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: ClaudeTheme.radiusSmall, style: .continuous)
-                        .strokeBorder(isRecording ? ClaudeTheme.terracotta : ClaudeTheme.ringWarm, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: OnboardingTheme.radiusSmall, style: .continuous)
+                        .strokeBorder(isRecording ? OnboardingTheme.terracotta : OnboardingTheme.ringWarm, lineWidth: 1)
                 )
             }
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 9)
-        .claudeCard(radius: ClaudeTheme.radiusMedium)
+        .onboardingCard(radius: OnboardingTheme.radiusMedium)
         .onDisappear { stopRecording() }
     }
 

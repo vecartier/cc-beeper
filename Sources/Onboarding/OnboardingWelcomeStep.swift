@@ -33,7 +33,7 @@ struct OnboardingWelcomeStep: View {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [ClaudeTheme.terracotta, ClaudeTheme.coral],
+                            colors: [OnboardingTheme.terracotta, OnboardingTheme.coral],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -42,7 +42,7 @@ struct OnboardingWelcomeStep: View {
                     .overlay(
                         Image(systemName: "bell.fill")
                             .font(.system(size: 36, weight: .semibold))
-                            .foregroundStyle(ClaudeTheme.ivory)
+                            .foregroundStyle(OnboardingTheme.ivory)
                     )
             }
         }

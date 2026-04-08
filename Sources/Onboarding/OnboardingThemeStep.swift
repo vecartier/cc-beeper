@@ -41,7 +41,7 @@ struct OnboardingThemeStep: View {
                                 }
                                 if viewModel.selectedThemeId == theme.id {
                                     Circle()
-                                        .strokeBorder(ClaudeTheme.terracotta, lineWidth: 2)
+                                        .strokeBorder(OnboardingTheme.terracotta, lineWidth: 2)
                                         .frame(width: 30, height: 30)
                                 }
                             }
@@ -52,9 +52,9 @@ struct OnboardingThemeStep: View {
                 }
 
                 Text(selectedTheme.displayName.uppercased())
-                    .font(ClaudeTheme.mono(10, weight: .semibold))
+                    .font(OnboardingTheme.mono(10, weight: .semibold))
                     .tracking(0.8)
-                    .foregroundStyle(ClaudeTheme.nearBlack)
+                    .foregroundStyle(OnboardingTheme.nearBlack)
                     .animation(.none, value: viewModel.selectedThemeId)
             }
         }
@@ -154,8 +154,8 @@ private struct MenuOnlyPreview: View {
                 .scaleEffect(1.8)
 
             Text("Lives in your menu bar")
-                .font(ClaudeTheme.sans(11))
-                .foregroundStyle(ClaudeTheme.stone)
+                .font(OnboardingTheme.sans(11))
+                .foregroundStyle(OnboardingTheme.stone)
         }
         .frame(height: 102)
     }

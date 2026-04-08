@@ -20,9 +20,9 @@ struct OnboardingEyebrow: View {
 
     var body: some View {
         Text(text.uppercased())
-            .font(ClaudeTheme.mono(10, weight: .medium))
+            .font(OnboardingTheme.mono(10, weight: .medium))
             .tracking(1.5)
-            .foregroundStyle(ClaudeTheme.stone)
+            .foregroundStyle(OnboardingTheme.stone)
     }
 }
 
@@ -35,8 +35,8 @@ struct OnboardingHeadline: View {
 
     var body: some View {
         Text(text)
-            .font(ClaudeTheme.serif(size, weight: .medium))
-            .foregroundStyle(ClaudeTheme.nearBlack)
+            .font(OnboardingTheme.serif(size, weight: .medium))
+            .foregroundStyle(OnboardingTheme.nearBlack)
             .multilineTextAlignment(.center)
             .lineSpacing(4)
     }
@@ -50,8 +50,8 @@ struct OnboardingCaption: View {
 
     var body: some View {
         Text(text)
-            .font(ClaudeTheme.sans(13))
-            .foregroundStyle(ClaudeTheme.stone)
+            .font(OnboardingTheme.sans(13))
+            .foregroundStyle(OnboardingTheme.stone)
             .multilineTextAlignment(.center)
             .lineSpacing(3)
     }
@@ -92,15 +92,15 @@ struct OnboardingPillButton: View {
     @State private var isPressed: Bool = false
 
     private var fillColor: Color {
-        if disabled { return ClaudeTheme.warmSilver }
-        return isPressed ? ClaudeTheme.coral : ClaudeTheme.terracotta
+        if disabled { return OnboardingTheme.warmSilver }
+        return isPressed ? OnboardingTheme.coral : OnboardingTheme.terracotta
     }
 
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(ClaudeTheme.sans(14, weight: .semibold))
-                .foregroundStyle(ClaudeTheme.ivory)
+                .font(OnboardingTheme.sans(14, weight: .semibold))
+                .foregroundStyle(OnboardingTheme.ivory)
                 .frame(minWidth: minWidth)
                 .padding(.horizontal, 24)
                 .padding(.vertical, 12)
@@ -133,16 +133,16 @@ struct OnboardingGhostButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(ClaudeTheme.sans(14, weight: .medium))
-                .foregroundStyle(ClaudeTheme.nearBlack)
+                .font(OnboardingTheme.sans(14, weight: .medium))
+                .foregroundStyle(OnboardingTheme.nearBlack)
                 .frame(minWidth: minWidth)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 12)
                 .background(
-                    Capsule().fill(isPressed ? ClaudeTheme.borderCream : ClaudeTheme.ivory)
+                    Capsule().fill(isPressed ? OnboardingTheme.borderCream : OnboardingTheme.ivory)
                 )
                 .overlay(
-                    Capsule().strokeBorder(ClaudeTheme.ringWarm, lineWidth: 1)
+                    Capsule().strokeBorder(OnboardingTheme.ringWarm, lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)
@@ -163,17 +163,17 @@ struct OnboardingKeycap: View {
 
     var body: some View {
         Text(text)
-            .font(ClaudeTheme.mono(13, weight: .semibold))
-            .foregroundStyle(ClaudeTheme.nearBlack)
+            .font(OnboardingTheme.mono(13, weight: .semibold))
+            .foregroundStyle(OnboardingTheme.nearBlack)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(
-                RoundedRectangle(cornerRadius: ClaudeTheme.radiusSmall, style: .continuous)
-                    .fill(ClaudeTheme.ivory)
+                RoundedRectangle(cornerRadius: OnboardingTheme.radiusSmall, style: .continuous)
+                    .fill(OnboardingTheme.ivory)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: ClaudeTheme.radiusSmall, style: .continuous)
-                    .strokeBorder(ClaudeTheme.ringWarm, lineWidth: 1)
+                RoundedRectangle(cornerRadius: OnboardingTheme.radiusSmall, style: .continuous)
+                    .strokeBorder(OnboardingTheme.ringWarm, lineWidth: 1)
             )
     }
 }
@@ -201,7 +201,7 @@ struct OnboardingKeycap: View {
     }
     .padding(48)
     .frame(width: 600, height: 440)
-    .background(ClaudeTheme.parchment)
+    .background(OnboardingTheme.parchment)
 }
 
 // MARK: - Onboarding card style (selectable cards for engine pickers)
@@ -214,12 +214,12 @@ private struct OnboardingCardStyleModifier: ViewModifier {
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
             .background(
-                RoundedRectangle(cornerRadius: ClaudeTheme.radiusMedium, style: .continuous)
-                    .fill(isSelected ? Color(hex: "FBF7F4") : ClaudeTheme.ivory)
+                RoundedRectangle(cornerRadius: OnboardingTheme.radiusMedium, style: .continuous)
+                    .fill(isSelected ? Color(hex: "FBF7F4") : OnboardingTheme.ivory)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: ClaudeTheme.radiusMedium, style: .continuous)
-                    .strokeBorder(isSelected ? ClaudeTheme.terracotta : ClaudeTheme.borderCream, lineWidth: isSelected ? 1.5 : 1)
+                RoundedRectangle(cornerRadius: OnboardingTheme.radiusMedium, style: .continuous)
+                    .strokeBorder(isSelected ? OnboardingTheme.terracotta : OnboardingTheme.borderCream, lineWidth: isSelected ? 1.5 : 1)
             )
     }
 }

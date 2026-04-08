@@ -92,23 +92,23 @@ private struct SizeOption<Preview: View>: View {
 
                 VStack(spacing: 3) {
                     Text(label.uppercased())
-                        .font(ClaudeTheme.mono(10, weight: .semibold))
+                        .font(OnboardingTheme.mono(10, weight: .semibold))
                         .tracking(0.5)
-                        .foregroundStyle(ClaudeTheme.nearBlack)
+                        .foregroundStyle(OnboardingTheme.nearBlack)
                     Text(desc)
-                        .font(ClaudeTheme.sans(10))
-                        .foregroundStyle(ClaudeTheme.stone)
+                        .font(OnboardingTheme.sans(10))
+                        .foregroundStyle(OnboardingTheme.stone)
                 }
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
             .background(
-                RoundedRectangle(cornerRadius: ClaudeTheme.radiusMedium, style: .continuous)
+                RoundedRectangle(cornerRadius: OnboardingTheme.radiusMedium, style: .continuous)
                     .fill(isSelected ? Color(hex: "FBF7F4") : Color.clear)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: ClaudeTheme.radiusMedium, style: .continuous)
-                    .strokeBorder(isSelected ? ClaudeTheme.terracotta : Color.clear, lineWidth: 1.5)
+                RoundedRectangle(cornerRadius: OnboardingTheme.radiusMedium, style: .continuous)
+                    .strokeBorder(isSelected ? OnboardingTheme.terracotta : Color.clear, lineWidth: 1.5)
             )
             .contentShape(Rectangle())
         }

@@ -61,33 +61,33 @@ private struct PermissionRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: isGranted ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(isGranted ? ClaudeTheme.green : ClaudeTheme.warmSilver)
+                .foregroundStyle(isGranted ? OnboardingTheme.green : OnboardingTheme.warmSilver)
                 .font(.system(size: 18))
                 .frame(width: 24)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(name)
-                    .font(ClaudeTheme.sans(12, weight: .medium))
-                    .foregroundStyle(ClaudeTheme.nearBlack)
+                    .font(OnboardingTheme.sans(12, weight: .medium))
+                    .foregroundStyle(OnboardingTheme.nearBlack)
                 Text(description)
-                    .font(ClaudeTheme.sans(11))
-                    .foregroundStyle(ClaudeTheme.stone)
+                    .font(OnboardingTheme.sans(11))
+                    .foregroundStyle(OnboardingTheme.stone)
             }
 
             Spacer()
 
             if isGranted {
-                StatusBadge(text: "Granted", color: ClaudeTheme.green)
+                StatusBadge(text: "Granted", color: OnboardingTheme.green)
             } else {
                 Button("Grant") { onGrant() }
                     .buttonStyle(.bordered)
-                    .tint(ClaudeTheme.terracotta)
+                    .tint(OnboardingTheme.terracotta)
                     .controlSize(.small)
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .claudeCard(radius: ClaudeTheme.radiusMedium)
+        .onboardingCard(radius: OnboardingTheme.radiusMedium)
     }
 }
 
@@ -97,7 +97,7 @@ private struct StatusBadge: View {
 
     var body: some View {
         Text(text.uppercased())
-            .font(ClaudeTheme.mono(9, weight: .semibold))
+            .font(OnboardingTheme.mono(9, weight: .semibold))
             .tracking(0.5)
             .foregroundStyle(color)
             .padding(.horizontal, 8)

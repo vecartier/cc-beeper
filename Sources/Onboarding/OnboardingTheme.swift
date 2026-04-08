@@ -4,7 +4,7 @@ import SwiftUI
 //
 // Warm, parchment-based palette used throughout the onboarding flow.
 
-enum ClaudeTheme {
+enum OnboardingTheme {
 
     // MARK: Colors — warm neutrals, no cool blues
 
@@ -86,9 +86,9 @@ enum ClaudeTheme {
 // MARK: - Card Background Modifier
 
 /// Ring-shadow card: ivory fill with a warm hairline border.
-struct ClaudeCard: ViewModifier {
-    var radius: CGFloat = ClaudeTheme.radiusMedium
-    var fillColor: Color = ClaudeTheme.ivory
+struct OnboardingCard: ViewModifier {
+    var radius: CGFloat = OnboardingTheme.radiusMedium
+    var fillColor: Color = OnboardingTheme.ivory
 
     func body(content: Content) -> some View {
         content
@@ -98,14 +98,14 @@ struct ClaudeCard: ViewModifier {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .strokeBorder(ClaudeTheme.borderCream, lineWidth: 1)
+                    .strokeBorder(OnboardingTheme.borderCream, lineWidth: 1)
             )
     }
 }
 
 extension View {
-    func claudeCard(radius: CGFloat = ClaudeTheme.radiusMedium,
-                    fillColor: Color = ClaudeTheme.ivory) -> some View {
-        modifier(ClaudeCard(radius: radius, fillColor: fillColor))
+    func onboardingCard(radius: CGFloat = OnboardingTheme.radiusMedium,
+                    fillColor: Color = OnboardingTheme.ivory) -> some View {
+        modifier(OnboardingCard(radius: radius, fillColor: fillColor))
     }
 }
