@@ -17,7 +17,7 @@ struct ScreenContentView: View {
 
     var body: some View {
         ZStack {
-            Rectangle().fill(themeManager.darkMode ? themeManager.lcdBg : Color.clear)
+            Rectangle().fill(Color.clear)
 
             HStack(spacing: 8) {
                 // Character
@@ -71,7 +71,7 @@ struct ScreenContentView: View {
                     .font(.system(size: 11, weight: .heavy, design: .monospaced))
                     .foregroundColor(themeManager.lcdOn)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(themeManager.darkMode ? themeManager.lcdBg.opacity(0.9) : Color.clear.opacity(0.9))
+                    .background(Color.clear.opacity(0.9))
                     .transition(.opacity)
             }
 
@@ -86,7 +86,7 @@ struct ScreenContentView: View {
 
             // Pixel grid
             Canvas { context, size in
-                let lineColor = AppConstants.lcdGridLine.opacity(themeManager.darkMode ? 0.25 : 0.12)
+                let lineColor = AppConstants.lcdGridLine.opacity(0.12)
                 let spacing: CGFloat = 2.0
                 let lineW: CGFloat = 0.5
 

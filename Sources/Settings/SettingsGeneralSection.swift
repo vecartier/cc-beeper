@@ -9,9 +9,5 @@ struct SettingsThemeSection: View {
                 .padding(.vertical, 4)
         }
 
-        Section {
-            Toggle("Dark Mode", isOn: $themeManager.darkMode)
-                .toggleStyle(.switch)
-        }
     }
 }

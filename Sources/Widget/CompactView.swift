@@ -13,7 +13,7 @@ struct CompactView: View {
 
     // LCD screen -- proportional from large shell (286x45 in 360x160)
     private let lcdW: CGFloat = 175
-    private let lcdH: CGFloat = 45
+    private let lcdH: CGFloat = 47
 
     var body: some View {
         ZStack(alignment: .topLeading) {

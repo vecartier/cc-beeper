@@ -29,9 +29,7 @@ final class ThemeManager: ObservableObject {
     @Published var currentThemeId: String {
         didSet { UserDefaults.standard.set(currentThemeId, forKey: "themeId") }
     }
-    @Published var darkMode: Bool {
-        didSet { UserDefaults.standard.set(darkMode, forKey: "darkMode") }
-    }
+    let darkMode: Bool = false
 
     var theme: ShellTheme {
         Self.themes.first { $0.id == currentThemeId } ?? Self.themes[0]
@@ -39,7 +37,6 @@ final class ThemeManager: ObservableObject {
 
     init() {
         currentThemeId = UserDefaults.standard.string(forKey: "themeId") ?? "black"
-        darkMode = UserDefaults.standard.bool(forKey: "darkMode")
     }
 
     var shellImageName: String { theme.shellImage }
@@ -47,6 +44,6 @@ final class ThemeManager: ObservableObject {
 
     // MARK: - LCD Colors (dark mode support)
 
-    var lcdBg: Color { darkMode ? Color(hex: "1E2012") : Color(hex: "98D65A") }
-    var lcdOn: Color { darkMode ? Color(hex: "7A8050") : Color(hex: "2A4A10") }
+    var lcdBg: Color { Color(hex: "98D65A") }
+    var lcdOn: Color { Color(hex: "2A4A10") }
 }
