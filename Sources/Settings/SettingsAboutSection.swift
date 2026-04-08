@@ -24,6 +24,10 @@ struct SettingsAboutSection: View {
                 Text("A desktop companion for Claude Code.")
                     .font(.body)
                     .foregroundStyle(.secondary)
+
+                Text("Not affiliated with or endorsed by Anthropic.")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)

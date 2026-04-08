@@ -101,7 +101,7 @@ Use them from any app, in any keyboard layout (AZERTY, QWERTZ, Dvorak). All rema
 
 ### Themes, Sizes & Sound
 
-- **10 shell colors**, each with a dark mode LCD variant
+- **10 shell colors**
 - **3 widget sizes** — Large (buttons + LCD), Compact (LCD only), or Menu Only (icon in the menu bar)
 - **Sound & haptics** — ping on permission requests, chime on task completion, vibration until resolved
 
@@ -172,7 +172,7 @@ The menu contains: session count, state label, Mute/Unmute, Sleep/Wake, Clap Dic
 
 | Tab | What's inside |
 |-----|--------------|
-| **Theme** | 10 shell colors + dark mode toggle |
+| **Theme** | 10 shell colors |
 | **Dictation** | Double Clap Dictation toggle, Whisper model size (small/medium), download |
 | **Read Over** | Auto-speak toggle, Kokoro/Apple picker, language & voice |
 | **Feedback** | Sound + vibration toggles |
@@ -186,6 +186,8 @@ The menu contains: session count, state label, Mute/Unmute, Sleep/Wake, Clap Dic
 ---
 
 ## Disclaimer
+
+**CC-Beeper is an independent, community-built project. It is not affiliated with, endorsed by, or sponsored by Anthropic.**
 
 CC-Beeper was designed and fully vibe-coded with [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Use it at your own risk.
 

@@ -1,11 +1,8 @@
 import SwiftUI
 
-// MARK: - Claude Design System
+// MARK: - Onboarding Theme
 //
-// Warm, parchment-based palette inspired by the Claude visual language.
-// Used throughout the onboarding flow.
-//
-// Reference: https://github.com/VoltAgent/awesome-design-md/blob/main/design-md/claude/DESIGN.md
+// Warm, parchment-based palette used throughout the onboarding flow.
 
 enum ClaudeTheme {
 
@@ -20,7 +17,7 @@ enum ClaudeTheme {
     /// Primary text — near-black with a warm undertone.
     static let nearBlack = Color(hex: "141413")
 
-    /// Primary CTA color — Anthropic terracotta.
+    /// Primary CTA color — warm terracotta.
     static let terracotta = Color(hex: "C96442")
 
     /// Accent — softer than terracotta, used for highlights.

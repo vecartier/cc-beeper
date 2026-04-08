@@ -4,7 +4,7 @@ cask "cc-beeper" do
 
   url "https://github.com/vecartier/CC-Beeper/releases/download/v#{version}/CC-Beeper.dmg"
   name "CC-Beeper"
-  desc "Floating widget companion for Claude Code — LCD pager with hotkeys, voice, and permissions"
+  desc "Floating LCD pager widget with hotkeys, voice, and permissions (unofficial, not affiliated with Anthropic)"
   homepage "https://github.com/vecartier/CC-Beeper"
 
   depends_on macos: ">= :sequoia"
