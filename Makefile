@@ -7,10 +7,6 @@ install: build
 	@echo ""
 	@echo "Setting up Claude Code hooks..."
 	@python3 scripts/setup.py
-	@echo ""
-	@echo "Installing to /Applications..."
-	@pkill -x CC-Beeper 2>/dev/null; sleep 1; rm -rf /Applications/CC-Beeper.app
-	@cp -R CC-Beeper.app /Applications/CC-Beeper.app
 	@echo "Launching CC-Beeper..."
 	@open /Applications/CC-Beeper.app
 

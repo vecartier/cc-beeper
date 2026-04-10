@@ -3,8 +3,9 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-# Build the app first
-./build.sh
+# Build the app first (skip the auto-install to /Applications — DMG builds
+# should not stomp on the user's installed copy).
+SKIP_INSTALL=1 ./build.sh
 
 echo "Creating DMG with create-dmg..."
 

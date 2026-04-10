@@ -107,3 +107,14 @@ else
         CC-Beeper.app
 fi
 echo "Signed CC-Beeper.app (identity: $SIGNING_IDENTITY)"
+
+# Install the fresh build into /Applications so the running copy never drifts
+# from the source tree. Skip with SKIP_INSTALL=1 for CI / DMG builds.
+if [ "${SKIP_INSTALL:-0}" != "1" ]; then
+    echo "Installing to /Applications..."
+    osascript -e 'tell application "CC-Beeper" to quit' >/dev/null 2>&1 || true
+    pkill -f "/Applications/CC-Beeper.app/Contents/MacOS/CC-Beeper" >/dev/null 2>&1 || true
+    rm -rf /Applications/CC-Beeper.app
+    cp -R CC-Beeper.app /Applications/
+    echo "Installed /Applications/CC-Beeper.app"
+fi
