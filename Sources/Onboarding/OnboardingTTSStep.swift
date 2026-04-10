@@ -23,7 +23,7 @@ struct OnboardingTTSStep: View {
             subtitle: "CC-Beeper can read Claude's responses aloud. Kokoro runs on-device with natural-sounding voices.",
             primaryLabel: "Next",
             primaryAction: { viewModel.goNext() },
-            primaryDisabled: useKokoro && viewModel.isTtsDownloading,
+            primaryDisabled: useKokoro && !viewModel.isTtsReady,
             skipLabel: nil,
             skipAction: nil,
             onBack: { viewModel.goBack() }
@@ -49,11 +49,16 @@ struct OnboardingTTSStep: View {
                                             .foregroundStyle(OnboardingTheme.terracotta)
                                     }
                                 } else if viewModel.isTtsReady {
-                                    Text("~930 MB · Ready")
+                                    Text("~2 MB · Ready")
                                         .font(OnboardingTheme.sans(11))
                                         .foregroundStyle(OnboardingTheme.green)
+                                } else if let err = viewModel.ttsDownloadError {
+                                    Text("Download failed — \(err)")
+                                        .font(OnboardingTheme.sans(11))
+                                        .foregroundStyle(OnboardingTheme.terracotta)
+                                        .lineLimit(2)
                                 } else {
-                                    Text("~930 MB · 9 languages · Natural voices")
+                                    Text("~2 MB · 9 languages · Natural voices")
                                         .font(OnboardingTheme.sans(11))
                                         .foregroundStyle(OnboardingTheme.stone)
                                 }
@@ -68,9 +73,9 @@ struct OnboardingTTSStep: View {
                             } else if !viewModel.isTtsDownloading {
                                 Button(action: { viewModel.downloadKokoro() }) {
                                     HStack(spacing: 4) {
-                                        Image(systemName: "arrow.down")
+                                        Image(systemName: viewModel.ttsDownloadError == nil ? "arrow.down" : "arrow.clockwise")
                                             .font(.system(size: 10, weight: .semibold))
-                                        Text("Download")
+                                        Text(viewModel.ttsDownloadError == nil ? "Download" : "Retry")
                                     }
                                     .font(OnboardingTheme.sans(12, weight: .semibold))
                                     .foregroundStyle(OnboardingTheme.nearBlack)
