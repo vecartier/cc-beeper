@@ -1,102 +1,86 @@
 import Foundation
-import AVFoundation
-import CoreML
 @preconcurrency import FluidAudio
 
-/// Actor wrapping FluidAudio's PocketTtsManager lifecycle for on-device PocketTTS synthesis.
+/// Actor wrapping FluidAudio's KokoroTtsManager lifecycle for on-device Kokoro TTS synthesis.
 ///
 /// Usage:
-///   - Check `PocketTTSService.modelsDownloaded` before routing to PocketTTS path (cheap disk stat, no load).
-///   - Use `PocketTTSService.shared` singleton — initialize once, then call `synthesize()` repeatedly.
-///   - Do NOT call `initialize()` or `downloadModels()` on every synthesis request.
-actor PocketTTSService {
+///   - Check `KokoroService.modelsDownloaded` before routing to Kokoro path (cheap disk stat, no load).
+///   - Use `KokoroService.shared` singleton — initialize once, then call `synthesize()` repeatedly.
+actor KokoroService {
 
     // MARK: - Singleton
 
-    static let shared = PocketTTSService()
+    static let shared = KokoroService()
 
     // MARK: - Internal State
 
-    private var manager: PocketTtsManager?
+    private var manager: KokoroTtsManager?
 
     private init() {}
 
     // MARK: - Model Presence Check (cheap disk stat, no load)
 
-    /// Returns true if the PocketTTS model directory exists on disk.
-    /// This is a cheap `fileExists` call — does NOT load the model.
-    /// Use this from TTSService to decide which TTS path to take.
+    /// Returns true if Kokoro CoreML models are present on disk.
+    /// Cheap directory-existence check — does NOT load the model.
     static var modelsDownloaded: Bool {
-        let modelPath = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".cache/fluidaudio/Models/pocket-tts")
-            .appendingPathComponent("flowlm_step.mlmodelc")
-        return FileManager.default.fileExists(atPath: modelPath.path)
+        guard let cacheDir = try? TtsModels.cacheDirectoryURL() else { return false }
+        let modelsDir = cacheDir.appendingPathComponent("Models/kokoro")
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: modelsDir.path, isDirectory: &isDir), isDir.boolValue else {
+            return false
+        }
+        let contents = (try? FileManager.default.contentsOfDirectory(atPath: modelsDir.path)) ?? []
+        return !contents.isEmpty
     }
 
     // MARK: - Model Download with Progress (called from onboarding)
 
-    /// Download PocketTTS models from HuggingFace with progress reporting.
+    /// Download Kokoro models from HuggingFace with progress reporting.
     /// After completion, the manager is ready for use — no separate `initialize()` call needed.
     ///
     /// - Parameter onProgress: Called on arbitrary thread with (fraction 0..1, label string).
     func downloadModels(onProgress: @escaping @Sendable (Double, String) -> Void) async throws {
-        // Download with progress reporting
-        _ = try await PocketTtsResourceDownloader.ensureModels { progress in
+        let models = try await TtsModels.download { progress in
             onProgress(progress.fractionCompleted, "\(progress.phase)")
         }
-        // Now initialize (models already on disk, no download)
-        let m = PocketTtsManager(defaultVoice: "alba")
-        try await m.initialize()
+        let m = KokoroTtsManager(defaultVoice: "bm_daniel")
+        try await m.initialize(models: models, preloadVoices: nil)
         self.manager = m
     }
 
     // MARK: - Initialize from Disk (load already-downloaded models, no network)
 
-    /// Load the PocketTTS model from disk into memory.
+    /// Load the Kokoro model from disk into memory.
     /// Call once before first synthesis (or lazily on first use from TTSService).
-    /// Do NOT call on every synthesis request — keep the manager alive.
-    func initialize(defaultVoice: String = "alba") async throws {
-        let m = PocketTtsManager(defaultVoice: defaultVoice)
-        try await m.initialize()
+    func initialize(defaultVoice: String = "bm_daniel") async throws {
+        let m = KokoroTtsManager(defaultVoice: defaultVoice)
+        try await m.initialize(preloadVoices: nil)
         self.manager = m
     }
 
     // MARK: - Synthesize
 
-    /// Synthesize text to WAV audio data using the PocketTTS model.
-    /// Returns 16-bit PCM WAV at 24 000 Hz — playable with AVAudioPlayer(data:fileTypeHint:.wav).
-    ///
-    /// - Parameters:
-    ///   - text: Text to synthesize.
-    ///   - voice: Optional voice override. Defaults to the manager's configured default voice.
-    /// - Returns: WAV Data ready for AVAudioPlayer playback.
+    /// Synthesize text to WAV audio data using the Kokoro model.
+    /// Returns 16-bit PCM WAV at 24 000 Hz — playable with AVAudioPlayer(data:fileTypeHint:"wav").
     func synthesize(text: String, voice: String? = nil) async throws -> Data {
+        if manager == nil {
+            try await initialize(defaultVoice: voice ?? "bm_daniel")
+        }
         guard let manager else {
-            throw PocketTTSServiceError.notInitialized
+            throw KokoroServiceError.notInitialized
         }
         return try await manager.synthesize(text: text, voice: voice)
-    }
-
-    // MARK: - Streaming Synthesis
-
-    /// Synthesize text as a stream of 80ms audio frames for low-latency playback.
-    func synthesizeStreaming(text: String, voice: String? = nil) async throws -> AsyncThrowingStream<PocketTtsSynthesizer.AudioFrame, Error> {
-        guard let manager else {
-            throw PocketTTSServiceError.notInitialized
-        }
-        return try await manager.synthesizeStreaming(text: text, voice: voice)
     }
 
     // MARK: - Voice Selection
 
     /// Update the default voice used for synthesis.
     func setDefaultVoice(_ voice: String) async {
-        await manager?.setDefaultVoice(voice)
+        try? await manager?.setDefaultVoice(voice)
     }
 
     // MARK: - Readiness Check
 
-    /// Returns true if the model is loaded and ready to synthesize.
     var isReady: Bool {
         manager != nil
     }
@@ -104,13 +88,13 @@ actor PocketTTSService {
 
 // MARK: - Errors
 
-enum PocketTTSServiceError: Error, LocalizedError {
+enum KokoroServiceError: Error, LocalizedError {
     case notInitialized
 
     var errorDescription: String? {
         switch self {
         case .notInitialized:
-            return "PocketTTSService: model not initialized — call initialize() before synthesizing"
+            return "KokoroService: model not initialized — call initialize() before synthesizing"
         }
     }
 }

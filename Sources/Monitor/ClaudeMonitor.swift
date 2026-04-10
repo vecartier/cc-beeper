@@ -173,17 +173,15 @@ final class ClaudeMonitor: ObservableObject {
             ttsService.setKokoroVoice(kokoroVoice)
         }
     }
-    @Published var kokoroLangCode: String = "a" {
+    @Published var kokoroLangCode: String = "b" {
         didSet {
             UserDefaults.standard.set(kokoroLangCode, forKey: "kokoroLangCode")
             ttsService.setKokoroLangCode(kokoroLangCode)
             if !KokoroVoiceCatalog.isVoiceValid(kokoroVoice, for: kokoroLangCode) {
                 kokoroVoice = KokoroVoiceCatalog.defaultVoice(for: kokoroLangCode)
             }
-            depsNeededForCurrentLang = KokoroVoiceCatalog.langCodesRequiringDeps.contains(kokoroLangCode)
         }
     }
-    @Published var depsNeededForCurrentLang: Bool = false
 
     // MARK: - Internal State (accessed by extensions in separate files)
 
@@ -234,13 +232,8 @@ final class ClaudeMonitor: ObservableObject {
         }
         voiceOver = UserDefaults.standard.bool(forKey: "voiceOver")
         ttsProvider = UserDefaults.standard.string(forKey: "ttsProvider") ?? "kokoro"
+        kokoroLangCode = UserDefaults.standard.string(forKey: "kokoroLangCode") ?? "b"
         kokoroVoice = UserDefaults.standard.string(forKey: "kokoroVoice") ?? "bm_daniel"
-        kokoroLangCode = UserDefaults.standard.string(forKey: "kokoroLangCode") ?? "a"
-        if UserDefaults.standard.object(forKey: "kokoroLangCode") == nil {
-            let systemLocale = Locale.preferredLanguages.first ?? "en"
-            kokoroLangCode = KokoroVoiceCatalog.kokoroLangCode(fromSystemLocale: systemLocale) ?? "a"
-        }
-        depsNeededForCurrentLang = KokoroVoiceCatalog.langCodesRequiringDeps.contains(kokoroLangCode)
         whisperModelSize = UserDefaults.standard.string(forKey: "whisperModelSize") ?? "small"
         migrateHotkeyDefaults()
         if let v = UserDefaults.standard.string(forKey: "hotkeyChar_accept") { hotkeyAccept = v }

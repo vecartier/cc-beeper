@@ -73,11 +73,6 @@ enum AppConstants {
     /// Primary accent color for CTAs and highlights.
     static let accent = Color(hex: "E86A1B")
 
-    // MARK: - Kokoro Paths (FRAG-08)
-
-    /// Python interpreter inside the Kokoro TTS virtual environment.
-    static let kokoroVenvPython = NSHomeDirectory() + "/.cache/cc-beeper/kokoro-venv/bin/python3"
-
     // MARK: - LED Colors (FRAG-07)
 
     /// Green LED color (idle/done states).

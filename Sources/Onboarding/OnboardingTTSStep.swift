@@ -127,10 +127,6 @@ struct OnboardingTTSStep: View {
                 }
                 .buttonStyle(.plain)
 
-                // Language dependencies
-                if useKokoro && viewModel.needsLangDeps && !viewModel.langDepsReady {
-                    LangDepsCard(viewModel: viewModel)
-                }
             }
             .frame(maxWidth: 460)
         }
@@ -145,44 +141,5 @@ struct OnboardingTTSStep: View {
                 .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(color)
         }
-    }
-}
-
-// MARK: - Language dependencies
-
-struct LangDepsCard: View {
-    @ObservedObject var viewModel: OnboardingViewModel
-
-    var body: some View {
-        VStack(spacing: 8) {
-            if viewModel.depsInstaller.isInstalling {
-                HStack {
-                    ProgressView().scaleEffect(0.7)
-                    Text(viewModel.depsInstaller.installProgress)
-                        .font(OnboardingTheme.sans(11))
-                        .foregroundStyle(OnboardingTheme.stone)
-                        .lineLimit(1)
-                }
-            } else {
-                let langName = KokoroVoiceCatalog.languageNames[viewModel.selectedLangCode] ?? "This language"
-                let sizeHint = viewModel.selectedLangCode == "j" ? " (~500 MB)" : " (~45 MB)"
-                Text("\(langName) needs extra dependencies\(sizeHint).")
-                    .font(OnboardingTheme.sans(11))
-                    .foregroundStyle(OnboardingTheme.stone)
-
-                Button("Install") { viewModel.installLangDeps() }
-                    .buttonStyle(.bordered)
-                    .tint(OnboardingTheme.terracotta)
-                    .controlSize(.small)
-
-                if let error = viewModel.depsInstaller.installError {
-                    Text(error)
-                        .font(OnboardingTheme.sans(11))
-                        .foregroundStyle(OnboardingTheme.crimson)
-                }
-            }
-        }
-        .padding(12)
-        .onboardingCard(radius: OnboardingTheme.radiusMedium)
     }
 }

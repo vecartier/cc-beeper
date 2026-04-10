@@ -9,22 +9,15 @@ final class TTSService: ObservableObject, @unchecked Sendable {
     private let synthesizer = AVSpeechSynthesizer()
     private var speechDelegate: TTSSpeechDelegate?
 
-    // TTS playback
+    // Playback
     private var audioPlayer: AVAudioPlayer?
     private var playerDelegate: TTSPlaybackDelegate?
 
-    // Kokoro subprocess
-    private var kokoroProcess: Process?
-    private var kokoroStdin: FileHandle?
-    private var kokoroReady: Bool = false
-    private var pendingKokoroText: String?
+    // Kokoro state
+    private var kokoroAvailable: Bool = false
+    private var currentVoice: String = "bm_daniel"
+    private var currentLangCode: String = "b"
     var onKokoroReady: (() -> Void)?
-
-    // File-based IPC
-    private static let ipcDir = NSHomeDirectory() + "/.claude/cc-beeper"
-    private static let outputFile = ipcDir + "/tts-output.wav"
-    private static let readyFile = ipcDir + "/tts-ready"
-    private var outputWatcher: DispatchSourceFileSystemObject?
 
     // MARK: - Logging
 
@@ -57,136 +50,94 @@ final class TTSService: ObservableObject, @unchecked Sendable {
         audioPlayer?.stop()
         audioPlayer = nil
         isSpeaking = false
-        usleep(100_000)
     }
 
     // MARK: - Kokoro Lifecycle
 
     func launchKokoro() {
-        let venvPython = AppConstants.kokoroVenvPython
-        guard FileManager.default.fileExists(atPath: venvPython) else {
-            log("Kokoro: venv not found — run setup-kokoro.sh first")
+        guard KokoroService.modelsDownloaded else {
+            log("Kokoro: models not downloaded — falling back to Apple voice")
+            kokoroAvailable = false
             return
         }
-
-        guard let serverScript = Bundle.main.path(forResource: "kokoro-tts-server", ofType: "py") else {
-            log("Kokoro: server script not found in app bundle")
-            return
-        }
-
-        // Clean up stale files
-        try? FileManager.default.removeItem(atPath: Self.readyFile)
-        try? FileManager.default.removeItem(atPath: Self.outputFile)
-
-        log("Kokoro: launching subprocess...")
-
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: venvPython)
-        process.arguments = ["-u", serverScript]
-        process.environment = ProcessInfo.processInfo.environment
-
-        let stdinPipe = Pipe()
-        let stderrPipe = Pipe()
-        process.standardInput = stdinPipe
-        process.standardOutput = FileHandle.nullDevice  // not used
-        process.standardError = stderrPipe
-
-        stderrPipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
-            let data = handle.availableData
-            guard !data.isEmpty, let text = String(data: data, encoding: .utf8) else { return }
-            for line in text.split(separator: "\n") {
-                self?.log("Kokoro stderr: \(line)")
+        kokoroAvailable = true
+        let voice = currentVoice
+        // Warm up the model in the background so first speech is fast
+        Task { [weak self] in
+            do {
+                try await KokoroService.shared.initialize(defaultVoice: voice)
+                await MainActor.run {
+                    self?.log("Kokoro: ready (native Swift)")
+                    self?.onKokoroReady?()
+                }
+            } catch {
+                await MainActor.run {
+                    self?.log("Kokoro: initialize failed — \(error.localizedDescription)")
+                    self?.kokoroAvailable = false
+                }
             }
         }
+    }
 
-        do {
-            try process.run()
-        } catch {
-            log("Kokoro: failed to launch: \(error)")
-            return
+    func setKokoroVoice(_ voice: String) {
+        currentVoice = voice
+        log("Kokoro: voice set to \(voice)")
+        Task { await KokoroService.shared.setDefaultVoice(voice) }
+    }
+
+    func setKokoroLangCode(_ code: String) {
+        // Kokoro voice IDs encode the language via their first letter (a=US, b=UK, etc.)
+        // so no separate language switch is needed — voice change is sufficient.
+        currentLangCode = code
+        log("Kokoro: lang code set to \(code)")
+    }
+
+    func shutdownKokoro() {
+        // KokoroService manages its own lifecycle — nothing to tear down here.
+    }
+
+    // MARK: - TTS Dispatcher
+
+    private func speak(_ text: String, provider: String = "apple") {
+        guard !text.isEmpty else { return }
+        switch provider {
+        case "kokoro":
+            guard kokoroAvailable else {
+                log("Kokoro unavailable — using Apple voice")
+                speakWithAva(text)
+                return
+            }
+            speakWithKokoro(text)
+        default:
+            speakWithAva(text)
         }
+    }
 
-        kokoroProcess = process
-        kokoroStdin = stdinPipe.fileHandleForWriting
+    // MARK: - Kokoro Path
 
-        process.terminationHandler = { [weak self] terminatedProcess in
-            DispatchQueue.main.async {
-                guard let self, self.kokoroProcess === terminatedProcess else { return }
-                // Unexpected crash — not intentional shutdown (AUDIT-05)
-                self.kokoroReady = false
-                self.kokoroProcess = nil
-                self.kokoroStdin = nil
-                if self.isSpeaking {
-                    self.audioPlayer?.stop()
-                    self.audioPlayer = nil
+    private func speakWithKokoro(_ text: String) {
+        log("Kokoro: speaking: \(text.prefix(200))")
+        isSpeaking = true
+
+        let voice = currentVoice
+        Task { [weak self] in
+            do {
+                let data = try await KokoroService.shared.synthesize(text: text, voice: voice)
+                await MainActor.run {
+                    self?.playWavData(data)
+                }
+            } catch {
+                await MainActor.run {
+                    guard let self else { return }
+                    self.log("Kokoro: synthesis failed — \(error.localizedDescription) — falling back to Apple")
                     self.isSpeaking = false
+                    self.speakWithAva(text)
                 }
-                self.log("Kokoro: subprocess crashed (exit code \(terminatedProcess.terminationStatus))")
-            }
-        }
-
-        // Set up file watcher for tts-output.wav
-        setupOutputWatcher()
-
-        // Poll for ready file (subprocess writes it when model is loaded)
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            for _ in 0..<60 {  // 30 second timeout
-                if FileManager.default.fileExists(atPath: Self.readyFile) {
-                    DispatchQueue.main.async {
-                        self?.kokoroReady = true
-                        self?.log("Kokoro: ready")
-                        self?.onKokoroReady?()
-                        if let pending = self?.pendingKokoroText {
-                            self?.pendingKokoroText = nil
-                            self?.speakWithKokoro(pending)
-                        }
-                    }
-                    return
-                }
-                usleep(500_000)
-            }
-            DispatchQueue.main.async {
-                self?.log("Kokoro: timeout waiting for ready")
             }
         }
     }
 
-    private func setupOutputWatcher() {
-        // Watch the IPC directory — os.replace() creates a new inode, so watching
-        // the file itself doesn't work. Directory watches catch renames into it.
-        let fd = open(Self.ipcDir, O_EVTONLY)
-        guard fd >= 0 else {
-            log("Kokoro: failed to open IPC dir for watching")
-            return
-        }
-
-        let source = DispatchSource.makeFileSystemObjectSource(
-            fileDescriptor: fd, eventMask: [.write], queue: .main
-        )
-        source.setEventHandler { [weak self] in self?.onOutputFileChanged() }
-        source.setCancelHandler { close(fd) }
-        source.resume()
-        outputWatcher = source
-    }
-
-    private var lastOutputHash: Int = 0
-
-    private func onOutputFileChanged() {
-        let exists = FileManager.default.fileExists(atPath: Self.outputFile)
-        let size = (try? FileManager.default.attributesOfItem(atPath: Self.outputFile)[.size] as? Int) ?? 0
-        log("Kokoro: onOutputFileChanged — exists=\(exists), size=\(size), lastHash=\(lastOutputHash)")
-
-        guard let data = FileManager.default.contents(atPath: Self.outputFile),
-              data.count > 44 else { return } // 44 = WAV header minimum
-        let hash = data.hashValue
-        guard hash != lastOutputHash else {
-            log("Kokoro: hash unchanged (\(hash)) — skipping")
-            return
-        }
-        lastOutputHash = hash
-
-        log("Kokoro: received \(data.count) bytes WAV from file")
-
+    private func playWavData(_ data: Data) {
         do {
             let player = try AVAudioPlayer(data: data, fileTypeHint: "wav")
             playerDelegate = TTSPlaybackDelegate { [weak self] in
@@ -200,117 +151,18 @@ final class TTSService: ObservableObject, @unchecked Sendable {
             audioPlayer = player
             isSpeaking = true
             player.play()
-            log("Kokoro: playback started")
+            log("Kokoro: playback started (\(data.count) bytes)")
         } catch {
-            log("Kokoro: playback error: \(error)")
+            log("Kokoro: playback error — \(error.localizedDescription)")
             isSpeaking = false
         }
     }
 
-    /// Write data to Kokoro subprocess stdin, catching broken pipe errors.
-    /// Returns false if the write failed (pipe broken / process dead).
-    @discardableResult
-    private func writeToKokoro(_ data: Data) -> Bool {
-        guard let stdin = kokoroStdin else { return false }
-        guard kokoroProcess?.isRunning == true else {
-            log("Kokoro: write failed — process not running")
-            kokoroReady = false
-            kokoroStdin = nil
-            kokoroProcess = nil
-            return false
-        }
-        do {
-            try stdin.write(contentsOf: data)
-            return true
-        } catch {
-            log("Kokoro: stdin write failed — \(error.localizedDescription)")
-            kokoroReady = false
-            kokoroStdin = nil
-            return false
-        }
-    }
-
-    func setKokoroVoice(_ voice: String) {
-        guard kokoroStdin != nil else {
-            log("Kokoro: setKokoroVoice(\(voice)) — stdin nil, Kokoro not running")
-            return
-        }
-        let cmd = "VOICE:\(voice)\n"
-        if let data = cmd.data(using: .utf8), writeToKokoro(data) {
-            log("Kokoro: voice set to \(voice)")
-        }
-    }
-
-    func setKokoroLangCode(_ code: String) {
-        guard kokoroStdin != nil else {
-            log("Kokoro: setKokoroLangCode(\(code)) — stdin nil, Kokoro not running")
-            return
-        }
-        let cmd = "LANG:\(code)\n"
-        if let data = cmd.data(using: .utf8), writeToKokoro(data) {
-            log("Kokoro: lang set to \(code)")
-        }
-    }
-
-    func shutdownKokoro() {
-        outputWatcher?.cancel()
-        outputWatcher = nil
-        kokoroStdin?.closeFile()
-        kokoroProcess?.terminate()
-        kokoroProcess = nil
-        kokoroStdin = nil
-        kokoroReady = false
-    }
-
-    // MARK: - TTS Dispatcher
-
-    private func speak(_ text: String, provider: String = "apple") {
-        guard !text.isEmpty else { return }
-        switch provider {
-        case "kokoro":
-            if kokoroReady {
-                speakWithKokoro(text)
-            } else if kokoroProcess == nil {
-                // Process crashed or was never started — attempt restart (AUDIT-06)
-                log("Kokoro: process not running — attempting restart for TTS request")
-                pendingKokoroText = text
-                launchKokoro()
-            } else {
-                log("Kokoro not ready — queuing speech")
-                pendingKokoroText = text
-            }
-        default:
-            speakWithAva(text)
-        }
-    }
-
-    // MARK: - Kokoro Path
-
-    private func speakWithKokoro(_ text: String) {
-        log("Kokoro: speaking: \(text.prefix(200))")
-        isSpeaking = true
-
-        guard kokoroStdin != nil else {
-            log("Kokoro: no stdin pipe — falling back to Apple voice")
-            speakWithAva(text)
-            return
-        }
-
-        // Send text to subprocess — it generates WAV and writes to tts-output.wav
-        let line = text.replacingOccurrences(of: "\n", with: " ") + "\n"
-        guard let data = line.data(using: .utf8) else { return }
-        if !writeToKokoro(data) {
-            log("Kokoro: write failed — falling back to Apple voice")
-            speakWithAva(text)
-        }
-        // File watcher will pick up the result and play it
-    }
-
-    // MARK: - Ava TTS Path
+    // MARK: - Apple TTS Path
 
     private func speakWithAva(_ text: String) {
         guard !text.isEmpty else { return }
-        log("speaking: \(text.prefix(200))")
+        log("speaking with Apple: \(text.prefix(200))")
         if isSpeaking { synthesizer.stopSpeaking(at: .immediate) }
 
         let utterance = AVSpeechUtterance(string: text)

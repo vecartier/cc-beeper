@@ -64,7 +64,8 @@ final class OnboardingViewModel: ObservableObject {
     @Published var isSttDownloading: Bool = false
     @Published var isSttReady: Bool = WhisperService.modelsDownloaded
     @Published var isTtsDownloading: Bool = false
-    @Published var isTtsReady: Bool = PocketTTSService.modelsDownloaded
+    @Published var isTtsReady: Bool = KokoroService.modelsDownloaded
+    @Published var ttsDownloadError: String? = nil
 
     // MARK: - Voice Engine Selection
     @Published var sttProvider: String = "whisper"  // "whisper" or "apple"
@@ -73,12 +74,7 @@ final class OnboardingViewModel: ObservableObject {
     }
 
     // MARK: - Language Selection State
-    @Published var selectedLangCode: String = "a" {
-        didSet { checkLangDeps() }
-    }
-    @Published var needsLangDeps: Bool = false
-    @Published var langDepsReady: Bool = true
-    let depsInstaller = KokoroDepsInstaller()
+    @Published var selectedLangCode: String = "a"
 
     // MARK: - Hotkey State
     @Published var hotkeyAccept: String
@@ -102,7 +98,7 @@ final class OnboardingViewModel: ObservableObject {
     private var pollTimer: Timer?
 
     init() {
-        isModelReady = WhisperService.modelsDownloaded && PocketTTSService.modelsDownloaded
+        isModelReady = WhisperService.modelsDownloaded && KokoroService.modelsDownloaded
 
         // Load current preferences or defaults
         selectedThemeId = UserDefaults.standard.string(forKey: "themeId") ?? "black"
@@ -115,10 +111,7 @@ final class OnboardingViewModel: ObservableObject {
         hotkeyTerminal = UserDefaults.standard.string(forKey: "hotkeyChar_terminal") ?? "T"
         hotkeyMute = UserDefaults.standard.string(forKey: "hotkeyChar_mute") ?? "M"
 
-        // Detect system language for default selection
-        let systemLocale = Locale.preferredLanguages.first ?? "en"
-        let detected = KokoroVoiceCatalog.kokoroLangCode(fromSystemLocale: systemLocale) ?? "a"
-        selectedLangCode = detected
+        selectedLangCode = UserDefaults.standard.string(forKey: "kokoroLangCode") ?? "b"
     }
 
     // MARK: - Navigation
@@ -169,9 +162,9 @@ final class OnboardingViewModel: ObservableObject {
                 }
             }
 
-            // Phase 2: PocketTTS (50–100%)
+            // Phase 2: Kokoro (50–100%)
             do {
-                try await PocketTTSService.shared.downloadModels { [weak self] fraction, label in
+                try await KokoroService.shared.downloadModels { [weak self] fraction, label in
                     Task { @MainActor in
                         self?.modelDownloadProgress = 0.5 + fraction * 0.5
                         self?.modelDownloadPhase = "Voice synthesis: \(label)"
@@ -208,12 +201,19 @@ final class OnboardingViewModel: ObservableObject {
     func downloadKokoro() {
         guard !isTtsDownloading else { return }
         isTtsDownloading = true
+        ttsDownloadError = nil
         Task {
+            var success = false
             do {
-                try await PocketTTSService.shared.downloadModels { _, _ in }
-            } catch {}
+                try await KokoroService.shared.downloadModels { _, _ in }
+                success = true
+            } catch {
+                await MainActor.run {
+                    self.ttsDownloadError = error.localizedDescription
+                }
+            }
             await MainActor.run {
-                self.isTtsReady = true
+                self.isTtsReady = success && KokoroService.modelsDownloaded
                 self.isTtsDownloading = false
             }
         }
@@ -301,22 +301,6 @@ final class OnboardingViewModel: ObservableObject {
     }
 
     // MARK: - Language Selection
-
-    func checkLangDeps() {
-        needsLangDeps = KokoroVoiceCatalog.langCodesRequiringDeps.contains(selectedLangCode)
-        guard needsLangDeps else { langDepsReady = true; return }
-        Task {
-            langDepsReady = await depsInstaller.areDepsInstalled(for: selectedLangCode)
-        }
-    }
-
-    func installLangDeps() {
-        guard !depsInstaller.isInstalling else { return }
-        Task {
-            let success = await depsInstaller.installDeps(for: selectedLangCode)
-            langDepsReady = success
-        }
-    }
 
     func applyLanguageChoice() {
         UserDefaults.standard.set(selectedLangCode, forKey: "kokoroLangCode")

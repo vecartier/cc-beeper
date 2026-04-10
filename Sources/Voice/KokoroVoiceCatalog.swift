@@ -94,9 +94,6 @@ enum KokoroVoiceCatalog {
         "z": "Chinese",
     ]
 
-    /// Languages that require extra pip install before use.
-    static let langCodesRequiringDeps: Set<String> = ["j", "z"]
-
     /// Maps Kokoro single-letter language codes to ISO 639-1 codes (used by WhisperKit).
     static let kokoroLangToISO: [String: String] = [
         "a": "en",   // American English

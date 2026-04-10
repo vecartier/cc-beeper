@@ -2,8 +2,6 @@ import SwiftUI
 
 struct SettingsVoiceOverSection: View {
     @EnvironmentObject var monitor: ClaudeMonitor
-    @StateObject private var depsInstaller = KokoroDepsInstaller()
-    @State private var depsReady: Bool = true
 
     private var currentVoices: [KokoroVoiceCatalog.Voice] {
         KokoroVoiceCatalog.voicesByLang[monitor.kokoroLangCode] ?? KokoroVoiceCatalog.voicesByLang["a"]!
@@ -45,9 +43,6 @@ struct SettingsVoiceOverSection: View {
                     }
                 }
                 .pickerStyle(.menu)
-                .onChange(of: monitor.kokoroLangCode) { _, newLang in
-                    checkDeps(for: newLang)
-                }
 
                 HStack {
                     Picker("Voice", selection: $monitor.kokoroVoice) {
@@ -58,10 +53,11 @@ struct SettingsVoiceOverSection: View {
                     .pickerStyle(.menu)
 
                     Button {
+                        let label = currentVoices.first(where: { $0.id == monitor.kokoroVoice })?.label ?? "this voice"
                         monitor.ttsService.stopSpeaking()
                         Task {
                             await monitor.ttsService.speakSummary(
-                                "Hello, I'm \(monitor.kokoroVoice). This is how I sound.",
+                                "Hi, I'm \(label). This is how I sound.",
                                 provider: "kokoro"
                             )
                         }
@@ -74,50 +70,5 @@ struct SettingsVoiceOverSection: View {
             }
         }
 
-        if monitor.ttsProvider == "kokoro" && KokoroVoiceCatalog.langCodesRequiringDeps.contains(monitor.kokoroLangCode) && !depsReady {
-            Section {
-                if depsInstaller.isInstalling {
-                    HStack {
-                        ProgressView()
-                            .scaleEffect(0.7)
-                        Text(depsInstaller.installProgress)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                } else {
-                    VStack(alignment: .leading, spacing: 4) {
-                        let langName = KokoroVoiceCatalog.languageNames[monitor.kokoroLangCode] ?? "this language"
-                        let sizeHint = monitor.kokoroLangCode == "j" ? " (~500 MB)" : " (~45 MB)"
-                        Text("\(langName) requires additional dependencies\(sizeHint).")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-
-                        Button("Install Dependencies") {
-                            Task {
-                                let success = await depsInstaller.installDeps(for: monitor.kokoroLangCode)
-                                depsReady = success
-                            }
-                        }
-
-                        if let error = depsInstaller.installError {
-                            Text(error)
-                                .font(.caption)
-                                .foregroundStyle(.red)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private func checkDeps(for langCode: String) {
-        guard KokoroVoiceCatalog.langCodesRequiringDeps.contains(langCode) else {
-            depsReady = true
-            return
-        }
-        Task {
-            depsReady = await depsInstaller.areDepsInstalled(for: langCode)
-        }
     }
 }

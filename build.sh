@@ -89,9 +89,6 @@ cat > CC-Beeper.app/Contents/Info.plist << 'PLIST'
 </plist>
 PLIST
 
-# Bundle Kokoro TTS server script
-cp scripts/kokoro-tts-server.py "$RESOURCES_DIR/kokoro-tts-server.py" 2>/dev/null || true
-
 echo "Built CC-Beeper.app"
 
 # Strip extended attributes (quarantine, etc.) from the bundle.
