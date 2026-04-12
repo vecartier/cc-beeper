@@ -7,7 +7,7 @@ cask "cc-beeper" do
   desc "Floating LCD pager widget with hotkeys, voice, and permissions (unofficial, not affiliated with Anthropic)"
   homepage "https://github.com/vecartier/CC-Beeper"
 
-  depends_on macos: ">= :sequoia"
+  depends_on macos: ">= :sonoma"
 
   app "CC-Beeper.app"
 

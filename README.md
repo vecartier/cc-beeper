@@ -111,7 +111,7 @@ Use them from any app, in any keyboard layout (AZERTY, QWERTZ, Dvorak). All rema
 
 ## Getting Started
 
-**Requirements:** macOS 26+ · [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
+**Requirements:** macOS 14 Sonoma+ · [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
 
 1. Download the [latest release](https://github.com/vecartier/cc-beeper/releases)
 2. Move `CC-Beeper.app` to `/Applications`
