@@ -36,7 +36,7 @@ CC-Beeper fixes that. It's a small widget that sits on your desktop, shows what 
 
 ## See It in Action
 
-https://github.com/user-attachments/assets/d65f557b-1b5e-41f9-b9fe-9826897f9140
+https://github.com/vecartier/cc-beeper/releases/download/v1.0.0/demo-video-ccbeeper.mp4
 
 ---
 
