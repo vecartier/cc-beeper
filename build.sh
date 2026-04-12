@@ -72,7 +72,7 @@ cat > CC-Beeper.app/Contents/Info.plist << 'PLIST'
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.1</string>
+    <string>1.0.0</string>
     <key>LSUIElement</key>
     <true/>
     <key>CFBundleIconFile</key>

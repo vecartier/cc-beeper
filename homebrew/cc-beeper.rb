@@ -1,5 +1,5 @@
 cask "cc-beeper" do
-  version "1.0.1"
+  version "1.0.0"
   sha256 :no_check
 
   url "https://github.com/vecartier/CC-Beeper/releases/download/v#{version}/CC-Beeper.dmg"

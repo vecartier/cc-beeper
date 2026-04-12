@@ -19,7 +19,7 @@
 [![Release](https://img.shields.io/github/v/release/vecartier/cc-beeper?style=flat-square)](https://github.com/vecartier/cc-beeper/releases/latest)
 [![macOS 14+](https://img.shields.io/badge/macOS-14%2B-blue?style=flat-square)](https://github.com/vecartier/cc-beeper)
 [![Swift](https://img.shields.io/badge/Swift-6-orange?style=flat-square)](https://github.com/vecartier/cc-beeper)
-[![License](https://img.shields.io/github/license/vecartier/cc-beeper?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPL--3.0-green?style=flat-square)](LICENSE)
 [![Homebrew](https://img.shields.io/badge/homebrew-tap-brown?style=flat-square)](https://github.com/vecartier/homebrew-tap)
 
 </div>
