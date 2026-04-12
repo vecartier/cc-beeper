@@ -41,14 +41,14 @@ struct OnboardingTTSStep: View {
                                     .foregroundStyle(OnboardingTheme.nearBlack)
                                 if viewModel.isTtsDownloading {
                                     HStack(spacing: 8) {
-                                        ProgressView(value: viewModel.ttsDownloadFraction)
-                                            .progressViewStyle(.linear)
-                                            .tint(OnboardingTheme.terracotta)
-                                            .frame(width: 120)
                                         Text("Downloading \(Int(viewModel.ttsDownloadFraction * 100))%...")
                                             .font(OnboardingTheme.sans(11))
                                             .foregroundStyle(OnboardingTheme.terracotta)
                                             .monospacedDigit()
+                                        ProgressView(value: viewModel.ttsDownloadFraction)
+                                            .progressViewStyle(.linear)
+                                            .tint(OnboardingTheme.terracotta)
+                                            .frame(width: 120)
                                     }
                                 } else if viewModel.isTtsReady {
                                     Text("~650 MB · Ready")

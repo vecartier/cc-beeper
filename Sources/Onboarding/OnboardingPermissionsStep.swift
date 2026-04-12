@@ -79,10 +79,7 @@ private struct PermissionRow: View {
             if isGranted {
                 StatusBadge(text: "Granted", color: OnboardingTheme.green)
             } else {
-                Button("Grant") { onGrant() }
-                    .buttonStyle(.bordered)
-                    .tint(OnboardingTheme.terracotta)
-                    .controlSize(.small)
+                StatusBadge(text: "Grant", color: OnboardingTheme.terracotta, action: onGrant)
             }
         }
         .padding(.horizontal, 14)
@@ -94,9 +91,10 @@ private struct PermissionRow: View {
 private struct StatusBadge: View {
     let text: String
     let color: Color
+    var action: (() -> Void)? = nil
 
     var body: some View {
-        Text(text.uppercased())
+        let label = Text(text.uppercased())
             .font(OnboardingTheme.mono(9, weight: .semibold))
             .tracking(0.5)
             .foregroundStyle(color)
@@ -104,7 +102,14 @@ private struct StatusBadge: View {
             .padding(.vertical, 4)
             .background(
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(color.opacity(0.12))
+                    .fill(color.opacity(0.2))
             )
+
+        if let action {
+            Button(action: action) { label }
+                .buttonStyle(.plain)
+        } else {
+            label
+        }
     }
 }
